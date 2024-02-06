@@ -1,5 +1,24 @@
 # SNLP_GCW
 
+## Note on 5.Feb.2024
+Expanding on the idea of secret unlearning. Paper achieving this to some extent: https://arxiv.org/abs/2310.10683
+
+Potential approaches:
+Reproduction study (have the authors cherry picked results? Eval metrics?)
+Loss function in the paper uses only 3 metrics, can we come up with another one?
+Instead of unlearning longer chunks of data, unlearn API keys
+Reproduce on a larger model/different model
+
+Detecting pre-trained data - we can use that method for evaluating whether something was successfully unlearned (if no longer detected in pre-training data?) https://arxiv.org/abs/2310.16789
+
+Example approach:
+Reproduce unlearning based on the method proposed in the paper https://arxiv.org/abs/2310.10683
+Re-evaluate using the same methods - reflect on results and the validity of results
+Introduce a new metric for unlearning (LOSS FUNCTION), currently used: Unlearn Harm, Random Mismatch, Maintain Performance . Come up with a new metric and see if it improves
+Try a different evaluation metric to check if the model got worse (in paper used similarity)
+Try to adapt and re-evaluate using pre-training data detection
+
+
 ## Note on 31.Jan.2024
 
 In this meeting, we have found few papers to look at next:
