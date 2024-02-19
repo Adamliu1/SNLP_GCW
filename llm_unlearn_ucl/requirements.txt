@@ -28,7 +28,7 @@ requests==2.31.0
 safetensors==0.4.0
 six==1.16.0
 tokenizers==0.14.1
-torch==1.13.1+cu117
+# torch==1.13.1+cu117
 tqdm==4.66.1
 transformers==4.34.1
 typing_extensions==4.8.0
