@@ -29,15 +29,22 @@ from utils import (
     get_truthfulQA_answers_plaintext,
 )
 
+# Added
+import hf_olmo
+
 torch.manual_seed(8888)
 np.random.seed(8888)
 random.seed(8888)
 
 
 def main(args) -> None:
-    accelerator = Accelerator()
+    # accelerator = Accelerator()
+    accelerator = Accelerator(mixed_precision="fp16")
     device = accelerator.device
-    model = AutoModelForCausalLM.from_pretrained(args.model_name)
+    print("AAAAA")
+    # model = AutoModelForCausalLM.from_pretrained(args.model_name, cache_dir=args.cache_dir)
+    model = AutoModelForCausalLM.from_pretrained(args.model_name, cache_dir=args.cache_dir, load_in_8bit=True, torch_dtype=torch.float16)
+    print("DUPA")
     # If use LoRA.
     if args.use_lora:
         peft_config = AdaLoraConfig(
@@ -49,9 +56,9 @@ def main(args) -> None:
         )
         model = get_peft_model(model, peft_config)
 
-    model.to(device)
-    tokenizer = AutoTokenizer.from_pretrained(args.model_name)
-
+    # model.to(device)
+    tokenizer = AutoTokenizer.from_pretrained(args.model_name, cache_dir=args.cache_dir)
+    
     # Load harmful data.
     # train_dataset = load_dataset("PKU-Alignment/PKU-SafeRLHF", split="330k_train")
     train_dataset = load_dataset("PKU-Alignment/PKU-SafeRLHF", split="train")
@@ -91,8 +98,9 @@ def main(args) -> None:
     model.train()
 
     # Reference model for computing KL.
-    pretrained_model = AutoModelForCausalLM.from_pretrained(args.model_name)
-    pretrained_model.to(device)
+    # pretrained_model = AutoModelForCausalLM.from_pretrained(args.model_name, cache_dir=args.cache_dir)
+    pretrained_model = AutoModelForCausalLM.from_pretrained(args.model_name, cache_dir=args.cache_dir, load_in_8bit=True, torch_dtype=torch.float16)
+    # pretrained_model.to(device)
 
     # Start unlearning.
     bad_loss = 0.0
@@ -113,7 +121,7 @@ def main(args) -> None:
                 K=5,
                 device=device,
             )
-
+            # time.sleep(20)
             ############ KL on normal samples. ############
             normal_loss = compute_kl(pretrained_model, model, normal_batch, device)
 
@@ -213,6 +221,12 @@ if __name__ == "__main__":
         type=str,
         default="logs/default.log",
         help="Log file name",
+    )
+    parser.add_argument(
+        "--cache_dir",
+        type=str,
+        default="/cs/student/projects1/2020/yadonliu/my_caches/huggingface",
+        help="Directory to save cache files.",
     )
     args = parser.parse_args()
 
