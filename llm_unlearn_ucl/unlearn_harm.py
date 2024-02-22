@@ -41,10 +41,11 @@ def main(args) -> None:
     # accelerator = Accelerator()
     accelerator = Accelerator(mixed_precision="fp16")
     device = accelerator.device
+    
     print("AAAAA")
-    # model = AutoModelForCausalLM.from_pretrained(args.model_name, cache_dir=args.cache_dir)
-    model = AutoModelForCausalLM.from_pretrained(args.model_name, cache_dir=args.cache_dir, load_in_8bit=True, torch_dtype=torch.float16)
-    print("DUPA")
+    model = AutoModelForCausalLM.from_pretrained(args.model_name, cache_dir=args.cache_dir)
+    # model = AutoModelForCausalLM.from_pretrained(args.model_name, cache_dir=args.cache_dir, load_in_8bit=True, torch_dtype=torch.float32)
+    print("BBBBB")
     # If use LoRA.
     if args.use_lora:
         peft_config = AdaLoraConfig(
@@ -56,7 +57,7 @@ def main(args) -> None:
         )
         model = get_peft_model(model, peft_config)
 
-    # model.to(device)
+    model.to(device)
     tokenizer = AutoTokenizer.from_pretrained(args.model_name, cache_dir=args.cache_dir)
     
     # Load harmful data.
@@ -98,9 +99,9 @@ def main(args) -> None:
     model.train()
 
     # Reference model for computing KL.
-    # pretrained_model = AutoModelForCausalLM.from_pretrained(args.model_name, cache_dir=args.cache_dir)
-    pretrained_model = AutoModelForCausalLM.from_pretrained(args.model_name, cache_dir=args.cache_dir, load_in_8bit=True, torch_dtype=torch.float16)
-    # pretrained_model.to(device)
+    pretrained_model = AutoModelForCausalLM.from_pretrained(args.model_name, cache_dir=args.cache_dir)
+    # pretrained_model = AutoModelForCausalLM.from_pretrained(args.model_name, cache_dir=args.cache_dir, load_in_8bit=True, torch_dtype=torch.float32)
+    pretrained_model.to(device)
 
     # Start unlearning.
     bad_loss = 0.0
@@ -225,7 +226,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--cache_dir",
         type=str,
-        default="/cs/student/projects1/2020/yadonliu/my_caches/huggingface",
+        default="./.cache",
         help="Directory to save cache files.",
     )
     args = parser.parse_args()
