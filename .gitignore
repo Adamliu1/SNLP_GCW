@@ -1,0 +1,11 @@
+.cache
+.env
+
+venv/
+
+__pycache__
+
+# Do not upload heavy weight division
+llm_unlearn_ucl/models
+llm_unlearn_ucl/logs
+llm_unlearn_ucl/data
