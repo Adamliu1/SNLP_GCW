@@ -40,3 +40,5 @@ yarl==1.9.2
 ai2-olmo
 accelerate
 bitsandbytes
+matplotlib
+scikit-learn
