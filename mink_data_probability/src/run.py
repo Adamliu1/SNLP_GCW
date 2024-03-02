@@ -10,15 +10,19 @@ import numpy as np
 from datasets import load_dataset
 from options import Options
 from eval import *
+from accelerate import Accelerator
 
 
 
-def load_model(name1):
-    olmo_name = "allenai/OLMo-1B"
+def load_model(name1, device):
     olmo_path = "/cs/student/projects3/aisoc/snlp_stuff_tmp/olmo1b_unlearned"
-    model1 = AutoModelForCausalLM.from_pretrained(name1, return_dict=True, device_map='auto', cache_dir=args.cache_dir)
+    model1 = AutoModelForCausalLM.from_pretrained(name1, return_dict=True, cache_dir=args.cache_dir, trust_remote_code=True)
+    model1.to(device)
     model1.eval()
-    tokenizer1 = AutoTokenizer.from_pretrained(name1, cache_dir=args.cache_dir)
+    # TODO: TEMP ADD OLMO TOKENIZER NAME
+    #olmo_name = "allenai/OLMo-1B"
+    olmo_name = "facebook/opt-1.3B"
+    tokenizer1 = AutoTokenizer.from_pretrained(olmo_name, cache_dir=args.cache_dir)
     """
     model1 = AutoModelForCausalLM.from_pretrained(olmo_path)
     tokenizer1 = AutoTokenizer.from_pretrained(olmo_name, cache_dir=args.cache_dir)
@@ -87,13 +91,15 @@ def evaluate_data(test_data, model1, tokenizer1, col_name, modelname1):
 
 
 if __name__ == '__main__':
+    accelerator = Accelerator(mixed_precision="fp16")
+    device = accelerator.device
     args = Options()
     args = args.parser.parse_args()
     args.output_dir = f"{args.output_dir}/{args.target_model}/{args.key_name}"
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
 
     # load model and data
-    model1, tokenizer1 = load_model(args.target_model)
+    model1, tokenizer1 = load_model(args.target_model, device)
     if "jsonl" in args.data:
         data = load_jsonl(f"{args.data}")
     else: # load data from huggingface
@@ -110,6 +116,6 @@ if __name__ == '__main__':
 
     for i, l in enumerate(ratios_list):
         print(f"Avg over all samples: Min_{ratios[i]*100}% Prob", np.mean(l))
-    model1.save_pretrained("../olmo_model")
+    #model1.save_pretrained("../olmo_model")
     #fig_fpr_tpr(all_output, args.output_dir)#, args.key_name)
 

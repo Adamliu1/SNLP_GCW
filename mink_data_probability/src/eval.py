@@ -96,9 +96,10 @@ def read_jsonl(path):
 def convert_huggingface_data_to_list_dic(dataset, max_samples):
     all_data = []
     total_samples = len(dataset)
-    if len(dataset) < max_samples:
+    if len(dataset) > max_samples:
         total_samples = max_samples
-    for i in range(max_samples):
+    for i in range(total_samples):
+        #if (dataset[i]['label'] == 0):
         ex = dataset[i]
         all_data.append(ex)
     return all_data
