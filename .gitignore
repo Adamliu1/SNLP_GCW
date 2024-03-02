@@ -1,11 +1,13 @@
 .cache
 .env
 
+# Do not upload trashy files
 venv/
-
+.DS_Store
 __pycache__
 
 # Do not upload heavy weight division
 llm_unlearn_ucl/models
 llm_unlearn_ucl/logs
 llm_unlearn_ucl/data
+models
