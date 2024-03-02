@@ -13,5 +13,6 @@ llm_unlearn_ucl/data
 models
 
 # Temporary ignore out files,TODO: might want to add them later to keep track of results
+out
 mink_data_probability/out
 mink_data_probability/src/out

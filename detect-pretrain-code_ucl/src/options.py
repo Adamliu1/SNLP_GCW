@@ -12,7 +12,7 @@ class Options():
 
     def initialize_parser(self):
         self.parser.add_argument('--target_model', type=str, default="text-davinci-003", help="the model to attack: huggyllama/llama-65b, text-davinci-003")
-        self.parser.add_argument('--ref_model', type=str, default="huggyllama/llama-7b")
+        self.parser.add_argument('--ref_model', type=str, default="")
         self.parser.add_argument('--output_dir', type=str, default="out")
         self.parser.add_argument('--data', type=str, default="swj0419/WikiMIA", help="the dataset to evaluate: default is WikiMIA")
         self.parser.add_argument('--length', type=int, default=64, help="the length of the input text to evaluate. Choose from 32, 64, 128, 256")

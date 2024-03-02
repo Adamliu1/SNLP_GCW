@@ -31,13 +31,9 @@ from eval import *
 #     return model1, model2, tokenizer1, tokenizer2
 
 def load_model(name1):
-    if "davinci" in name1:
-        model1 = None
-        tokenizer1 = None
-    else:
-        model1 = AutoModelForCausalLM.from_pretrained(name1, return_dict=True, device_map='auto', cache_dir=args.cache_dir)
-        model1.eval()
-        tokenizer1 = AutoTokenizer.from_pretrained(name1, cache_dir=args.cache_dir)
+    model1 = AutoModelForCausalLM.from_pretrained(name1, return_dict=True, device_map='auto', cache_dir=args.cache_dir)
+    model1.eval()
+    tokenizer1 = AutoTokenizer.from_pretrained(name1, cache_dir=args.cache_dir)
 
     return model1, tokenizer1
 
@@ -125,12 +121,8 @@ def calculatePerplexity(sentence, model, tokenizer, gpu):
 def inference(model1, tokenizer1, text, ex, modelname1):
     pred = {}
 
-    if "davinci" in modelname1:
-        p1, all_prob, p1_likelihood = calculatePerplexity_gpt3(text, modelname1) 
-        p_lower, _, p_lower_likelihood = calculatePerplexity_gpt3(text.lower(), modelname1)
-    else:
-        p1, all_prob, p1_likelihood = calculatePerplexity(text, model1, tokenizer1, gpu=model1.device)
-        p_lower, _, p_lower_likelihood = calculatePerplexity(text.lower(), model1, tokenizer1, gpu=model1.device)
+    p1, all_prob, p1_likelihood = calculatePerplexity(text, model1, tokenizer1, gpu=model1.device)
+    p_lower, _, p_lower_likelihood = calculatePerplexity(text.lower(), model1, tokenizer1, gpu=model1.device)
 
    # ppl
     pred["ppl"] = p1
@@ -184,10 +176,12 @@ if __name__ == '__main__':
         data = load_jsonl(f"{args.data}")
     else: # load data from huggingface
         dataset = load_dataset(args.data, split=f"WikiMIA_length{args.length}", cache_dir=args.cache_dir)
+        #dataset = load_dataset("PKU-Alignment/PKU-SafeRLHF", split="test", cache_dir=args.cache_dir)
         data = convert_huggingface_data_to_list_dic(dataset)
 
     # all_output = evaluate_data(data, model1, model2, tokenizer1, tokenizer2, args.key_name, args.target_model, args.ref_model)
     all_output = evaluate_data(data, model1, tokenizer1, args.key_name, args.target_model)
 
-    fig_fpr_tpr(all_output, args.output_dir)
+
+    fig_fpr_tpr(all_output, args.output_dir)#, args.key_name)
 
