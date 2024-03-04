@@ -38,8 +38,6 @@ To run:
 
 1. Follow the installation steps on their github.
 2. Have a directory with a model **AND a tokenizer**.
-   > [!WARNING]
-   > Currently we do not have tokenizers together with models. It's a TODO to save both to the same directory. -> this is ok to do, tokenizers are incomparably smaller than models so the upload/download won't be affected much.
 3. Run the following:
 
 ```bash
