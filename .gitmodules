@@ -1,0 +1,9 @@
+[submodule "llm_unlearn"]
+	path = llm_unlearn
+	url = https://github.com/kevinyaobytedance/llm_unlearn.git
+[submodule "detect-pretrain-code"]
+	path = detect-pretrain-code
+	url = https://github.com/swj0419/detect-pretrain-code.git
+[submodule "lm-evaluation-harness"]
+	path = lm-evaluation-harness
+	url = git@github.com:EleutherAI/lm-evaluation-harness.git
