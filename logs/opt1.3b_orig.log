@@ -1,0 +1,15 @@
+2024-03-04-15-19,112 root INFO use_lora: True
+2024-03-04-15-19,112 root INFO max_unlearn_steps: 1000
+2024-03-04-15-19,112 root INFO bad_weight: 0.5
+2024-03-04-15-19,112 root INFO random_weight: 1
+2024-03-04-15-19,112 root INFO normal_weight: 1
+2024-03-04-15-19,112 root INFO batch_size: 4
+2024-03-04-15-19,112 root INFO lr: 2e-06
+2024-03-04-15-19,112 root INFO max_bad_loss: 5.0
+2024-03-04-15-19,112 root INFO model_name: facebook/opt-1.3b
+2024-03-04-15-19,112 root INFO model_save_dir: models/opt1.3b_unlearned
+2024-03-04-15-19,112 root INFO save_every: 500
+2024-03-04-15-19,112 root INFO log_file: logs/opt1.3b_orig.log
+2024-03-04-15-19,112 root INFO cache_dir: ./.cache
+2024-03-04-15-19,112 root INFO huggingface_token: None
+2024-03-04-15-26,624 root INFO Current loss PKU on test set:2.093952985470095
