@@ -2,13 +2,15 @@
 
 We have... ✨ [an organization!](https://huggingface.co/ucl-snlp-nyt) ✨
 
-## Uploading models:
+## Uploading models
 
 Using `huggingface-cli` makes things very easy, so can recommend. To upload a particular model and all the files belonging to it, you can do:
 
 ```bash
 huggingface-cli upload ucl-snlp-nyt/snlp-unlearned-models models/model_name models/model_name
 ```
+
+## Downloading models
 
 To download all the models, you can use git lfs! First you can skip the large files:
 
