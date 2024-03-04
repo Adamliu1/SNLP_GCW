@@ -57,6 +57,15 @@ A couple of notes:
 - batch size can be auto calculated (max possible) or set by a user.
 - For testing you can use a flag `--limit`, which allows to specify what fraction (float 0-1) of benchmarks you want to use. In general this is only useful for testing because evaluation must be done on full benchmark datasets.
 
+I added `eval_framework_tasks/evaluate_models.sh`, which gives a easy way to evaluate a given model. The script allows to evaluate a single model and takes two parameters:
+1. The name of the experiment (This is when you want to evaluate multiple models within an experiment)
+2. The name of the model from `/cs/student/projects1/2020/aszablew/SNLP/SNLP_GCW/llm_unlearn_ucl/snlp-unlearned-models/models/` you want to evaluate.
+
+Example: 
+```bash
+./evaluate_models.sh experiment1 opt1.3b_unlearned
+```
+
 ## The performance of the process of unlearning
 
 @Davidyz
