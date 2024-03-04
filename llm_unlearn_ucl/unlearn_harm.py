@@ -41,9 +41,11 @@ def main(args) -> None:
     # accelerator = Accelerator()
     accelerator = Accelerator(mixed_precision="fp16")
     device = accelerator.device
-    
+
     print("AAAAA")
-    model = AutoModelForCausalLM.from_pretrained(args.model_name, cache_dir=args.cache_dir)
+    model = AutoModelForCausalLM.from_pretrained(
+        args.model_name, cache_dir=args.cache_dir
+    )
     # model = AutoModelForCausalLM.from_pretrained(args.model_name, cache_dir=args.cache_dir, load_in_8bit=True, torch_dtype=torch.float32)
     print("BBBBB")
     # If use LoRA.
@@ -59,7 +61,7 @@ def main(args) -> None:
 
     model.to(device)
     tokenizer = AutoTokenizer.from_pretrained(args.model_name, cache_dir=args.cache_dir)
-    
+
     # Load harmful data.
     # train_dataset = load_dataset("PKU-Alignment/PKU-SafeRLHF", split="330k_train")
     train_dataset = load_dataset("PKU-Alignment/PKU-SafeRLHF", split="train")
@@ -99,7 +101,9 @@ def main(args) -> None:
     model.train()
 
     # Reference model for computing KL.
-    pretrained_model = AutoModelForCausalLM.from_pretrained(args.model_name, cache_dir=args.cache_dir)
+    pretrained_model = AutoModelForCausalLM.from_pretrained(
+        args.model_name, cache_dir=args.cache_dir
+    )
     # pretrained_model = AutoModelForCausalLM.from_pretrained(args.model_name, cache_dir=args.cache_dir, load_in_8bit=True, torch_dtype=torch.float32)
     pretrained_model.to(device)
 
@@ -152,6 +156,7 @@ def main(args) -> None:
             # Save model.
             if idx % args.save_every == 0:
                 model.save_pretrained(args.model_save_dir, from_pt=True)
+                tokenizer.save_pretrained(args.model_save_dir)
     end_time = time.time()
     logging.info("Total time: %d sec" % (end_time - start_time))
 
@@ -160,6 +165,7 @@ def main(args) -> None:
 
     # Save final model.
     model.save_pretrained(args.model_save_dir, from_pt=True)
+    tokenizer.save_pretrained(args.model_save_dir)
     logging.info("Unlearning finished")
 
     return
