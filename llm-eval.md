@@ -47,6 +47,7 @@ lm_eval --model hf \
     --device cpu \
     --batch_size auto \
     --trust_remote_code True \
+    --output_path eval_results \
     --use_cache "./.cache"
 ```
 
