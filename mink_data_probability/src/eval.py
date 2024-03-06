@@ -33,6 +33,7 @@ def do_plot(prediction, answers, sweep_fn=sweep, metric='auc', legend="", output
     """
     fpr, tpr, auc, acc = sweep_fn(np.array(prediction), np.array(answers, dtype=bool))
 
+    print(fpr)
     low = tpr[np.where(fpr<.05)[0][-1]]
     # bp()
     print('Attack %s   AUC %.4f, Accuracy %.4f, TPR@5%%FPR of %.4f\n'%(legend, auc,acc, low))
@@ -92,9 +93,13 @@ def read_jsonl(path):
     with open(path, 'r') as f:
         return [json.loads(line) for line in tqdm(f)]
 
-def convert_huggingface_data_to_list_dic(dataset):
+def convert_huggingface_data_to_list_dic(dataset, max_samples):
     all_data = []
-    for i in range(len(dataset)):
+    total_samples = len(dataset)
+    if len(dataset) > max_samples:
+        total_samples = max_samples
+    for i in range(total_samples):
+        #if (dataset[i]['label'] == 0):
         ex = dataset[i]
         all_data.append(ex)
     return all_data

@@ -4,3 +4,6 @@
 [submodule "detect-pretrain-code"]
 	path = detect-pretrain-code
 	url = https://github.com/swj0419/detect-pretrain-code.git
+[submodule "lm-evaluation-harness"]
+	path = lm-evaluation-harness
+	url = git@github.com:EleutherAI/lm-evaluation-harness.git
