@@ -70,6 +70,16 @@ Example:
 
 @Davidyz
 
+Branch [`david/relearn`](https://github.com/Adamliu1/SNLP_GCW/tree/david/relearn) implements [the use relearning time](https://arxiv.org/pdf/2111.08947.pdf) as an evaluation metric for LLM unlearning. 
+This approach attempts to retrain the unlearned model on the forgetting dataset and compare the time (number of iterations/samples) before the model reaches the original performance before unlearning.
+Therefore, this benchmark requires the original model (before unlearning) for computing the baseline loss.
+
+```bash
+python relearn/relearn.py --original_model <original_model> --unlearned_model <unlearned_model> --batch_size 3
+```
+
+It might be necessary to adjust the learning rate so that the rate of re-learning shows significant differences.
+
 ## Using Min-k% prob as an unlearning metric - part of the unlearning loss?
 
 @Willmish
