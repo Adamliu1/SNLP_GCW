@@ -1,0 +1,16 @@
+2024-03-05-20-35,407 root INFO use_lora: False
+2024-03-05-20-35,407 root INFO max_unlearn_steps: 10000
+2024-03-05-20-35,407 root INFO bad_weight: 0.5
+2024-03-05-20-35,407 root INFO random_weight: 1
+2024-03-05-20-35,407 root INFO normal_weight: 1
+2024-03-05-20-35,407 root INFO batch_size: 4
+2024-03-05-20-35,407 root INFO lr: 2e-06
+2024-03-05-20-35,407 root INFO max_bad_loss: 100
+2024-03-05-20-35,407 root INFO model_name: allenai/OLMo-1B
+2024-03-05-20-35,407 root INFO model_save_dir: models/opt1.3b_unlearned
+2024-03-05-20-35,407 root INFO save_every: 500
+2024-03-05-20-35,407 root INFO log_file: logs/olmo1b_orig.log
+2024-03-05-20-35,407 root INFO cache_dir: ./.cache
+2024-03-05-20-35,407 root INFO target_loss: 3
+2024-03-05-20-40,933 root INFO Current loss PKU on test set:1.9500573219441077
+2024-03-05-20-40,933 root INFO Saving model to models/opt1.3b_unlearned
