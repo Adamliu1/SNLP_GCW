@@ -27,9 +27,15 @@ from parse_args import parse_args
 from peft import AdaLoraConfig, TaskType, get_peft_model
 from torch.optim import AdamW
 from transformers import AutoModelForCausalLM, AutoTokenizer, get_scheduler
-from utils import (compute_kl, create_pku_dataloader_from_dataset,
-                   create_truthfulqa_dataloader, get_answer_loss,
-                   get_rand_ans_loss, get_truthfulQA_answers_plaintext)
+from utils import (
+    compute_kl,
+    create_pku_dataloader_from_dataset,
+    create_mathqa_dataloader_from_dataset,
+    create_truthfulqa_dataloader,
+    get_answer_loss,
+    get_rand_ans_loss,
+    get_truthfulQA_answers_plaintext,
+)
 
 import wandb
 
@@ -48,7 +54,11 @@ class BatchSamplesLogger:
         self.data = []
         self.columns = [f"{prefix} Batch Number", f"{prefix} Input IDs"]
         self.dataframe = pd.DataFrame(
-            columns=(["batch_number", "input_ids_list"] if not self.decode_text else ["batch_number", "input_ids_list", "sample_text"])
+            columns=(
+                ["batch_number", "input_ids_list"]
+                if not self.decode_text
+                else ["batch_number", "input_ids_list", "sample_text"]
+            )
         )
         if decode_text:
             self.columns.append(f"{prefix} Sample Text")
@@ -60,9 +70,17 @@ class BatchSamplesLogger:
 
         for i in range(batch_size):
             input_ids_list = batch["input_ids"][i].tolist()
-            sample_text = self.tokenizer.decode(batch["input_ids"][i], skip_special_tokens=True) if self.decode_text else ""
+            sample_text = (
+                self.tokenizer.decode(batch["input_ids"][i], skip_special_tokens=True)
+                if self.decode_text
+                else ""
+            )
             # Wanb info
-            data_row = [batch_number, input_ids_list] if not self.decode_text else [batch_number, input_ids_list, sample_text]
+            data_row = (
+                [batch_number, input_ids_list]
+                if not self.decode_text
+                else [batch_number, input_ids_list, sample_text]
+            )
             self.data.append(data_row)
             #
             data_dict = {
@@ -113,7 +131,9 @@ def save_batch_data(batch, batch_type, idx, save_dir):
 
 def main(args) -> None:
     set_seed(args.seed)
-    assert args.epoch_size % args.sequential == 0, "epoch_size should be divisible by number of splits for sequential learning (--sequential)."
+    assert (
+        args.epoch_size % args.sequential == 0
+    ), "epoch_size should be divisible by number of splits for sequential learning (--sequential)."
     assert (
         args.epoch_size // args.sequential
     ) % args.batch_size == 0, "samples in each 'sequence' (--epoch_size / --sequential) should be a multiple of batch_size."
@@ -121,8 +141,21 @@ def main(args) -> None:
     # accelerator = Accelerator(mixed_precision="fp16")
     device = accelerator.device
 
-    model = AutoModelForCausalLM.from_pretrained(args.model_name, cache_dir=args.cache_dir)
-    # model = AutoModelForCausalLM.from_pretrained(args.model_name, cache_dir=args.cache_dir, load_in_8bit=True, torch_dtype=torch.float32)
+    print("AAAAA")
+    if args.use_quantized:
+        # Uncomment for quantized
+        model = AutoModelForCausalLM.from_pretrained(
+            args.model_name,
+            cache_dir=args.cache_dir,
+            load_in_8bit=True,
+            torch_dtype=torch.float32,
+        )
+    else:
+        model = AutoModelForCausalLM.from_pretrained(
+            args.model_name, cache_dir=args.cache_dir
+        )
+
+    print("BBBBB")
     # If use LoRA.
     if args.use_lora:
         peft_config = AdaLoraConfig(
@@ -133,34 +166,80 @@ def main(args) -> None:
             target_modules=["q_proj", "v_proj"],
         )
         model = get_peft_model(model, peft_config)
+    if not args.use_quantized:
+        model.to(device)
 
-    model.to(device)
     tokenizer = AutoTokenizer.from_pretrained(args.model_name, cache_dir=args.cache_dir)
 
-    # filter entries with harmful responses and draw random samples from the remaining dataset.
-    full_bad_dataset = load_dataset("PKU-Alignment/PKU-SafeRLHF", split="train").filter(
-        lambda entry: not (entry["is_response_0_safe"] or entry["is_response_1_safe"])
-    )
-    if args.shuffle_seed:
-        # shuffle the dataset with a given seed for reproducibility
-        full_bad_dataset = full_bad_dataset.shuffle(seed=args.shuffle_seed)
-    if args.sequential > 0:
-        # NOTE: sequential/batch unlearning using sliced dataset.
-        train_bad_dataset = full_bad_dataset.select(range(args.epoch_size))
+    # Load data to unlearn.
+    if args.unlearning_dataset == "PKU-Alignment/PKU-SafeRLHF":
+        # filter entries with harmful responses and draw random samples from the remaining dataset.
+        full_bad_dataset = load_dataset(
+            "PKU-Alignment/PKU-SafeRLHF", split="train"
+        ).filter(
+            lambda entry: not (
+                entry["is_response_0_safe"] or entry["is_response_1_safe"]
+            )
+        )
+        if args.shuffle_seed:
+            # shuffle the dataset with a given seed for reproducibility
+            full_bad_dataset = full_bad_dataset.shuffle(seed=args.shuffle_seed)
+        if args.sequential > 0:
+            # NOTE: sequential/batch unlearning using sliced dataset.
+            train_bad_dataset = full_bad_dataset.select(range(args.epoch_size))
+        else:
+            # NOTE: full dataset like bytedance.
+            train_bad_dataset = full_bad_dataset
+
+        Path(args.samples_save_dir).mkdir(exist_ok=True)
+        bad_sample_path = f"{args.samples_save_dir}/bad_{args.epoch_size if args.sequential > 0 else 'full'}_samples.json"
+        with open(bad_sample_path, "w") as fin:
+            print(f"Writing bad samples to {bad_sample_path}")
+            json.dump(
+                [
+                    train_bad_dataset[i]
+                    for i in range(
+                        args.epoch_size
+                        if args.sequential > 0
+                        else len(train_bad_dataset)
+                    )
+                ],
+                fin,
+            )
+
+        train_bad_loaders = create_pku_dataloader_from_dataset(
+            tokenizer,
+            train_bad_dataset,
+            batch_size=args.batch_size,
+            splits=max(args.sequential, 1),
+        )
+
+        # XXX: for now this is the prefix that is added before each q and answer,
+        # it is used by get_rand_ans_loss() to extract just the question part and
+        # add a random answer to it.
+        # !!!! Has additional sideffect of model unlearning this pattern!!!!
+        # ADDITONALLY: create_truthfulqa_dataloader() is also using this pattern!!!
+        question_prefix_str = "### Question:"
+        answer_prefix_str = "### Answer:"
+
+    elif args.unlearning_dataset == "math_qa":
+        train_dataset = load_dataset("math_qa", split="train")
+        train_bad_loader = create_mathqa_dataloader_from_dataset(
+            tokenizer, train_dataset, batch_size=args.batch_size
+        )
+        question_prefix_str = "Problem:"
+        answer_prefix_str = "correct:"
     else:
-        # NOTE: full dataset like bytedance.
-        train_bad_dataset = full_bad_dataset
-
-    Path(args.samples_save_dir).mkdir(exist_ok=True)
-    bad_sample_path = f"{args.samples_save_dir}/bad_{args.epoch_size if args.sequential > 0 else 'full'}_samples.json"
-    with open(bad_sample_path, "w") as fin:
-        print(f"Writing bad samples to {bad_sample_path}")
-        json.dump([train_bad_dataset[i] for i in range(args.epoch_size if args.sequential > 0 else len(train_bad_dataset))], fin)
-
-    train_bad_loaders = create_pku_dataloader_from_dataset(tokenizer, train_bad_dataset, batch_size=args.batch_size, splits=max(args.sequential, 1))
+        print(f"Unlearning dataset not known! dataset: {args.unlearning_dataset}")
+        return
 
     # Get normal data.
-    train_normal_loaders, val_normal_loader, test_normal_loader, train_normal_dataset = create_truthfulqa_dataloader(
+    (
+        train_normal_loaders,
+        val_normal_loader,
+        test_normal_loader,
+        train_normal_dataset,
+    ) = create_truthfulqa_dataloader(
         tokenizer,
         batch_size=args.batch_size,
         seed=args.shuffle_seed if args.shuffle_seed is not None else args.seed,
@@ -170,13 +249,29 @@ def main(args) -> None:
     normal_sample_path = f"{args.samples_save_dir}/normal_{args.epoch_size if args.sequential > 0 else 'full'}_samples.json"
     with open(normal_sample_path, "w") as fin:
         print(f"Writing normal samples to {normal_sample_path}")
-        json.dump([train_normal_dataset[i] for i in range(args.epoch_size if args.sequential > 0 else len(train_normal_dataset))], fin)
+        json.dump(
+            [
+                train_normal_dataset[i]
+                for i in range(
+                    args.epoch_size
+                    if args.sequential > 0
+                    else len(train_normal_dataset)
+                )
+            ],
+            fin,
+        )
 
     # Load normal answer used for random mismatch.
     normal_ans = get_truthfulQA_answers_plaintext()
-    data_sample_artifacts = wandb.Artifact(name="training_batch_raw_data", type="batch_data")
-    data_sample_artifacts.add_file(normal_sample_path, name=f"normal_{args.epoch_size}_samples.json")
-    data_sample_artifacts.add_file(bad_sample_path, name=f"bad_{args.epoch_size}_samples.json")
+    data_sample_artifacts = wandb.Artifact(
+        name="training_batch_raw_data", type="batch_data"
+    )
+    data_sample_artifacts.add_file(
+        normal_sample_path, name=f"normal_{args.epoch_size}_samples.json"
+    )
+    data_sample_artifacts.add_file(
+        bad_sample_path, name=f"bad_{args.epoch_size}_samples.json"
+    )
     wandb.log_artifact(data_sample_artifacts)
 
     optimizer = AdamW(model.parameters(), lr=args.lr)
@@ -196,16 +291,35 @@ def main(args) -> None:
         lr_scheduler,
     ) = accelerator.prepare(model, optimizer, lr_scheduler)
     for i in range(args.sequential):
-        train_bad_loaders[i], train_normal_loaders[i] = accelerator.prepare(train_bad_loaders[i], train_normal_loaders[i])
+        train_bad_loaders[i], train_normal_loaders[i] = accelerator.prepare(
+            train_bad_loaders[i], train_normal_loaders[i]
+        )
 
     model.train()
 
     # Reference model for computing KL.
-    pretrained_model = AutoModelForCausalLM.from_pretrained(args.model_name, cache_dir=args.cache_dir)
-    # pretrained_model = AutoModelForCausalLM.from_pretrained(args.model_name, cache_dir=args.cache_dir, load_in_8bit=True, torch_dtype=torch.float32)
-    pretrained_model.to(device)
+    if args.use_quantized:
+        # Uncomment for quantized
+        pretrained_model = AutoModelForCausalLM.from_pretrained(
+            args.model_name,
+            cache_dir=args.cache_dir,
+            load_in_8bit=True,
+            torch_dtype=torch.float32,
+        )
+    else:
+        pretrained_model = AutoModelForCausalLM.from_pretrained(
+            args.model_name, cache_dir=args.cache_dir
+        )
+        pretrained_model.to(device)
 
-    def run_training_batch(bad_batch, normal_batch, idx, epoch: int, bad_loader_size: int = 0, normal_loader_size: int = 0):
+    def run_training_batch(
+        bad_batch,
+        normal_batch,
+        idx,
+        epoch: int,
+        bad_loader_size: int = 0,
+        normal_loader_size: int = 0,
+    ):
         ############ GA on answer only. ############
         bad_loss = get_answer_loss("ga", bad_batch, model, device=device)
 
@@ -217,19 +331,19 @@ def main(args) -> None:
             model,
             K=5,
             device=device,
+            question_prefix_str=question_prefix_str,
+            answer_prefix_str=answer_prefix_str,
         )
-        # time.sleep(20)
         ############ KL on normal samples. ############
         normal_loss = compute_kl(pretrained_model, model, normal_batch, device)
 
         # Final loss = bad loss + random smoothing + normal loss.
-        loss = args.bad_weight * bad_loss + args.random_weight * random_loss + args.normal_weight * normal_loss
+        loss = (
+            args.bad_weight * bad_loss
+            + args.random_weight * random_loss
+            + args.normal_weight * normal_loss
+        )
 
-        # Backprop.
-        # accelerator.backward(loss)
-        # optimizer.step()
-        # lr_scheduler.step()
-        # optimizer.zero_grad()
         bad_batch_idx = idx
         normal_batch_idx = idx
         if bad_loader_size:
@@ -254,7 +368,11 @@ def main(args) -> None:
             batch_samples_logger_bad.log_accumulated_samples(wandb)
             batch_samples_logger_normal.log_accumulated_samples(wandb)
 
-        stats = f"epoch: {epoch}, batch: {idx}, " f"bad_loss: {-bad_loss:.2f}, " f"current_div_loss: {normal_loss:.2f}, "
+        stats = (
+            f"epoch: {epoch}, batch: {idx}, "
+            f"bad_loss: {-bad_loss:.2f}, "
+            f"current_div_loss: {normal_loss:.2f}, "
+        )
         logging.info(stats)
         print(stats)
         idx += 1
@@ -269,8 +387,12 @@ def main(args) -> None:
             sample_save_dir = Path(args.samples_save_dir)
             sample_save_dir.mkdir(parents=True, exist_ok=True)
 
-            batch_samples_logger_bad.export_dataframe(os.path.join(sample_save_dir, f"bad_batch_{idx}.csv"))
-            batch_samples_logger_normal.export_dataframe(os.path.join(sample_save_dir, f"normal_batch_{idx}.csv"))
+            batch_samples_logger_bad.export_dataframe(
+                os.path.join(sample_save_dir, f"bad_batch_{idx}.csv")
+            )
+            batch_samples_logger_normal.export_dataframe(
+                os.path.join(sample_save_dir, f"normal_batch_{idx}.csv")
+            )
             if bool(args.wandb_log):
                 # Save batch data to files
                 # bad_input_ids_path, bad_attention_mask_path = save_batch_data(
@@ -319,19 +441,29 @@ def main(args) -> None:
     start_time = time.time()
     running_loss = deque()
     # Here for caching what samples are used so far
-    batch_samples_logger_bad = BatchSamplesLogger(tokenizer, prefix="Bad", decode_text=True)
-    batch_samples_logger_normal = BatchSamplesLogger(tokenizer, prefix="Normal", decode_text=True)
+    batch_samples_logger_bad = BatchSamplesLogger(
+        tokenizer, prefix="Bad", decode_text=True
+    )
+    batch_samples_logger_normal = BatchSamplesLogger(
+        tokenizer, prefix="Normal", decode_text=True
+    )
 
     if args.sequential > 0:
         # NOTE: sequential/batch unlearning
         num_batches_per_epoch = args.epoch_size // args.batch_size
-        for seq, (train_normal_loader, train_bad_loader) in enumerate(zip(train_normal_loaders, train_bad_loaders)):
+        for seq, (train_normal_loader, train_bad_loader) in enumerate(
+            zip(train_normal_loaders, train_bad_loaders)
+        ):
             epoch_num = 0
             accu_bad_loss = 0
             while epoch_num < args.num_epochs:
                 accu_bad_loss = 0
-                for normal_batch, bad_batch in zip(train_normal_loader, train_bad_loader):
-                    loss, bad_loss = run_training_batch(bad_batch, normal_batch, idx, epoch_num)
+                for normal_batch, bad_batch in zip(
+                    train_normal_loader, train_bad_loader
+                ):
+                    loss, bad_loss = run_training_batch(
+                        bad_batch, normal_batch, idx, epoch_num
+                    )
                     idx += 1
                     # NOTE: the whole dataset is considered to be one single batch.
                     # Back-prop after the whole dataset has been finished.
@@ -345,7 +477,9 @@ def main(args) -> None:
 
                 if args.sequential == 1:
                     # NOTE: Batch unlearning, save for every epoch
-                    model_tokenizer_save_dir = Path(os.path.join(args.model_save_dir, f"epoch_{epoch_num}"))
+                    model_tokenizer_save_dir = Path(
+                        os.path.join(args.model_save_dir, f"epoch_{epoch_num}")
+                    )
                     model_tokenizer_save_dir.mkdir(parents=True, exist_ok=True)
 
                     model.save_pretrained(model_tokenizer_save_dir, from_pt=True)
@@ -356,7 +490,9 @@ def main(args) -> None:
                     break
 
             if abs(accu_bad_loss) > args.max_bad_loss:
-                print(f"bad_loss {abs(accu_bad_loss)} exceeding args.max_bad_loss {args.max_bad_loss}. Unlearning stopped.")
+                print(
+                    f"bad_loss {abs(accu_bad_loss)} exceeding args.max_bad_loss {args.max_bad_loss}. Unlearning stopped."
+                )
                 break
         model_tokenizer_save_dir = Path(os.path.join(args.model_save_dir, "final"))
         model_tokenizer_save_dir.mkdir(parents=True, exist_ok=True)
@@ -383,13 +519,22 @@ def main(args) -> None:
             except StopIteration:
                 train_normal_loader_gen = iter(train_normal_loaders[0])
                 normal_batch = next(train_normal_loader_gen)
-            loss, bad_loss = run_training_batch(bad_batch, normal_batch, idx, epoch_num, bad_loader_len, normal_loader_len)
+            loss, bad_loss = run_training_batch(
+                bad_batch,
+                normal_batch,
+                idx,
+                epoch_num,
+                bad_loader_len,
+                normal_loader_len,
+            )
             accelerator.backward(loss)
             optimizer.step()
             lr_scheduler.step()
             optimizer.zero_grad()
             if idx % args.save_every == 0:
-                model_tokenizer_save_dir = Path(os.path.join(args.model_save_dir, f"checkpoint_{idx}"))
+                model_tokenizer_save_dir = Path(
+                    os.path.join(args.model_save_dir, f"checkpoint_{idx}")
+                )
                 model_tokenizer_save_dir.mkdir(parents=True, exist_ok=True)
 
                 model.save_pretrained(model_tokenizer_save_dir, from_pt=True)
@@ -399,7 +544,9 @@ def main(args) -> None:
                 running_loss.popleft()
             avg_loss = abs(np.mean(running_loss))
             if avg_loss > args.max_bad_loss:
-                print(f"bad_loss {avg_loss} exceeding args.max_bad_loss {args.max_bad_loss}. Unlearning stopped.")
+                print(
+                    f"bad_loss {avg_loss} exceeding args.max_bad_loss {args.max_bad_loss}. Unlearning stopped."
+                )
                 break
         model_tokenizer_save_dir = Path(os.path.join(args.model_save_dir, "final"))
         model_tokenizer_save_dir.mkdir(parents=True, exist_ok=True)
@@ -427,7 +574,9 @@ if __name__ == "__main__":
 
     # Initialize logging
     if bool(args.wandb_log):
-        wandb.init(project=args.wandb_project_name, name=args.wandb_run_name, config=vars(args))
+        wandb.init(
+            project=args.wandb_project_name, name=args.wandb_run_name, config=vars(args)
+        )
 
     logging.basicConfig(
         filename=args.log_file,
