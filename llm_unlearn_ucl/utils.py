@@ -306,6 +306,7 @@ def get_answer_loss(operation, batch, model, device="cuda:0"):
         position_loss = loss_fct(shift_logits[bid], shift_labels[bid])
         if operation == "ga":  # Negative the direction for GA.
             position_loss = -position_loss
+        print(position_loss)
 
         # Simply put equal weights on all answers.
         position_weight = torch.zeros_like(one_inp)
@@ -320,6 +321,10 @@ def get_answer_loss(operation, batch, model, device="cuda:0"):
         one_loss = (position_weight[:-1] * position_loss).sum()
         losses.append(one_loss)
     final_loss = torch.stack(losses).mean()
+    print(final_loss)
+    from sys import exit
+
+    exit(1)
 
     return final_loss
 
@@ -361,15 +366,6 @@ def get_rand_ans_loss(
             ori_text.split(question_prefix_str)[1].split(answer_prefix_str)[0].strip()
         )
         question_prefix = f"{question_prefix_str} {question} {answer_prefix_str}"
-
-        # XXX: REMOVE THIS AFTER TESTING previous method for splitting question
-        question_old = ori_text.split("###")[1].split("Question:")[-1].strip()
-        if question != question_old:
-            print(
-                "NEW METHOD FOR SPLITTING HAS DIFFERENT RESULT!", question, question_old
-            )
-            return
-        # question_prefix = f"### Question: {question}\n ### Answer: "
 
         tokenized_question_prefix = tokenizer(
             question_prefix, truncation=True, padding="max_length"

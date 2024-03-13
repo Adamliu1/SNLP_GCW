@@ -23,11 +23,13 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, get_scheduler
 from utils import (
     compute_kl,
     create_pku_dataloader_from_dataset,
+    create_mathqa_dataloader_from_dataset,
     create_truthfulqa_dataloader,
     get_answer_loss,
     get_rand_ans_loss,
     get_truthfulQA_answers_plaintext,
 )
+from parse_args import parse_args
 
 # Added
 import hf_olmo
@@ -43,10 +45,19 @@ def main(args) -> None:
     device = accelerator.device
 
     print("AAAAA")
-    model = AutoModelForCausalLM.from_pretrained(
-        args.model_name, cache_dir=args.cache_dir
-    )
-    # model = AutoModelForCausalLM.from_pretrained(args.model_name, cache_dir=args.cache_dir, load_in_8bit=True, torch_dtype=torch.float32)
+    if args.use_quantized:
+        # Uncomment for quantized
+        model = AutoModelForCausalLM.from_pretrained(
+            args.model_name,
+            cache_dir=args.cache_dir,
+            load_in_8bit=True,
+            torch_dtype=torch.float32,
+        )
+    else:
+        model = AutoModelForCausalLM.from_pretrained(
+            args.model_name, cache_dir=args.cache_dir
+        )
+
     print("BBBBB")
     # If use LoRA.
     if args.use_lora:
@@ -58,16 +69,35 @@ def main(args) -> None:
             target_modules=["q_proj", "v_proj"],
         )
         model = get_peft_model(model, peft_config)
+    if not args.use_quantized:
+        model.to(device)
 
-    model.to(device)
     tokenizer = AutoTokenizer.from_pretrained(args.model_name, cache_dir=args.cache_dir)
 
-    # Load harmful data.
-    # train_dataset = load_dataset("PKU-Alignment/PKU-SafeRLHF", split="330k_train")
-    train_dataset = load_dataset("PKU-Alignment/PKU-SafeRLHF", split="train")
-    train_bad_loader = create_pku_dataloader_from_dataset(
-        tokenizer, train_dataset, batch_size=args.batch_size
-    )
+    # Load data to unlearn.
+    if args.unlearning_dataset == "PKU-Alignment/PKU-SafeRLHF":
+        train_dataset = load_dataset("PKU-Alignment/PKU-SafeRLHF", split="train")
+        train_bad_loader = create_pku_dataloader_from_dataset(
+            tokenizer, train_dataset, batch_size=args.batch_size
+        )
+        # XXX: for now this is the prefix that is added before each q and answer,
+        # it is used by get_rand_ans_loss() to extract just the question part and
+        # add a random answer to it.
+        # !!!! Has additional sideffect of model unlearning this pattern!!!!
+        # ADDITONALLY: create_truthfulqa_dataloader() is also using this pattern!!!
+        question_prefix_str = "### Question:"
+        answer_prefix_str = "### Answer:"
+
+    elif args.unlearning_dataset == "math_qa":
+        train_dataset = load_dataset("math_qa", split="train")
+        train_bad_loader = create_mathqa_dataloader_from_dataset(
+            tokenizer, train_dataset, batch_size=args.batch_size
+        )
+        question_prefix_str = "Problem:"
+        answer_prefix_str = "correct:"
+    else:
+        print(f"Unlearning dataset not known! dataset: {args.unlearning_dataset}")
+        return
 
     # Get normal data.
     train_normal_loader, _, _ = create_truthfulqa_dataloader(
@@ -101,11 +131,19 @@ def main(args) -> None:
     model.train()
 
     # Reference model for computing KL.
-    pretrained_model = AutoModelForCausalLM.from_pretrained(
-        args.model_name, cache_dir=args.cache_dir
-    )
-    # pretrained_model = AutoModelForCausalLM.from_pretrained(args.model_name, cache_dir=args.cache_dir, load_in_8bit=True, torch_dtype=torch.float32)
-    pretrained_model.to(device)
+    if args.use_quantized:
+        # Uncomment for quantized
+        pretrained_model = AutoModelForCausalLM.from_pretrained(
+            args.model_name,
+            cache_dir=args.cache_dir,
+            load_in_8bit=True,
+            torch_dtype=torch.float32,
+        )
+    else:
+        pretrained_model = AutoModelForCausalLM.from_pretrained(
+            args.model_name, cache_dir=args.cache_dir
+        )
+        pretrained_model.to(device)
 
     # Start unlearning.
     bad_loss = 0.0
@@ -125,6 +163,8 @@ def main(args) -> None:
                 model,
                 K=5,
                 device=device,
+                question_prefix_str=question_prefix_str,
+                answer_prefix_str=answer_prefix_str,
             )
             # time.sleep(20)
             ############ KL on normal samples. ############
@@ -172,70 +212,7 @@ def main(args) -> None:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
-    )
-    parser.add_argument("--use_lora", action="store_true")
-
-    parser.add_argument(
-        "--max_unlearn_steps",
-        type=int,
-        default=1000,
-        help="Max number of unlearning steps.",
-    )
-    parser.add_argument(
-        "--bad_weight", type=float, default=0.5, help="Weight on the bad loss."
-    )
-    parser.add_argument(
-        "--random_weight",
-        type=float,
-        default=1,
-        help="Weight on learning the random outputs.",
-    )
-    parser.add_argument(
-        "--normal_weight",
-        type=float,
-        default=1,
-        help="Weight on normal loss.",
-    )
-    parser.add_argument(
-        "--batch_size", type=int, default=2, help="Batch size of unlearning."
-    )
-    parser.add_argument("--lr", type=float, default=2e-6, help="Unlearning LR.")
-    parser.add_argument(
-        "--max_bad_loss",
-        type=float,
-        default=100,
-        help="Maximum loss on bad samples to terminate.",
-    )
-    parser.add_argument(
-        "--model_name",
-        type=str,
-        default="facebook/opt-1.3b",
-        help="Name of the pretrained model.",
-    )
-    parser.add_argument(
-        "--model_save_dir",
-        type=str,
-        default="models/opt1.3b_unlearned",
-        help="Directory to save model.",
-    )
-    parser.add_argument(
-        "--save_every", type=int, default=500, help="How many steps to save model."
-    )
-    parser.add_argument(
-        "--log_file",
-        type=str,
-        default="logs/default.log",
-        help="Log file name",
-    )
-    parser.add_argument(
-        "--cache_dir",
-        type=str,
-        default="./.cache",
-        help="Directory to save cache files.",
-    )
-    args = parser.parse_args()
+    args = parse_args()
 
     logging.basicConfig(
         filename=args.log_file,
