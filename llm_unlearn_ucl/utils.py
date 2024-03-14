@@ -40,17 +40,17 @@ def create_mathqa_dataloader_from_dataset(
                 continue
 
             prompt = examples["Problem"][i]
-            # rationale = examples["rationale"][i]
+            rationale = examples["Rationale"][i]
             options = examples["options"][i]
-            correct = examples["correct"][i]
+            # correct = examples["correct"][i]
             # annotated_formula["annotated_formula"][i]
-            text = f"Problem: {prompt} options: {options} correct: {correct}"
+            text = f"Problem: {prompt} options: {options} rationale: {rationale}"
 
             tokenized = tokenizer(text, truncation=True, padding="max_length")
             results["input_ids"].append(tokenized["input_ids"])
             results["attention_mask"].append(tokenized["attention_mask"])
             # Calculate start idx for answer
-            test_text = f"Problem: {prompt} options: {options} correct: "
+            test_text = f"Problem: {prompt} options: {options} rationale: "
             test_tokenized = tokenizer(test_text, truncation=True, padding="max_length")
             results["start_locs"].append(len(test_tokenized["input_ids"]) - 1)
 
@@ -338,6 +338,7 @@ def get_answer_loss(operation, batch, model, device="cuda:0"):
     shift_logits = outputs.logits[:, :-1, :]
     shift_labels = labels[:, 1:]
     losses = []
+    # print("SHape inputs: ", input_ids.shape[0])
     for bid in range(input_ids.shape[0]):
         one_inp, one_st = input_ids[bid], start_locs[bid]
 
@@ -345,7 +346,7 @@ def get_answer_loss(operation, batch, model, device="cuda:0"):
         position_loss = loss_fct(shift_logits[bid], shift_labels[bid])
         if operation == "ga":  # Negative the direction for GA.
             position_loss = -position_loss
-        print(position_loss)
+        # print(position_loss)
 
         # Simply put equal weights on all answers.
         position_weight = torch.zeros_like(one_inp)
@@ -360,10 +361,10 @@ def get_answer_loss(operation, batch, model, device="cuda:0"):
         one_loss = (position_weight[:-1] * position_loss).sum()
         losses.append(one_loss)
     final_loss = torch.stack(losses).mean()
-    print(final_loss)
-    from sys import exit
+    # print(final_loss)
+    # from sys import exit
 
-    exit(1)
+    # exit(1)
 
     return final_loss
 

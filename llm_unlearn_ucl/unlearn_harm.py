@@ -228,7 +228,7 @@ def main(args) -> None:
             tokenizer, train_dataset, batch_size=args.batch_size
         )
         question_prefix_str = "Problem:"
-        answer_prefix_str = "correct:"
+        answer_prefix_str = "rationale:"
     else:
         print(f"Unlearning dataset not known! dataset: {args.unlearning_dataset}")
         return
