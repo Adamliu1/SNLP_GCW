@@ -17,9 +17,11 @@ from peft import AdaLoraConfig, TaskType, get_peft_model
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import _LRScheduler
 from torch.optim.optimizer import Optimizer
+from torch.utils.data import DataLoader
 from transformers import (AutoModelForCausalLM, AutoTokenizer, PreTrainedModel,
                           PreTrainedTokenizerBase, get_scheduler)
-from utils import create_pku_dataloader_from_dataset, get_answer_loss
+from utils import (create_math_dataloader, create_pku_dataloader_from_dataset,
+                   get_answer_loss)
 
 torch.manual_seed(8888)
 np.random.seed(8888)
@@ -35,7 +37,7 @@ lora_modules = {
 
 def compute_loss(
     model: PreTrainedModel,
-    dataset: Dataset,
+    dataloader: DataLoader,
     args: argparse.Namespace,
     device: torch.device,
     tokenizer: PreTrainedTokenizerBase,
@@ -43,9 +45,6 @@ def compute_loss(
     verbose: bool = False,
 ) -> float:
     with torch.no_grad():
-        dataloader = create_pku_dataloader_from_dataset(
-            tokenizer, dataset, batch_size=args.batch_size
-        )
         if accelerator is not None:
             dataloader = accelerator.prepare(dataloader)
         model.eval()
@@ -62,7 +61,7 @@ def compute_loss(
 
 def retrain_model(
     model: PreTrainedModel,
-    train_dataset: Dataset,
+    train_loader: DataLoader,
     target_loss: float,
     args: argparse.Namespace,
     device: torch.device,
@@ -72,9 +71,6 @@ def retrain_model(
     accelerator: Accelerator,
     verbose: bool,
 ) -> Tuple[int, float]:
-    train_loader = create_pku_dataloader_from_dataset(
-        tokenizer, train_dataset, batch_size=args.batch_size
-    )
     model.train()
     total_samples_trained = 0
     finished = False
@@ -145,9 +141,21 @@ def main(args):
     original_model = accelerator.prepare(original_model)
 
     print("Computing current loss on original model...")
-    eval_dataset = load_dataset("PKU-Alignment/PKU-SafeRLHF", split="test")
+    # eval_dataset = load_dataset("PKU-Alignment/PKU-SafeRLHF", split="test")
+    eval_dataset = load_dataset(
+        "ArtifactAI/arxiv-math-instruct-50k", split="train[:10%]"
+    )
+    eval_dataloader = create_math_dataloader(
+        tokenizer, eval_dataset, batch_size=args.batch_size
+    )
     target_loss = compute_loss(
-        original_model, eval_dataset, args, device, tokenizer, accelerator, args.verbose
+        original_model,
+        eval_dataloader,
+        args,
+        device,
+        tokenizer,
+        accelerator,
+        args.verbose,
     )
 
     print(f"Current loss: {target_loss}")
@@ -192,11 +200,16 @@ def main(args):
     unlearned_model, lr_scheduler = accelerator.prepare(unlearned_model, lr_scheduler)
     optimizer = AcceleratedOptimizer(optimizer, True)
 
-    retrain_dataset = load_dataset("PKU-Alignment/PKU-SafeRLHF", split="train")
     print("Starting retrain...")
+    retrain_dataset = load_dataset(
+        "ArtifactAI/arxiv-math-instruct-50k", split="train[:10%]"
+    )
+    retrain_dataloader = create_math_dataloader(
+        tokenizer, retrain_dataset, batch_size=args.batch_size
+    )
     num_samples, relearned_loss = retrain_model(
         unlearned_model,
-        retrain_dataset,
+        retrain_dataloader,
         target_loss,
         args,
         device,

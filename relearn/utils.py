@@ -9,7 +9,9 @@ import numpy as np
 import pandas as pd
 import torch
 from datasets import Dataset
-from transformers import DataCollatorForLanguageModeling
+from torch.utils.data import DataLoader
+from transformers import (DataCollatorForLanguageModeling,
+                          PreTrainedTokenizerBase)
 
 torch.manual_seed(8888)
 np.random.seed(8888)
@@ -93,6 +95,56 @@ def create_pku_dataloader_from_dataset(tokenizer, dataset, fraction=1.0, batch_s
     )
 
     return dataloader
+
+
+def create_math_dataloader(
+    tokenizer: PreTrainedTokenizerBase,
+    dataset: Dataset,
+    fraction: float = 1.0,
+    batch_size: int = 4,
+) -> DataLoader:
+    def preproccess(examples):
+        """
+        Input: Dict[List]
+        Output: Dict[List]
+        """
+        results = {"input_ids": [], "attention_mask": [], "start_locs": []}
+
+        for i in range(len(examples["question"])):
+            # Subsample if needed.
+            if random.random() > fraction:
+                continue
+
+            prompt = examples["question"][i]
+            response_list = []
+
+            response_list.append(examples["answer"][i])
+
+            # Add all responses to results or skip if none.
+            for response in response_list:
+                text = f"### Question: {prompt}\n ### Answer: {response}"
+                tokenized = tokenizer(text, truncation=True, padding="max_length")
+                results["input_ids"].append(tokenized["input_ids"])
+                results["attention_mask"].append(tokenized["attention_mask"])
+                # Calculate start idx for answer
+                test_text = f"### Question: {prompt}\n ### Answer: "
+                test_tokenized = tokenizer(
+                    test_text, truncation=True, padding="max_length"
+                )
+                results["start_locs"].append(len(test_tokenized["input_ids"]) - 1)
+
+        return results
+
+    dataset = dataset.map(
+        preproccess,
+        batched=True,
+        remove_columns=["question", "answer"],
+    )
+    dataset.set_format(
+        type="torch", columns=["input_ids", "attention_mask", "start_locs"]
+    )
+    data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
+    return DataLoader(dataset, batch_size=batch_size, collate_fn=data_collator)
 
 
 def create_truthfulqa_dataloader(tokenizer, batch_size=4):
