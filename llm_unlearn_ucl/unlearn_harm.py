@@ -149,6 +149,10 @@ def main(args) -> None:
     bad_loss = 0.0
     idx = 0
     start_time = time.time()
+    print("Save model pre-unlearning!")
+    model.save_pretrained(args.model_save_dir + f"_idx_{idx}", from_pt=True)
+    tokenizer.save_pretrained(args.model_save_dir + f"_idx_{idx}")
+
     # Stop if bad loss is big enough or reaching max step.
     while bad_loss < args.max_bad_loss and idx < args.max_unlearn_steps:
         for bad_batch, normal_batch in zip(train_bad_loader, train_normal_loader):
@@ -195,8 +199,8 @@ def main(args) -> None:
 
             # Save model.
             if idx % args.save_every == 0:
-                model.save_pretrained(args.model_save_dir, from_pt=True)
-                tokenizer.save_pretrained(args.model_save_dir)
+                model.save_pretrained(args.model_save_dir + f"_idx_{idx}", from_pt=True)
+                tokenizer.save_pretrained(args.model_save_dir + f"_idx_{idx}")
     end_time = time.time()
     logging.info("Total time: %d sec" % (end_time - start_time))
 

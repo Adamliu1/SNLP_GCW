@@ -50,6 +50,7 @@ def create_mathqa_dataloader_from_dataset(
             results["input_ids"].append(tokenized["input_ids"])
             results["attention_mask"].append(tokenized["attention_mask"])
             # Calculate start idx for answer
+            # XXX: @Andrzej said apparently it might work better without space below??? (check?)
             test_text = f"Problem: {prompt} options: {options} rationale: "
             test_tokenized = tokenizer(test_text, truncation=True, padding="max_length")
             results["start_locs"].append(len(test_tokenized["input_ids"]) - 1)
