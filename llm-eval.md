@@ -75,10 +75,35 @@ This approach attempts to retrain the unlearned model on the forgetting dataset 
 Therefore, this benchmark requires the original model (before unlearning) for computing the baseline loss.
 
 ```bash
-python relearn/relearn.py --original_model <original_model> --unlearned_model <unlearned_model> --batch_size 3
-```
+usage: relearn.py [-h] [--use_lora] [--dataset DATASET] [--max_relearn_epochs MAX_RELEARN_EPOCHS] [--batch_size BATCH_SIZE] [--lr LR] [--original_model ORIGINAL_MODEL] [--unlearned_model UNLEARNED_MODEL] [--model_save_dir MODEL_SAVE_DIR]
+                  [--log_file LOG_FILE] [--cache_dir CACHE_DIR] [-v]
 
+optional arguments:
+  -h, --help            show this help message and exit
+  --use_lora
+  --dataset DATASET     Unlearning dataset to test against (default: gsm8k)
+  --max_relearn_epochs MAX_RELEARN_EPOCHS
+                        Max number of relearning epochs. (default: 10)
+  --batch_size BATCH_SIZE
+                        Batch size of relearning. (default: 2)
+  --lr LR               Relearning LR. (default: 2e-06)
+  --original_model ORIGINAL_MODEL
+                        Name of the original model. (default: facebook/opt-1.3b)
+  --unlearned_model UNLEARNED_MODEL
+                        Name of the unlearned model (default: None)
+  --model_save_dir MODEL_SAVE_DIR
+                        Directory to save relearned model. (don't save if None)
+  --log_file LOG_FILE   Log file name (default: ./logs/default.log)
+  --cache_dir CACHE_DIR
+                        Directory to save cache files. (default: ./.cache)
+  -v, --verbose
+```
 It might be necessary to adjust the learning rate so that the rate of re-learning shows significant differences.
+Here's the arguments that I used:
+```bash
+python relearn/relearn.py --original_model facebook/opt-1.3b --unlearned_model ../snlp-unlearned-models/models/opt1.3b_unlearned --batch_size 2 --lr 1e-4 --model_save_dir ./models/opt1.3b_relearned_gsm8k --log_file ./logs/opt1.3b_relearned_g
+sm8k.log --use_lora -v
+```
 
 ## Using Min-k% prob as an unlearning metric - part of the unlearning loss?
 

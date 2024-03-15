@@ -62,9 +62,7 @@ def create_pku_dataloader_from_dataset(tokenizer, dataset, fraction=1.0, batch_s
                 results["attention_mask"].append(tokenized["attention_mask"])
                 # Calculate start idx for answer
                 test_text = f"### Question: {prompt}\n ### Answer: "
-                test_tokenized = tokenizer(
-                    test_text, truncation=True, padding="max_length"
-                )
+                test_tokenized = tokenizer(test_text, truncation=True, padding="max_length")
                 results["start_locs"].append(len(test_tokenized["input_ids"]) - 1)
 
         return results
@@ -83,27 +81,18 @@ def create_pku_dataloader_from_dataset(tokenizer, dataset, fraction=1.0, batch_s
             "safer_response_id",
         ],
     )
-    dataset.set_format(
-        type="torch", columns=["input_ids", "attention_mask", "start_locs"]
-    )
+    dataset.set_format(type="torch", columns=["input_ids", "attention_mask", "start_locs"])
 
     # Add labels and make it data loader.
     data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
 
-    dataloader = torch.utils.data.DataLoader(
-        dataset, batch_size=batch_size, collate_fn=data_collator
-    )
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, collate_fn=data_collator)
 
     return dataloader
 
 
-def create_math_dataloader(
-    tokenizer: PreTrainedTokenizerBase,
-    dataset: Dataset,
-    fraction: float = 1.0,
-    batch_size: int = 4,
-) -> DataLoader:
-    def preproccess(examples):
+def create_gsm8k_dataloader(tokenizer: PreTrainedTokenizerBase, dataset: Dataset, fraction: float = 1, batch_size: int = 4) -> DataLoader:
+    def preprocess(examples):
         """
         Input: Dict[List]
         Output: Dict[List]
@@ -115,36 +104,99 @@ def create_math_dataloader(
             if random.random() > fraction:
                 continue
 
-            prompt = examples["question"][i]
-            response_list = []
-
-            response_list.append(examples["answer"][i])
+            question = examples["question"][i]
+            answer = examples["answer"][i]
 
             # Add all responses to results or skip if none.
-            for response in response_list:
-                text = f"### Question: {prompt}\n ### Answer: {response}"
-                tokenized = tokenizer(text, truncation=True, padding="max_length")
-                results["input_ids"].append(tokenized["input_ids"])
-                results["attention_mask"].append(tokenized["attention_mask"])
-                # Calculate start idx for answer
-                test_text = f"### Question: {prompt}\n ### Answer: "
-                test_tokenized = tokenizer(
-                    test_text, truncation=True, padding="max_length"
-                )
-                results["start_locs"].append(len(test_tokenized["input_ids"]) - 1)
+            text = f"### Question: {question}\n ### Answer: {answer}"
+            tokenized = tokenizer(text, truncation=True, padding="max_length")
+            results["input_ids"].append(tokenized["input_ids"])
+            results["attention_mask"].append(tokenized["attention_mask"])
+            # Calculate start idx for answer
+            test_text = f"### Question: {question}\n ### Answer: "
+            test_tokenized = tokenizer(test_text, truncation=True, padding="max_length")
+            results["start_locs"].append(len(test_tokenized["input_ids"]) - 1)
 
         return results
 
+    # Need to drop all original columns to emit more than one row for each original row
+    # https://huggingface.co/docs/datasets/about_map_batch#input-size-output-size.
     dataset = dataset.map(
-        preproccess,
+        preprocess,
         batched=True,
         remove_columns=["question", "answer"],
     )
-    dataset.set_format(
-        type="torch", columns=["input_ids", "attention_mask", "start_locs"]
-    )
+    dataset.set_format(type="torch", columns=["input_ids", "attention_mask", "start_locs"])
+
+    # Add labels and make it data loader.
     data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
-    return DataLoader(dataset, batch_size=batch_size, collate_fn=data_collator)
+
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, collate_fn=data_collator)
+
+    return dataloader
+
+
+def create_mathqa_dataloader_from_dataset(tokenizer, dataset, fraction=1.0, batch_size=4):
+    # MathQA structure:
+    """
+    # Problem ; Rationale ; options ; correct ; annotated_formula
+    example:
+    Problem: the banker ' s gain of a certain sum due 3 years hence at 10 % per annum is rs . 36 . what is the present worth ?
+    Rationale: "explanation : t = 3 years r = 10 % td = ( bg × 100 ) / tr = ( 36 × 100 ) / ( 3 × 10 ) = 12 × 10 = rs . 120 td = ( pw × tr ) / 100 ⇒ 120 = ( pw × 3 × 10 ) / 100 ⇒ 1200 = pw × 3 pw = 1200 / 3 = rs . 400 answer : option a"
+    options: a ) rs . 400 , b ) rs . 300 , c ) rs . 500 , d ) rs . 350 , e ) none of these
+    correct: a
+    annoatated_formula: divide(multiply(const_100, divide(multiply(36, const_100), multiply(3, 10))), multiply(3, 10))
+
+    For now, only extracting Problem, options and correct
+    """
+
+    def preprocess(examples):
+        results = {"input_ids": [], "attention_mask": [], "start_locs": []}
+        for i in range(len(examples["Problem"])):
+            # Randomly subsample if too large
+            if random.random() > fraction:
+                continue
+
+            prompt = examples["Problem"][i]
+            rationale = examples["Rationale"][i]
+            options = examples["options"][i]
+            # correct = examples["correct"][i]
+            # annotated_formula["annotated_formula"][i]
+            text = f"Problem: {prompt} options: {options} rationale: {rationale}"
+
+            tokenized = tokenizer(text, truncation=True, padding="max_length")
+            results["input_ids"].append(tokenized["input_ids"])
+            results["attention_mask"].append(tokenized["attention_mask"])
+            # Calculate start idx for answer
+            # XXX: @Andrzej said apparently it might work better without space below??? (check?)
+            test_text = f"Problem: {prompt} options: {options} rationale: "
+            test_tokenized = tokenizer(test_text, truncation=True, padding="max_length")
+            results["start_locs"].append(len(test_tokenized["input_ids"]) - 1)
+
+        return results
+
+    # Need to drop all original columns to emit more than one row for each original row https://huggingface.co/docs/datasets/about_map_batch#input-size-output-size.
+    dataset = dataset.map(
+        preprocess,
+        batched=True,
+        remove_columns=[
+            "Problem",
+            "Rationale",
+            "options",
+            "correct",
+            "annotated_formula",
+            "linear_formula",
+            "category",
+        ],
+    )
+    dataset.set_format(type="torch", columns=["input_ids", "attention_mask", "start_locs"])
+
+    # Add labels and make it data loader.
+    data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
+
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, collate_fn=data_collator)
+
+    return dataloader
 
 
 def create_truthfulqa_dataloader(tokenizer, batch_size=4):
@@ -175,21 +227,13 @@ def create_truthfulqa_dataloader(tokenizer, batch_size=4):
     val_len = int(0.1 * len(dataset))
     test_len = len(dataset) - train_len - val_len
 
-    train_data, val_data, test_data = torch.utils.data.random_split(
-        dataset, [train_len, val_len, test_len]
-    )
+    train_data, val_data, test_data = torch.utils.data.random_split(dataset, [train_len, val_len, test_len])
 
     data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
 
-    train_dataloader = torch.utils.data.DataLoader(
-        train_data, batch_size=batch_size, collate_fn=data_collator, shuffle=True
-    )
-    val_dataloader = torch.utils.data.DataLoader(
-        val_data, batch_size=batch_size, collate_fn=data_collator, shuffle=True
-    )
-    test_dataloader = torch.utils.data.DataLoader(
-        test_data, batch_size=batch_size, collate_fn=data_collator, shuffle=True
-    )
+    train_dataloader = torch.utils.data.DataLoader(train_data, batch_size=batch_size, collate_fn=data_collator, shuffle=True)
+    val_dataloader = torch.utils.data.DataLoader(val_data, batch_size=batch_size, collate_fn=data_collator, shuffle=True)
+    test_dataloader = torch.utils.data.DataLoader(test_data, batch_size=batch_size, collate_fn=data_collator, shuffle=True)
 
     return train_dataloader, val_dataloader, test_dataloader
 
@@ -332,9 +376,7 @@ def get_rand_ans_loss(bad_batch, tokenizer, normal_ans, model, K=5, device="cuda
         # Get question.
         question = ori_text.split("###")[1].split("Question:")[-1].strip()
         question_prefix = f"### Question: {question}\n ### Answer: "
-        tokenized_question_prefix = tokenizer(
-            question_prefix, truncation=True, padding="max_length"
-        )
+        tokenized_question_prefix = tokenizer(question_prefix, truncation=True, padding="max_length")
         # Doesn't need to minus 1 because there's a starting token in the beginning.
         start_loc = len(tokenized_question_prefix)
 
@@ -343,9 +385,7 @@ def get_rand_ans_loss(bad_batch, tokenizer, normal_ans, model, K=5, device="cuda
             random_sample = f"{question_prefix}{rand_ans}"
 
             # Tokenize.
-            tokenized_rs = tokenizer(
-                random_sample, truncation=True, padding="max_length"
-            )
+            tokenized_rs = tokenizer(random_sample, truncation=True, padding="max_length")
             batch_random_features.append(
                 {
                     "input_ids": tokenized_rs["input_ids"],

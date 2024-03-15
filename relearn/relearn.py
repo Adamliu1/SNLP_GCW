@@ -12,7 +12,7 @@ import numpy as np
 import torch
 from accelerate import Accelerator
 from accelerate.accelerator import AcceleratedOptimizer
-from datasets import Dataset, load_dataset
+from datasets import load_dataset
 from peft import AdaLoraConfig, TaskType, get_peft_model
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import _LRScheduler
@@ -20,8 +20,9 @@ from torch.optim.optimizer import Optimizer
 from torch.utils.data import DataLoader
 from transformers import (AutoModelForCausalLM, AutoTokenizer, PreTrainedModel,
                           PreTrainedTokenizerBase, get_scheduler)
-from utils import (create_math_dataloader, create_pku_dataloader_from_dataset,
-                   get_answer_loss)
+from utils import (create_gsm8k_dataloader,
+                   create_mathqa_dataloader_from_dataset,
+                   create_pku_dataloader_from_dataset, get_answer_loss)
 
 torch.manual_seed(8888)
 np.random.seed(8888)
@@ -29,8 +30,7 @@ random.seed(8888)
 
 lora_modules = {
     # attempts to fix lora on olmo
-    "olmo": [f"model.transformer.blocks.{i}.att_proj" for i in range(16)]
-    + [f"model.transformer.blocks.{i}.ff_proj" for i in range(16)],
+    "olmo": [f"model.transformer.blocks.{i}.att_proj" for i in range(16)] + [f"model.transformer.blocks.{i}.ff_proj" for i in range(16)],
     "opt": ["q_proj", "v_proj"],
 }
 
@@ -38,9 +38,7 @@ lora_modules = {
 def compute_loss(
     model: PreTrainedModel,
     dataloader: DataLoader,
-    args: argparse.Namespace,
     device: torch.device,
-    tokenizer: PreTrainedTokenizerBase,
     accelerator: Accelerator = None,
     verbose: bool = False,
 ) -> float:
@@ -50,9 +48,7 @@ def compute_loss(
         model.eval()
         total_loss = 0.0
         for i, batch in enumerate(dataloader):
-            loss = get_answer_loss(
-                "gd", batch, model, device
-            )  # do not flip the sign of the harmful data
+            loss = get_answer_loss("gd", batch, model, device)  # do not flip the sign of the harmful data
             if verbose:
                 print(f"\tComputing loss of batch ({1+i}/{len(dataloader)}): {loss}")
             total_loss += loss.item()
@@ -65,7 +61,6 @@ def retrain_model(
     target_loss: float,
     args: argparse.Namespace,
     device: torch.device,
-    tokenizer: PreTrainedTokenizerBase,
     optimizer: Optimizer,
     lr_scheduler: _LRScheduler,
     accelerator: Accelerator,
@@ -75,7 +70,7 @@ def retrain_model(
     total_samples_trained = 0
     finished = False
     losses = deque()
-    for step in range(args.max_unlearn_steps):
+    for epoch in range(args.max_relearn_epochs):
         for i, batch in enumerate(train_loader):
             optimizer.zero_grad()
             with torch.cuda.amp.autocast():
@@ -90,13 +85,13 @@ def retrain_model(
             if len(losses) > 10:
                 losses.popleft()
 
-            message = f"\t\tEpoch {step + 1}, batch {i}/{len(train_loader)}, loss for current batch: {batch_loss}"
+            message = f"\t\tepoch:{epoch + 1},batch:{i},batch_loss:{batch_loss}"
             if verbose:
                 print(message)
             logging.info(message)
             if np.mean(losses) <= target_loss:
                 finished = True
-                message = f"Relearn finished at iteration {step + 1}. Current mean loss: {np.mean(losses)}"
+                message = "finished"
                 logging.info(message)
                 if verbose:
                     print(message)
@@ -113,9 +108,7 @@ def main(args):
 
     print(f"Loading original model {args.original_model}...")
     # Load original model and compute its loss on the harmful dataset
-    original_model = AutoModelForCausalLM.from_pretrained(
-        args.original_model, cache_dir=args.cache_dir, trust_remote_code=True
-    )
+    original_model = AutoModelForCausalLM.from_pretrained(args.original_model, cache_dir=args.cache_dir, trust_remote_code=True)
     # If use LoRA.
     if args.use_lora:
         target_modules = []
@@ -134,39 +127,45 @@ def main(args):
             original_model = get_peft_model(original_model, peft_config)
     original_model.to(device)
 
-    tokenizer = AutoTokenizer.from_pretrained(
-        args.original_model, cache_dir=args.cache_dir
-    )
-    num_training_steps = args.max_unlearn_steps
+    tokenizer = AutoTokenizer.from_pretrained(args.original_model, cache_dir=args.cache_dir)
+    num_training_steps = args.max_relearn_epochs
     original_model = accelerator.prepare(original_model)
 
+    print(f"Constructing dataloader for {args.dataset}")
+    if args.dataset == "gsm8k":
+        eval_dataset = load_dataset("gsm8k", "main", split="train[:5%]")
+        eval_dataloader = create_gsm8k_dataloader(tokenizer, eval_dataset, batch_size=args.batch_size)
+        retrain_dataset = load_dataset("gsm8k", "main", split="train[5%:20%]")
+        retrain_dataloader = create_gsm8k_dataloader(tokenizer, retrain_dataset, batch_size=args.batch_size)
+    elif args.dataset == "PKU-Alignment/PKU-SafeRLHF":
+        eval_dataset = load_dataset("PKU-Alignment/PKU-SafeRLHF", split="test[:10%]")
+        eval_dataloader = create_pku_dataloader_from_dataset(tokenizer, eval_dataset, batch_size=args.batch_size)
+        retrain_dataset = load_dataset("PKU-Alignment/PKU-SafeRLHF", split="train")
+        retrain_dataloader = create_pku_dataloader_from_dataset(tokenizer, retrain_dataset, batch_size=args.batch_size)
+    elif args.dataset == "math_qa":
+        eval_dataset = load_dataset("math_qa", split="train[:5%]")
+        eval_dataloader = create_mathqa_dataloader_from_dataset(tokenizer, eval_dataset, batch_size=args.batch_size)
+        retrain_dataset = load_dataset("math_qa", split="train[5%:20%]")
+        retrain_dataloader = create_mathqa_dataloader_from_dataset(tokenizer, eval_dataset, batch_size=args.batch_size)
+    else:
+        raise ValueError(f"{args.dataset} is not a valid dataset!")
+
     print("Computing current loss on original model...")
-    # eval_dataset = load_dataset("PKU-Alignment/PKU-SafeRLHF", split="test")
-    eval_dataset = load_dataset(
-        "ArtifactAI/arxiv-math-instruct-50k", split="train[:10%]"
-    )
-    eval_dataloader = create_math_dataloader(
-        tokenizer, eval_dataset, batch_size=args.batch_size
-    )
     target_loss = compute_loss(
         original_model,
         eval_dataloader,
-        args,
         device,
-        tokenizer,
         accelerator,
         args.verbose,
     )
 
     print(f"Current loss: {target_loss}")
-    logging.info(f"Current loss PKU on test set:{target_loss}")
-    del original_model
+    logging.info(f"orig_model_loss:{target_loss}")
+    del original_model, eval_dataset, eval_dataloader
 
     print(f"Loading unlearned model {args.unlearned_model}...")
     # Load unlearned model for timed relearning
-    unlearned_model = AutoModelForCausalLM.from_pretrained(
-        args.unlearned_model, cache_dir=args.cache_dir, trust_remote_code=True
-    )
+    unlearned_model = AutoModelForCausalLM.from_pretrained(args.unlearned_model, cache_dir=args.cache_dir, trust_remote_code=True)
 
     # If use LoRA.
     if args.use_lora:
@@ -186,11 +185,9 @@ def main(args):
             unlearned_model = get_peft_model(unlearned_model, peft_config)
     unlearned_model.to(device)
 
-    tokenizer = AutoTokenizer.from_pretrained(
-        args.unlearned_model, cache_dir=args.cache_dir
-    )
+    tokenizer = AutoTokenizer.from_pretrained(args.unlearned_model, cache_dir=args.cache_dir)
     optimizer = AdamW(unlearned_model.parameters(), lr=args.lr)
-    num_training_steps = args.max_unlearn_steps
+    num_training_steps = args.max_relearn_epochs
     lr_scheduler = get_scheduler(
         "linear",
         optimizer=optimizer,
@@ -201,26 +198,19 @@ def main(args):
     optimizer = AcceleratedOptimizer(optimizer, True)
 
     print("Starting retrain...")
-    retrain_dataset = load_dataset(
-        "ArtifactAI/arxiv-math-instruct-50k", split="train[:10%]"
-    )
-    retrain_dataloader = create_math_dataloader(
-        tokenizer, retrain_dataset, batch_size=args.batch_size
-    )
     num_samples, relearned_loss = retrain_model(
         unlearned_model,
         retrain_dataloader,
         target_loss,
         args,
         device,
-        tokenizer,
         optimizer,
         lr_scheduler,
         accelerator,
         args.verbose,
     )
-    logging.info(f"Steps before reaching target_loss: {num_samples}")
-    logging.info(f"Relearned loss: {relearned_loss}")
+    logging.info(f"num_relearn_steps: {num_samples}")
+    logging.info(f"relearned_loss: {relearned_loss}")
     print(f"num_samples: {num_samples}")
     if args.use_lora:
         unlearned_model = unlearned_model.merge_and_unload()
@@ -232,38 +222,31 @@ def main(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
-    )
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("--use_lora", action="store_true")
+    parser.add_argument("--dataset", type=str, default="gsm8k", help="Unlearning dataset to test against. Supported options: [gsm8k, math_qa, PKU-Alignment/PKU-SafeRLHF]")
     parser.add_argument(
-        "--max_unlearn_steps",
+        "--max_relearn_epochs",
         type=int,
-        default=10000,
-        help="Max number of unlearning steps.",
+        default=10,
+        help="Max number of relearning epochs.",
     )
-    parser.add_argument(
-        "--batch_size", type=int, default=2, help="Batch size of unlearning."
-    )
-    parser.add_argument("--lr", type=float, default=2e-6, help="Unlearning LR.")
+    parser.add_argument("--batch_size", type=int, default=2, help="Batch size of relearning.")
+    parser.add_argument("--lr", type=float, default=2e-6, help="Relearning LR.")
     parser.add_argument(
         "--original_model",
         type=str,
         default="facebook/opt-1.3b",
         help="Name of the original model.",
     )
-    parser.add_argument(
-        "--unlearned_model", type=str, help="Name of the unlearned model"
-    )
+    parser.add_argument("--unlearned_model", type=str, help="Name of the unlearned model")
     parser.add_argument(
         "--model_save_dir",
         type=str,
         default="",
-        help="Directory to save relearned model.",
+        help="Directory to save relearned model. Don't save if the option is not set.",
     )
-    parser.add_argument(
-        "--log_file", type=str, default="logs/unlearn.log", help="Log file name"
-    )
+    parser.add_argument("--log_file", type=str, default="./logs/default.log", help="Log file name")
     parser.add_argument(
         "--cache_dir",
         type=str,
