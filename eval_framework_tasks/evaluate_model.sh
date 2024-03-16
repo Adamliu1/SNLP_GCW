@@ -8,7 +8,7 @@ EXPERIMENT_PATH=/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks/$E
 
 RESULTS_PATH=$EXPERIMENT_PATH/results
 LOGS_PATH=$EXPERIMENT_PATH/logs
-CACHE_PATH=$EXPERIMENT_PATH/.cache
+CACHE_PATH=$EXPERIMENT_PATH/.cache_$MODEL_NAME
 
 mkdir $EXPERIMENT_PATH
 mkdir $RESULTS_PATH
@@ -22,9 +22,9 @@ accelerate launch -m lm_eval --model hf \
     --tasks arc_challenge,hellaswag,truthfulqa,mmlu,winogrande,gsm8k \
     --batch_size auto \
     --trust_remote_code True \
-    --output_path $RESULTS_PATH/$MODEL_NAME.json \
+    --output_path $RESULTS_PATH/$MODEL_NAME/$MODEL_NAME.json \
     --wandb_args project=snlp-lm-eval-harness,name=$EXPERIMENT_NAME-$MODEL_NAME \
     --log_samples \
-    --use_cache $CACHE_PATH&> $LOGS_PATH/$MODEL_NAME.log 
+    --use_cache $CACHE_PATH &> $LOGS_PATH/$MODEL_NAME.log 
     
 date
