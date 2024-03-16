@@ -10,8 +10,7 @@ import pandas as pd
 import torch
 from datasets import Dataset
 from torch.utils.data import DataLoader
-from transformers import (DataCollatorForLanguageModeling,
-                          PreTrainedTokenizerBase)
+from transformers import DataCollatorForLanguageModeling, PreTrainedTokenizerBase
 
 torch.manual_seed(8888)
 np.random.seed(8888)
@@ -213,12 +212,13 @@ def create_truthfulqa_dataloader(tokenizer, batch_size=4):
     df = pd.read_csv("data/TruthfulQA.csv")
     questions, good_answers = df["Question"].values, df["Best Answer"].values
 
-    data = {"input_ids": [], "attention_mask": []}
+    data = {"input_ids": [], "attention_mask": [], "start_locs": []}
     for question, good_answer in zip(questions, good_answers):
         text = f"### Question: {question}\n ### Answer: {good_answer}"
         tokenized = tokenizer(text, truncation=True, padding="max_length")
         data["input_ids"].append(tokenized["input_ids"])
         data["attention_mask"].append(tokenized["attention_mask"])
+        data["start_locs"].append(0)  # tokenized["input_ids"] - 1 gives 0 loss.
 
     dataset = Dataset.from_dict(data)
 
