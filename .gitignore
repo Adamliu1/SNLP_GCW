@@ -7,17 +7,18 @@ venv/
 __pycache__
 
 # Do not upload samples from eval experiemnts
-eval_framework_tasks/*/results/*.jsonl
+eval_framework_tasks/*/results/*/*.jsonl
 eval_framework_tasks/wandb
 
 # Do not upload eval datasets
-eval_framework_tasks/*.db
+eval_framework_tasks/*/*.db
 
 # Do not upload heavy weight division
 llm_unlearn_ucl/models
 llm_unlearn_ucl/logs
 llm_unlearn_ucl/data
 models
+snlp-unlearned-models
 
 # Temporary ignore out files,TODO: might want to add them later to keep track of results
 out
