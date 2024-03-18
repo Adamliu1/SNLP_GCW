@@ -11,9 +11,9 @@ import torch
 from datasets import Dataset
 from transformers import DataCollatorForLanguageModeling
 
-torch.manual_seed(8888)
-np.random.seed(8888)
-random.seed(8888)
+# torch.manual_seed(8888)
+# np.random.seed(8888)
+# random.seed(8888)
 
 
 def create_pku_dataloader_from_dataset(tokenizer, dataset, fraction=1.0, batch_size=4):
@@ -36,7 +36,11 @@ def create_pku_dataloader_from_dataset(tokenizer, dataset, fraction=1.0, batch_s
         Input: Dict[List]
         Output: Dict[List]
         """
-        results = {"input_ids": [], "attention_mask": [], "start_locs": []}
+        results = {
+            "input_ids": [],
+            "attention_mask": [],
+            "start_locs": [],
+        }
 
         for i in range(len(examples["prompt"])):
             # Subsample if needed.
@@ -56,6 +60,7 @@ def create_pku_dataloader_from_dataset(tokenizer, dataset, fraction=1.0, batch_s
             for response in response_list:
                 text = f"### Question: {prompt}\n ### Answer: {response}"
                 tokenized = tokenizer(text, truncation=True, padding="max_length")
+
                 results["input_ids"].append(tokenized["input_ids"])
                 results["attention_mask"].append(tokenized["attention_mask"])
                 # Calculate start idx for answer
@@ -82,7 +87,8 @@ def create_pku_dataloader_from_dataset(tokenizer, dataset, fraction=1.0, batch_s
         ],
     )
     dataset.set_format(
-        type="torch", columns=["input_ids", "attention_mask", "start_locs"]
+        type="torch",
+        columns=["input_ids", "attention_mask", "start_locs"],
     )
 
     # Add labels and make it data loader.
