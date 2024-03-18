@@ -1,6 +1,8 @@
 import argparse
+import os
 import re
-from typing import Any, Dict, List
+from os import PathLike
+from typing import Any, Dict, List, Optional
 
 from matplotlib import pyplot as plt
 from numpy import asarray, convolve, inf, ones
@@ -11,6 +13,21 @@ dataset_pattern = re.compile(r".*dataset:\s*(.+)")
 original_model_pattern = re.compile(r".*original_model:\s*(.+)")
 unlearnt_model_pattern = re.compile(r".*unlearned_model:\s*(.+)")
 num_samples_pattern = re.compile(r".*num_relearn_steps:\s*(\d+)")
+FIG_SIZE = (10, 8)
+
+
+def show_plot(fig, path: Optional[PathLike]):
+    if path is not None:
+        plt.savefig(path)
+    if os.getenv("SSH_TTY"):
+        try:
+            import imgcat
+
+            imgcat.imgcat(fig)
+        except ImportError:
+            pass
+    else:
+        plt.show()
 
 
 def clip_losses(parsed_logs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -88,14 +105,17 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     args.log_file.sort(key=lambda x: (len(x), x))
-    plt.yscale("log")
+    results = [parse_log(i, args.smooth_factor) for i in args.log_file]
+    if args.clipped:
+        results = clip_losses(results)
     if len(args.log_file) == 1:
         data = args.log_file[0]
         parsed_result = parse_log(data, args.smooth_factor)
-        plt.figure()
+        fig = plt.figure(dpi=200)
         plt.title(
             f"Loss function for relearning in {parsed_result['num_samples']} samples.\nDataset: {parsed_result['dataset']}, base model: {parsed_result['original_model']}, unlearned_model: {parsed_result['unlearned_model'].split('/')[-1]}"
         )
+        plt.yscale("log")
         plt.plot(
             range(1, len(parsed_result["losses"]) + 1),
             parsed_result["losses"],
@@ -110,21 +130,20 @@ if __name__ == "__main__":
             label="loss of the original model",
         )
         plt.legend()
-        plt.show()
 
         for key in parsed_result:
             if not isinstance(parsed_result[key], list):
                 print(f"{key}:\t{parsed_result[key]}")
+        show_plot(fig, "loss_funcs.png")
     elif args.merged:
-        results = [parse_log(i, args.smooth_factor) for i in args.log_file]
-        if args.clipped:
-            results = clip_losses(results)
+        fig = plt.figure(dpi=200, figsize=FIG_SIZE)
         for parsed_result in results:
             plt.plot(
                 range(1, len(parsed_result["losses"]) + 1),
                 parsed_result["losses"],
                 label=make_label(parsed_result),
             )
+        plt.yscale("log")
         plt.title(
             f"Comparison of relearning rate using the loss on {results[0]['dataset']}"
         )
@@ -137,13 +156,13 @@ if __name__ == "__main__":
             label=f"loss of the original model: {parsed_result['prev_loss']}",
         )
         plt.legend()
-        plt.show()
-
+        show_plot(fig, "loss_funcs.png")
     else:
         results = [parse_log(i, args.smooth_factor) for i in args.log_file]
         if args.clipped:
             results = clip_losses(results)
-        fig, ax = plt.subplots(len(args.log_file), 1)
+        plt.yscale("log")
+        fig, ax = plt.subplots(len(args.log_file), 1, dpi=200, figsize=FIG_SIZE)
         for idx, log_file in enumerate(args.log_file):
             parsed_result = results[idx]
             ax[idx].set_title(
@@ -163,4 +182,16 @@ if __name__ == "__main__":
                 label=f"loss of the original model: {parsed_result['losses']}",
             )
             ax[idx].legend()
-        plt.show()
+        show_plot(fig, "loss_funcs.png")
+    if len(results) > 1:
+        fig = plt.figure(dpi=200, figsize=FIG_SIZE)
+        plt.yscale("log")
+        plt.title("Number of samples required for relearning for each model.")
+        plt.xlabel("Model")
+        plt.ylabel("Number of samples")
+        plt.plot(
+            [i["unlearned_model"].split("_")[-1] for i in results],
+            [i["num_samples"] for i in results],
+        )
+        fig.autofmt_xdate()
+        show_plot(fig, "num_samples.png")
