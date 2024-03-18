@@ -18,15 +18,13 @@ from torch.optim import AdamW
 from torch.optim.lr_scheduler import _LRScheduler
 from torch.optim.optimizer import Optimizer
 from torch.utils.data import DataLoader
-from transformers import (AutoModelForCausalLM, AutoTokenizer, PreTrainedModel,
-                          PreTrainedTokenizerBase, get_scheduler)
-from utils import (create_gsm8k_dataloader,
-                   create_mathqa_dataloader_from_dataset,
-                   create_pku_dataloader_from_dataset, get_answer_loss)
+from transformers import AutoModelForCausalLM, AutoTokenizer, PreTrainedModel, PreTrainedTokenizerBase, get_scheduler
+from utils import create_gsm8k_dataloader, create_mathqa_dataloader_from_dataset, create_pku_dataloader_from_dataset, create_truthfulqa_dataloader, get_answer_loss
 
-torch.manual_seed(8888)
-np.random.seed(8888)
-random.seed(8888)
+SEED = 114514
+torch.manual_seed(SEED)
+np.random.seed(SEED)
+random.seed(SEED)
 
 lora_modules = {
     # attempts to fix lora on olmo
@@ -135,7 +133,7 @@ def main(args):
     if args.dataset == "gsm8k":
         eval_dataset = load_dataset("gsm8k", "main", split="train[:5%]")
         eval_dataloader = create_gsm8k_dataloader(tokenizer, eval_dataset, batch_size=args.batch_size)
-        retrain_dataset = load_dataset("gsm8k", "main", split="train[5%:20%]")
+        retrain_dataset = load_dataset("gsm8k", "main", split="train[5%:]")
         retrain_dataloader = create_gsm8k_dataloader(tokenizer, retrain_dataset, batch_size=args.batch_size)
     elif args.dataset == "PKU-Alignment/PKU-SafeRLHF":
         eval_dataset = load_dataset("PKU-Alignment/PKU-SafeRLHF", split="test[:10%]")
@@ -145,8 +143,12 @@ def main(args):
     elif args.dataset == "math_qa":
         eval_dataset = load_dataset("math_qa", split="train[:5%]")
         eval_dataloader = create_mathqa_dataloader_from_dataset(tokenizer, eval_dataset, batch_size=args.batch_size)
-        retrain_dataset = load_dataset("math_qa", split="train[5%:20%]")
+        retrain_dataset = load_dataset("math_qa", split="train[5%:]")
         retrain_dataloader = create_mathqa_dataloader_from_dataset(tokenizer, eval_dataset, batch_size=args.batch_size)
+    elif args.dataset == "truthfulqa":
+        retrain_dataloader, eval_dataloader, _ = create_truthfulqa_dataloader(tokenizer, batch_size=args.batch_size)
+        eval_dataset = None
+        retrain_dataset = None
     else:
         raise ValueError(f"{args.dataset} is not a valid dataset!")
 
@@ -187,9 +189,10 @@ def main(args):
 
     tokenizer = AutoTokenizer.from_pretrained(args.unlearned_model, cache_dir=args.cache_dir)
     optimizer = AdamW(unlearned_model.parameters(), lr=args.lr)
-    num_training_steps = args.max_relearn_epochs
+    # num_training_steps = args.max_relearn_epochs
+    num_training_steps = 10000
     lr_scheduler = get_scheduler(
-        "linear",
+        "cosine",
         optimizer=optimizer,
         num_warmup_steps=0,
         num_training_steps=num_training_steps,
@@ -224,7 +227,7 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("--use_lora", action="store_true")
-    parser.add_argument("--dataset", type=str, default="gsm8k", help="Unlearning dataset to test against. Supported options: [gsm8k, math_qa, PKU-Alignment/PKU-SafeRLHF]")
+    parser.add_argument("--dataset", type=str, default="gsm8k", help="Unlearning dataset to test against. Supported options: [gsm8k, math_qa, PKU-Alignment/PKU-SafeRLHF, truthfulqa]")
     parser.add_argument(
         "--max_relearn_epochs",
         type=int,
