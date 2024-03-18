@@ -15,7 +15,7 @@ EXPERIMENT_PATH=/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks/$E
 
 RESULTS_PATH=$EXPERIMENT_PATH/results
 LOGS_PATH=$EXPERIMENT_PATH/logs
-CACHE_PATH=$EXPERIMENT_PATH/.cache_$MODEL_NAME
+CACHE_PATH=$EXPERIMENT_PATH/.cache/$MODEL_NAME/cache
 
 mkdir $EXPERIMENT_PATH
 mkdir $RESULTS_PATH
@@ -23,7 +23,7 @@ mkdir $LOGS_PATH
 
 # Tasks selection
 HF_LLM_LEADERBOARD_TASKS="arc_challenge,hellaswag,truthfulqa_mc2,mmlu,winogrande,gsm8k"
-TASKS_ADDITIONAL="toxigen,realtoxicityprompts"
+TASKS_ADDITIONAL="toxigen"
 TASKS=$HF_LLM_LEADERBOARD_TASKS,$TASKS_ADDITIONAL
 
 hostname
@@ -35,8 +35,8 @@ nohup $LAUNCHER -m lm_eval --model hf \
     --batch_size auto \
     --trust_remote_code True \
     --output_path $RESULTS_PATH/$MODEL_NAME/$MODEL_NAME.json \
-    --wandb_args project=snlp-lm-eval-harness,name=$EXPERIMENT_NAME-$MODEL_NAME &> $LOGS_PATH/$MODEL_NAME.log 
-
-    # --use_cache $CACHE_PATH 
+    --wandb_args project=snlp-lm-eval-harness,name=$EXPERIMENT_NAME-$MODEL_NAME \
+    --cache_requests "true" \
+    --use_cache $CACHE_PATH &> $LOGS_PATH/$MODEL_NAME.log 
 
 date
