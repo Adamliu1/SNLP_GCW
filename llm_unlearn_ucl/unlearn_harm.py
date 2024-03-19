@@ -148,7 +148,7 @@ def main(args) -> None:
     train_bad_loader = create_pku_dataloader_from_dataset(tokenizer, train_dataset, batch_size=args.batch_size)
 
     # Get normal data.
-    train_normal_loader, _, _, train_normal_dataset = create_truthfulqa_dataloader(tokenizer, batch_size=args.batch_size)
+    train_normal_loader, _, _, train_normal_dataset = create_truthfulqa_dataloader(tokenizer, batch_size=args.batch_size, seed=args.seed if args.shuffle else None)
     normal_sample_path = f"{args.samples_save_dir}/normal_{args.epoch_size}_samples.json"
     with open(normal_sample_path, "w") as fin:
         print(f"Writing normal samples to {normal_sample_path}")
