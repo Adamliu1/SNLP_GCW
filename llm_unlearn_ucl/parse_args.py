@@ -2,9 +2,7 @@ import argparse
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
-    )
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument("--use_lora", action="store_true")
 
@@ -14,9 +12,7 @@ def parse_args() -> argparse.Namespace:
         default=1000,
         help="Max number of unlearning steps.",
     )
-    parser.add_argument(
-        "--bad_weight", type=float, default=0.5, help="Weight on the bad loss."
-    )
+    parser.add_argument("--bad_weight", type=float, default=0.5, help="Weight on the bad loss.")
     parser.add_argument(
         "--random_weight",
         type=float,
@@ -29,9 +25,7 @@ def parse_args() -> argparse.Namespace:
         default=1,
         help="Weight on normal loss.",
     )
-    parser.add_argument(
-        "--batch_size", type=int, default=2, help="Batch size of unlearning."
-    )
+    parser.add_argument("--batch_size", type=int, default=2, help="Batch size of unlearning.")
     parser.add_argument("--lr", type=float, default=2e-6, help="Unlearning LR.")
     parser.add_argument(
         "--max_bad_loss",
@@ -60,9 +54,7 @@ def parse_args() -> argparse.Namespace:
         help="The directory that saves the sample used for unlearning",
     )
 
-    parser.add_argument(
-        "--save_every", type=int, default=500, help="How many steps to save model."
-    )
+    parser.add_argument("--save_every", type=int, default=500, help="How many steps to save model.")
     parser.add_argument(
         "--log_file",
         type=str,
@@ -82,7 +74,7 @@ def parse_args() -> argparse.Namespace:
         default="8888",
         help="Seed used for unlearning. Default codebase uses 8888 as default seed.",
     )
-    
+
     parser.add_argument(
         "--sequential",
         action="store_true",
@@ -96,8 +88,7 @@ def parse_args() -> argparse.Namespace:
         default=True,
         help="Whether to enable experiment trackers for logging.",
     )
-    
-    
+
     parser.add_argument(
         "--wandb_log_feq",
         type=int,
@@ -117,6 +108,7 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="The name of the wandb run,",
     )
+    parser.add_argument("--num_running_loss", type=int, default=10, help="Number of losses to keep for computing running average loss.")
 
     args = parser.parse_args()
 
