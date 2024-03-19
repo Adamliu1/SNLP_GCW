@@ -39,6 +39,7 @@ from utils import (
 import wandb
 from typing import List
 from transformers.tokenization_utils_base import BatchEncoding
+from matplotlib import pyplot as plt
 
 
 def set_seed(seed_num: int) -> None:
@@ -371,18 +372,32 @@ def main(args) -> None:
         ############ Compute Min-K for the batch ##########
         # TODO: Do we just comput min-K for data being unlearned? or full question?
         # TODO: should we fix the size of input values (WikiMIA they used the same sample sizes)
-        mink_probs = compute_mink_prob(
-            model=model, tokenizer=tokenizer, batch=bad_batch, K=args.mink_prob_k
-        )
+        # mink_probs = compute_mink_prob(
+        #     model=model, tokenizer=tokenizer, batch=bad_batch, K=args.mink_prob_k
+        # )
         mink_probs_base = compute_mink_prob(
             model=pretrained_model,
             tokenizer=tokenizer,
             batch=bad_batch,
             K=args.mink_prob_k,
         )
+
+        mink_probs_base_normal = compute_mink_prob(
+            model=pretrained_model,
+            tokenizer=tokenizer,
+            batch=normal_batch,
+            K=args.mink_prob_k,
+        )
         # TODO: THIS NEED TO BE CALCULATED AFTER GRADIENT STEP!!! (otherwise we are comparing against previous gradient update!)
         mink_probs_after_step = compute_mink_prob(
             model=model, tokenizer=tokenizer, batch=bad_batch, K=args.mink_prob_k
+        )
+
+        mink_probs_after_step_normal = compute_mink_prob(
+            model=model,
+            tokenizer=tokenizer,
+            batch=normal_batch,
+            K=args.mink_prob_k,
         )
         ############ GA on answer only. ############
         bad_loss = get_answer_loss("ga", bad_batch, model, device=device)
@@ -426,12 +441,14 @@ def main(args) -> None:
                     "normal_loss": normal_loss,
                     # NOTE: Sould I negative the sign here????
                     "final_loss": loss,
-                    "ratio mink unlearning/reference": np.mean(mink_probs)
-                    / np.mean(mink_probs_base),
-                    "ratio mink unlearning_after_step/reference": np.mean(
+                    "ratio (bad) mink unlearning/reference": np.mean(
                         mink_probs_after_step
                     )
                     / np.mean(mink_probs_base),
+                    "ratio (normal) mink unlearning/reference": np.mean(
+                        mink_probs_after_step_normal
+                    )
+                    / np.mean(mink_probs_base_normal),
                 }
             )
             # Log batch samples with optional decoding
@@ -442,8 +459,8 @@ def main(args) -> None:
             f"epoch: {epoch}, batch: {idx}, "
             f"bad_loss: {-bad_loss:.2f}, "
             f"current_div_loss: {normal_loss:.2f}, "
-            f"ratio mink unlearning/reference: {np.mean(mink_probs)/np.mean(mink_probs_base):.3f}, "
-            f"ratio mink unlearning_after_step/reference: {np.mean(mink_probs_after_step)/np.mean(mink_probs_base):.3f}"
+            f"ratio (bad) mink unlearning/reference: {np.mean(mink_probs_after_step)/np.mean(mink_probs_base):.3f}"
+            f"ratio (normal) mink unlearning/reference: {np.mean(mink_probs_after_step_normal)/np.mean(mink_probs_base_normal):.3f}"
         )
         logging.info(stats)
         print(stats)
