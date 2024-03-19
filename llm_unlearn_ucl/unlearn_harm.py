@@ -39,7 +39,6 @@ from utils import (
 import wandb
 from typing import List
 from transformers.tokenization_utils_base import BatchEncoding
-from matplotlib import pyplot as plt
 
 
 def set_seed(seed_num: int) -> None:
