@@ -129,6 +129,7 @@ def main(args) -> None:
     tokenizer = AutoTokenizer.from_pretrained(args.model_name, cache_dir=args.cache_dir)
 
     # Load harmful data.
+    
     train_dataset = load_dataset("PKU-Alignment/PKU-SafeRLHF", split="train")
     train_bad_loader = create_pku_dataloader_from_dataset(
         tokenizer, train_dataset, batch_size=args.batch_size
@@ -187,8 +188,21 @@ def main(args) -> None:
     )
 
     # Stop if bad loss is big enough or reaching max step.
-    while bad_loss < args.max_bad_loss and idx < args.max_unlearn_steps:
-        for bad_batch, normal_batch in zip(train_bad_loader, train_normal_loader):
+    train_bad_loader_gen = iter(train_bad_loader)
+    while bad_loss < args.max_bad_loss:
+        for normal_batch in train_normal_loader: 
+            
+            if idx >= args.max_unlearn_steps:
+                # can still have more than given nr of max steps. stops at the closest value divisible by batch size
+                break
+            
+            try: # repeatedly cycle through the bad data
+                bad_batch = next(train_bad_loader_gen)
+            except StopIteration:
+                # restart the generator if the previous generator is exhausted.
+                train_bad_loader_gen = iter(train_bad_loader)
+                bad_batch = next(train_bad_loader_gen)
+                
             ############ GA on answer only. ############
             bad_loss = get_answer_loss("ga", bad_batch, model, device=device)
 
@@ -283,6 +297,8 @@ def main(args) -> None:
 
                     # Log the artifact to wandb
                     wandb.log_artifact(artifact)
+                    
+            
 
     end_time = time.time()
     logging.info("Total time: %d sec" % (end_time - start_time))
