@@ -24,7 +24,7 @@ def fetch_log_data(log_dir: str) -> dict[int, dict]:
     log_file_names = os.listdir(log_dir)
     assert (
         log_file_names
-    ), "Beep boop, no files in a directory provided ({log_dir_name}). Maybe you forgot to copy them?"
+    ), f"Beep boop, no files in a directory provided ({log_dir_name}). Maybe you forgot to copy them?"
 
     log_files_contents = {}
     for file_name in log_file_names:
