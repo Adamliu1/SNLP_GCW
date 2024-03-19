@@ -185,7 +185,7 @@ def main(args) -> None:
     # pretrained_model = AutoModelForCausalLM.from_pretrained(args.model_name, cache_dir=args.cache_dir, load_in_8bit=True, torch_dtype=torch.float32)
     pretrained_model.to(device)
 
-    def run_training_batch(bad_batch, normal_batch, idx, bad_loader_size: int, normal_loader_size: int):
+    def run_training_batch(bad_batch, normal_batch, idx, bad_loader_size: int, normal_loader_size: int, epoch: int):
         ############ GA on answer only. ############
         bad_loss = get_answer_loss("ga", bad_batch, model, device=device)
 
@@ -229,7 +229,7 @@ def main(args) -> None:
             batch_samples_logger_bad.log_accumulated_samples(wandb)
             batch_samples_logger_normal.log_accumulated_samples(wandb)
 
-        stats = f"batch: {idx}, " f"bad_loss: {-bad_loss:.2f}, " f"current_div_loss: {normal_loss:.2f}, "
+        stats = f"epoch: {epoch}, batch: {idx}, " f"bad_loss: {-bad_loss:.2f}, " f"current_div_loss: {normal_loss:.2f}, "
         logging.info(stats)
         print(stats)
         idx += 1
@@ -286,7 +286,7 @@ def main(args) -> None:
                 # Log the artifact to wandb
                 wandb.log_artifact(artifact)
 
-        return bad_loss
+        return loss, bad_loss
 
     print("#################### START UNLEARNING ####################")
     # Start unlearning.
@@ -304,14 +304,13 @@ def main(args) -> None:
     while epoch_num < args.num_epochs:
         accu_bad_loss = None
         for normal_batch, bad_batch in zip(train_normal_loader, train_bad_loader):
-            bad_loss = run_training_batch(bad_batch, normal_batch, idx, bad_loader_size, normal_loader_size)
+            loss, bad_loss = run_training_batch(bad_batch, normal_batch, idx, bad_loader_size, normal_loader_size, epoch_num)
             idx += 1
             if args.sequential:
-                accelerator.backward(bad_loss)
+                accelerator.backward(loss)
                 optimizer.step()
                 lr_scheduler.step()
                 optimizer.zero_grad()
-                epoch_num += 1
                 running_loss.append(bad_loss.item())
                 if np.mean(running_loss) > args.max_bad_loss:
                     break
@@ -319,25 +318,23 @@ def main(args) -> None:
                 # Non-sequential
                 # NOTE: the whole dataset is considered to be one single batch.
                 # Back-prop after the whole dataset has been finished.
+                accelerator.backward(loss / num_batches_per_epoch)
                 if accu_bad_loss is None:
                     accu_bad_loss = bad_loss
                 else:
                     accu_bad_loss += bad_loss
+        epoch_num += 1
         if args.sequential:
             if np.mean(running_loss) > args.max_bad_loss:
                 break
-
         else:
             # NOTE: non-sequential.
-            accelerator.backward(accu_bad_loss / num_batches_per_epoch)
             optimizer.step()
             lr_scheduler.step()
             optimizer.zero_grad()
-            epoch_num += 1
             running_loss.append(accu_bad_loss.item())
             if np.mean(running_loss) > args.max_bad_loss:
                 break
-        epoch_num += 1
 
     end_time = time.time()
     logging.info("Total time: %d sec" % (end_time - start_time))
