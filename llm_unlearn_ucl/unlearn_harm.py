@@ -21,16 +21,21 @@ import hf_olmo
 import numpy as np
 import torch
 import wandb
+import pandas as pd
 from accelerate import Accelerator
 from datasets import load_dataset
-from pandas import DataFrame
 from parse_args import parse_args
 from peft import AdaLoraConfig, TaskType, get_peft_model
 from torch.optim import AdamW
 from transformers import AutoModelForCausalLM, AutoTokenizer, get_scheduler
-from utils import (compute_kl, create_pku_dataloader_from_dataset,
-                   create_truthfulqa_dataloader, get_answer_loss,
-                   get_rand_ans_loss, get_truthfulQA_answers_plaintext)
+from utils import (
+    compute_kl,
+    create_pku_dataloader_from_dataset,
+    create_truthfulqa_dataloader,
+    get_answer_loss,
+    get_rand_ans_loss,
+    get_truthfulQA_answers_plaintext,
+)
 
 
 def set_seed(seed_num: int) -> None:
@@ -46,10 +51,12 @@ class BatchSamplesLogger:
         self.decode_text = decode_text
         self.data = []
         self.columns = [f"{prefix} Batch Number", f"{prefix} Input IDs"]
-        self.dataframe = DataFrame(
-            columns=["batch_number", "input_ids_list"]
-            if not self.decode_text
-            else ["batch_number", "input_ids_list", "sample_text"]
+        self.dataframe = pd.DataFrame(
+            columns=(
+                ["batch_number", "input_ids_list"]
+                if not self.decode_text
+                else ["batch_number", "input_ids_list", "sample_text"]
+            )
         )
         if decode_text:
             self.columns.append(f"{prefix} Sample Text")
@@ -57,6 +64,7 @@ class BatchSamplesLogger:
     def append_batch_samples(self, batch, batch_number):
         """Accumulate samples from the batch along with the batch number."""
         batch_size = batch["input_ids"].size(0)
+        new_rows = []
 
         for i in range(batch_size):
             input_ids_list = batch["input_ids"][i].tolist()
@@ -65,16 +73,23 @@ class BatchSamplesLogger:
                 if self.decode_text
                 else ""
             )
+            # Wanb info
             data_row = (
                 [batch_number, input_ids_list]
                 if not self.decode_text
                 else [batch_number, input_ids_list, sample_text]
             )
             self.data.append(data_row)
-            data_row = {"batch_number": batch_number, "input_ids_list": input_ids_list}
-            if self.decode_text:
-                data_row["sample_text"] = sample_text
-            self.dataframe.append(data_row)
+            #
+            data_dict = {
+                "batch_number": batch_number,
+                "input_ids_list": input_ids_list,
+                "sample_text": sample_text if self.decode_text else pd.NA,
+            }
+            new_rows.append(data_dict)
+
+        new_rows_df = pd.DataFrame(new_rows)
+        self.dataframe = pd.concat([self.dataframe, new_rows_df])
 
     def export_dataframe(self, path):
         self.dataframe.to_csv(path)
@@ -245,14 +260,22 @@ def main(args) -> None:
 
         # Save model.
         if idx % args.save_every == 0:
-            model.save_pretrained(args.model_save_dir, from_pt=True)
-            tokenizer.save_pretrained(args.model_save_dir)
+            model_tokenizer_save_dir = Path(
+                os.path.join(args.model_save_dir, f"checkpoint_{idx}")
+            )
+            model_tokenizer_save_dir.mkdir(parents=True, exist_ok=True)
+
+            model.save_pretrained(model_tokenizer_save_dir, from_pt=True)
+            tokenizer.save_pretrained(model_tokenizer_save_dir)
+
+            sample_save_dir = Path(args.samples_save_dir)
+            sample_save_dir.mkdir(parents=True, exist_ok=True)
 
             batch_samples_logger_bad.export_dataframe(
-                os.path.join(args.samples_save_dir, f"bad_batch_{idx}.csv")
+                os.path.join(sample_save_dir, f"bad_batch_{idx}.csv")
             )
             batch_samples_logger_normal.export_dataframe(
-                os.path.join(args.samples_save_dir, f"normal_batch_{idx}.csv")
+                os.path.join(sample_save_dir, f"normal_batch_{idx}.csv")
             )
             if bool(args.wandb_log):
                 # Save batch data to files
