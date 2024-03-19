@@ -82,6 +82,13 @@ def parse_args() -> argparse.Namespace:
         default="8888",
         help="Seed used for unlearning. Default codebase uses 8888 as default seed.",
     )
+    
+    parser.add_argument(
+        "--sequential",
+        action="store_true",
+        default=False,
+        help="Whether to use sequential unlearning.",
+    )
 
     parser.add_argument(
         "--wandb_log",
@@ -89,6 +96,8 @@ def parse_args() -> argparse.Namespace:
         default=True,
         help="Whether to enable experiment trackers for logging.",
     )
+    
+    
     parser.add_argument(
         "--wandb_log_feq",
         type=int,
