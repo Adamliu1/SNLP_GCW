@@ -55,13 +55,14 @@ def filter_json_logs(log_data: dict[int, dict]) -> dict[int, dict]:
             ],
             "arc_challenge_acc_norm": log["results"]["arc_challenge"]["acc_norm,none"],
             "mmlu_acc": log["results"]["mmlu"]["acc,none"],
+            "toxigen_acc_norm": log["results"]["toxigen"]["acc_norm,none"],
         }
 
     return results
 
 
 def create_plot(df: pd.DataFrame, log_dir: str) -> None:
-    ax = df.plot(style=["o-"] * 6)
+    ax = df.plot(style=["o-"] * 7)
     fig = ax.get_figure()
     fig.savefig(os.path.join(log_dir, "..", "figure.png"))
 
