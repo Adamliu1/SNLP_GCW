@@ -109,7 +109,9 @@ def parse_args() -> argparse.Namespace:
         help="The name of the wandb run,",
     )
     parser.add_argument("--num_running_loss", type=int, default=10, help="Number of losses to keep for computing running average loss.")
-
+    parser.add_argument("--epoch_size", type=int, default=64, help="Number of samples per epoch from the unlearning set to unlearn on.")
+    parser.add_argument("--shuffle", action="store_true", default=False, help="Whether to shuffle the unlearning dataset. If true, the seed supplied to --seed will be used.")
+    parser.add_argument("--num_epochs", type=int, default=100, help="Number of epochs to unlearn.")
     args = parser.parse_args()
 
     return args
