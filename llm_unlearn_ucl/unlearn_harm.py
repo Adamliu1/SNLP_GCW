@@ -158,6 +158,7 @@ def main(args) -> None:
     data_sample_artifacts = wandb.Artifact(name="training_batch_raw_data", type="batch_data")
     data_sample_artifacts.add_file(normal_sample_path, name=f"normal_{args.epoch_size}_samples.json")
     data_sample_artifacts.add_file(bad_sample_path, name=f"bad_{args.epoch_size}_samples.json")
+    wandb.log_artifact(data_sample_artifacts)
 
     optimizer = AdamW(model.parameters(), lr=args.lr)
 
