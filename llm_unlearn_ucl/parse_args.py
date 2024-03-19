@@ -7,6 +7,14 @@ def parse_args() -> argparse.Namespace:
         description="Unlearn data/skill based on a particular dataset.",
     )
 
+    parser.add_argument(
+        "--mink_prob_k",
+        type=float,
+        default=0.2,
+        help="K value as a float for percentage of of lowest "
+        "probability tokens to consider, used by Min-K% PROB https://arxiv.org/pdf/2310.16789.pdf",
+    )
+
     parser.add_argument("--use_lora", action="store_true")
 
     parser.add_argument(

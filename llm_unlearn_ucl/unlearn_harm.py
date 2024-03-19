@@ -36,8 +36,9 @@ from utils import (
     get_rand_ans_loss,
     get_truthfulQA_answers_plaintext,
 )
-
 import wandb
+from typing import List
+from transformers.tokenization_utils_base import BatchEncoding
 
 
 def set_seed(seed_num: int) -> None:
@@ -129,6 +130,51 @@ def save_batch_data(batch, batch_type, idx, save_dir):
     return input_ids_path, attention_mask_path
 
 
+def compute_mink_prob(
+    model: AutoModelForCausalLM,
+    tokenizer: AutoTokenizer,
+    batch: BatchEncoding,
+    K: float,
+) -> List[float]:
+    # Compute the average of min-K% Prob values for the entire batch
+    # TODO: should we do this on just 2 element batch or entire dataset?
+    #
+    # NOTE: Need to properly unpack the batch, compute logits for each batch and
+    # properly mask the output! only compute min K on the part we are checking if is
+    # Unlearned/member in pretraining: output
+    with torch.no_grad():
+        # TODO: verify: in run.py for mink, calculatePerplexity func (49), they also pass labels=input_ids. WHy?
+        # TODO: should we: feeed full sentance (question + answer), and then mask out to compute probabilities,
+        # Or Mask out input, only get logits for the answer and compute probabilities on those
+        # NOTE: For now, we feed full question, as we are unlearning B given A, so we want individual token
+        # probabilities of B, given A (but we don't care about token probabilities of A - the question)
+        outputs = model(batch["input_ids"], attention_mask=batch["attention_mask"])
+        # OR, something along thelines of
+        # outputs = model(batch["input_ids"][batch["start_locs"]:], attention_mask=batch["attention_mask"])
+    logits = outputs.logits
+
+    probabilities = torch.nn.functional.log_softmax(logits, dim=-1)
+    no_of_sentences = batch["input_ids"].shape[0]
+    # Compute for each sentence in the batch
+    pred_mink = []
+    for s_idx in range(no_of_sentences):
+        # extract prob for each token in the unlearned answer given all previous tokens
+        input_ids_sentence = batch["input_ids"][s_idx]  # [1:]
+        all_prob = []
+        for i in range(batch["start_locs"][s_idx].item(), len(input_ids_sentence)):
+            token_id = input_ids_sentence[i]
+            # i is 1 ahead of the actual token, as we want the probability of that token given all previous tokens
+            probability = probabilities[s_idx, i - 1, token_id].item()
+            all_prob.append(probability)
+        # Get top-K % probs and compute their mean (it was log_softmax, so top k% is actually mink% prob)
+        k_length = int(len(all_prob) * K)
+        topk_prob = np.sort(all_prob)[:k_length]
+        pred_mink.append(-np.mean(topk_prob).item())
+
+    # All mean MIN-K% prob in: pred_mink. For now, return all
+    return pred_mink
+
+
 def main(args) -> None:
     set_seed(args.seed)
     assert (
@@ -141,7 +187,7 @@ def main(args) -> None:
     # accelerator = Accelerator(mixed_precision="fp16")
     device = accelerator.device
 
-    print("AAAAA")
+    print(f"Loading model {args.model_name} for training...")
     if args.use_quantized:
         # Uncomment for quantized
         model = AutoModelForCausalLM.from_pretrained(
@@ -155,7 +201,7 @@ def main(args) -> None:
             args.model_name, cache_dir=args.cache_dir
         )
 
-    print("BBBBB")
+    print("Model loaded.")
     # If use LoRA.
     if args.use_lora:
         peft_config = AdaLoraConfig(
@@ -298,6 +344,7 @@ def main(args) -> None:
     model.train()
 
     # Reference model for computing KL.
+    print(f"Loading model {args.model_name} for reference ('fully learned')...")
     if args.use_quantized:
         # Uncomment for quantized
         pretrained_model = AutoModelForCausalLM.from_pretrained(
@@ -311,6 +358,7 @@ def main(args) -> None:
             args.model_name, cache_dir=args.cache_dir
         )
         pretrained_model.to(device)
+    print("Model loaded.")
 
     def run_training_batch(
         bad_batch,
@@ -320,6 +368,22 @@ def main(args) -> None:
         bad_loader_size: int = 0,
         normal_loader_size: int = 0,
     ):
+        ############ Compute Min-K for the batch ##########
+        # TODO: Do we just comput min-K for data being unlearned? or full question?
+        # TODO: should we fix the size of input values (WikiMIA they used the same sample sizes)
+        mink_probs = compute_mink_prob(
+            model=model, tokenizer=tokenizer, batch=bad_batch, K=args.mink_prob_k
+        )
+        mink_probs_base = compute_mink_prob(
+            model=pretrained_model,
+            tokenizer=tokenizer,
+            batch=bad_batch,
+            K=args.mink_prob_k,
+        )
+        # TODO: THIS NEED TO BE CALCULATED AFTER GRADIENT STEP!!! (otherwise we are comparing against previous gradient update!)
+        mink_probs_after_step = compute_mink_prob(
+            model=model, tokenizer=tokenizer, batch=bad_batch, K=args.mink_prob_k
+        )
         ############ GA on answer only. ############
         bad_loss = get_answer_loss("ga", bad_batch, model, device=device)
 
@@ -362,6 +426,12 @@ def main(args) -> None:
                     "normal_loss": normal_loss,
                     # NOTE: Sould I negative the sign here????
                     "final_loss": loss,
+                    "ratio mink unlearning/reference": np.mean(mink_probs)
+                    / np.mean(mink_probs_base),
+                    "ratio mink unlearning_after_step/reference": np.mean(
+                        mink_probs_after_step
+                    )
+                    / np.mean(mink_probs_base),
                 }
             )
             # Log batch samples with optional decoding
@@ -372,6 +442,8 @@ def main(args) -> None:
             f"epoch: {epoch}, batch: {idx}, "
             f"bad_loss: {-bad_loss:.2f}, "
             f"current_div_loss: {normal_loss:.2f}, "
+            f"ratio mink unlearning/reference: {np.mean(mink_probs)/np.mean(mink_probs_base):.3f}, "
+            f"ratio mink unlearning_after_step/reference: {np.mean(mink_probs_after_step)/np.mean(mink_probs_base):.3f}"
         )
         logging.info(stats)
         print(stats)
