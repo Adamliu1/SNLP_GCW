@@ -145,31 +145,38 @@ def main(args) -> None:
         # NOTE: Optionally use a different seed for shuffling dataset.
         generator_state = torch.get_rng_state()
         torch.manual_seed(args.shuffle_seed)
-    train_bad_dataset = full_bad_dataset.select(torch.randperm(len(full_bad_dataset))[: args.epoch_size].tolist())
+    if args.sequential > 0:
+        # NOTE: sequential/batch unlearning using sliced dataset.
+        train_bad_dataset = full_bad_dataset.select(torch.randperm(len(full_bad_dataset))[: args.epoch_size].tolist())
+    else:
+        # NOTE: full dataset like bytedance.
+        train_bad_dataset = full_bad_dataset.select(torch.randperm(len(full_bad_dataset)).tolist())
+
     if args.shuffle_seed is not None:
         # NOTE: restore torch state to use args.seed for other part of the code.
         torch.set_rng_state(generator_state)
 
     Path(args.samples_save_dir).mkdir(exist_ok=True)
-    bad_sample_path = f"{args.samples_save_dir}/bad_{args.epoch_size}_samples.json"
+    bad_sample_path = f"{args.samples_save_dir}/bad_{args.epoch_size if args.sequential > 0 else 'full'}_samples.json"
     with open(bad_sample_path, "w") as fin:
         print(f"Writing bad samples to {bad_sample_path}")
-        json.dump([train_bad_dataset[i] for i in range(args.epoch_size)], fin)
+        json.dump([train_bad_dataset[i] for i in range(args.epoch_size if args.sequential > 0 else len(train_bad_dataset))], fin)
 
-    train_bad_loaders = create_pku_dataloader_from_dataset(tokenizer, train_bad_dataset, batch_size=args.batch_size, splits=args.sequential)
+    train_bad_loaders = create_pku_dataloader_from_dataset(tokenizer, train_bad_dataset, batch_size=args.batch_size, splits=max(args.sequential, 1))
 
     # Get normal data.
     train_normal_loaders, val_normal_loader, test_normal_loader, train_normal_dataset = create_truthfulqa_dataloader(
         tokenizer,
         batch_size=args.batch_size,
         seed=args.shuffle_seed if args.shuffle_seed is not None else args.seed,
-        num_samples=args.epoch_size,
-        splits=args.sequential,
+        num_samples=args.epoch_size if args.sequential > 0 else None,
+        splits=max(args.sequential, 1),
     )
-    normal_sample_path = f"{args.samples_save_dir}/normal_{args.epoch_size}_samples.json"
+    normal_sample_path = f"{args.samples_save_dir}/normal_{args.epoch_size if args.sequential > 0 else 'full'}_samples.json"
     with open(normal_sample_path, "w") as fin:
         print(f"Writing normal samples to {normal_sample_path}")
-        json.dump([train_normal_dataset[i] for i in range(args.epoch_size)], fin)
+        json.dump([train_normal_dataset[i] for i in range(args.epoch_size if args.sequential > 0 else len(train_normal_dataset))], fin)
+
     # Load normal answer used for random mismatch.
     normal_ans = get_truthfulQA_answers_plaintext()
     data_sample_artifacts = wandb.Artifact(name="training_batch_raw_data", type="batch_data")
@@ -203,7 +210,7 @@ def main(args) -> None:
     # pretrained_model = AutoModelForCausalLM.from_pretrained(args.model_name, cache_dir=args.cache_dir, load_in_8bit=True, torch_dtype=torch.float32)
     pretrained_model.to(device)
 
-    def run_training_batch(bad_batch, normal_batch, idx, epoch: int):
+    def run_training_batch(bad_batch, normal_batch, idx, epoch: int, bad_loader_size: int = 0, normal_loader_size: int = 0):
         ############ GA on answer only. ############
         bad_loss = get_answer_loss("ga", bad_batch, model, device=device)
 
@@ -228,9 +235,14 @@ def main(args) -> None:
         # optimizer.step()
         # lr_scheduler.step()
         # optimizer.zero_grad()
-
-        batch_samples_logger_bad.append_batch_samples(bad_batch, idx)
-        batch_samples_logger_normal.append_batch_samples(normal_batch, idx)
+        bad_batch_idx = idx
+        normal_batch_idx = idx
+        if bad_loader_size:
+            bad_batch_idx %= bad_loader_size
+        if normal_loader_size:
+            normal_batch_idx %= normal_loader_size
+        batch_samples_logger_bad.append_batch_samples(bad_batch, bad_batch_idx)
+        batch_samples_logger_normal.append_batch_samples(normal_batch, normal_batch_idx)
 
         # Print.
         if bool(args.wandb_log) and (idx % args.wandb_log_feq == 0):
@@ -252,13 +264,12 @@ def main(args) -> None:
         print(stats)
         idx += 1
 
-        # Save model.
         if idx % args.save_every == 0:
-            model_tokenizer_save_dir = Path(os.path.join(args.model_save_dir, f"checkpoint_{idx}"))
-            model_tokenizer_save_dir.mkdir(parents=True, exist_ok=True)
+            # model_tokenizer_save_dir = Path(os.path.join(args.model_save_dir, f"checkpoint_{idx}"))
+            # model_tokenizer_save_dir.mkdir(parents=True, exist_ok=True)
 
-            model.save_pretrained(model_tokenizer_save_dir, from_pt=True)
-            tokenizer.save_pretrained(model_tokenizer_save_dir)
+            # model.save_pretrained(model_tokenizer_save_dir, from_pt=True)
+            # tokenizer.save_pretrained(model_tokenizer_save_dir)
 
             sample_save_dir = Path(args.samples_save_dir)
             sample_save_dir.mkdir(parents=True, exist_ok=True)
@@ -316,29 +327,81 @@ def main(args) -> None:
     batch_samples_logger_bad = BatchSamplesLogger(tokenizer, prefix="Bad", decode_text=True)
     batch_samples_logger_normal = BatchSamplesLogger(tokenizer, prefix="Normal", decode_text=True)
 
-    num_batches_per_epoch = args.epoch_size // args.batch_size
-    for seq, (train_normal_loader, train_bad_loader) in enumerate(zip(train_normal_loaders, train_bad_loaders)):
-        epoch_num = 0
-        accu_bad_loss = 0
-        while epoch_num < args.num_epochs:
+    if args.sequential > 0:
+        # NOTE: sequential/batch unlearning
+        num_batches_per_epoch = args.epoch_size // args.batch_size
+        for seq, (train_normal_loader, train_bad_loader) in enumerate(zip(train_normal_loaders, train_bad_loaders)):
+            epoch_num = 0
             accu_bad_loss = 0
-            for normal_batch, bad_batch in zip(train_normal_loader, train_bad_loader):
-                loss, bad_loss = run_training_batch(bad_batch, normal_batch, idx, epoch_num)
-                idx += 1
-                # NOTE: the whole dataset is considered to be one single batch.
-                # Back-prop after the whole dataset has been finished.
-                accelerator.backward(loss / num_batches_per_epoch)
-                bad_loss /= num_batches_per_epoch
-                accu_bad_loss += bad_loss.item()
-            epoch_num += 1
+            while epoch_num < args.num_epochs:
+                accu_bad_loss = 0
+                for normal_batch, bad_batch in zip(train_normal_loader, train_bad_loader):
+                    loss, bad_loss = run_training_batch(bad_batch, normal_batch, idx, epoch_num)
+                    idx += 1
+                    # NOTE: the whole dataset is considered to be one single batch.
+                    # Back-prop after the whole dataset has been finished.
+                    accelerator.backward(loss / num_batches_per_epoch)
+                    bad_loss /= num_batches_per_epoch
+                    accu_bad_loss += bad_loss.item()
+                epoch_num += 1
+                optimizer.step()
+                lr_scheduler.step()
+                optimizer.zero_grad()
+
+                if args.sequential == 1:
+                    # NOTE: Batch unlearning, save for every epoch
+                    model_tokenizer_save_dir = Path(os.path.join(args.model_save_dir, f"epoch_{epoch_num}"))
+                    model_tokenizer_save_dir.mkdir(parents=True, exist_ok=True)
+
+                    model.save_pretrained(model_tokenizer_save_dir, from_pt=True)
+                    tokenizer.save_pretrained(model_tokenizer_save_dir)
+
+                if abs(accu_bad_loss) > args.max_bad_loss:
+                    break
+
+            if abs(accu_bad_loss) > args.max_bad_loss:
+                break
+        model_tokenizer_save_dir = Path(os.path.join(args.model_save_dir, "final"))
+        model_tokenizer_save_dir.mkdir(parents=True, exist_ok=True)
+
+        model.save_pretrained(model_tokenizer_save_dir, from_pt=True)
+        tokenizer.save_pretrained(model_tokenizer_save_dir)
+
+    else:
+        # NOTE: Original ByteDance Unlearning.
+        train_bad_loader_gen = iter(train_bad_loaders[0])
+        train_normal_loader_gen = iter(train_normal_loaders[0])
+        bad_loader_len = len(train_bad_loaders[0])
+        normal_loader_len = len(train_normal_loaders[0])
+        epoch_num = 0
+        for idx in range(args.max_unlearn_steps):
+            try:
+                bad_batch = next(train_bad_loader_gen)
+            except StopIteration:
+                epoch_num += 1
+                train_bad_loader_gen = iter(train_bad_loaders[0])
+                bad_batch = next(train_bad_loader_gen)
+            try:
+                normal_batch = next(train_normal_loader_gen)
+            except StopIteration:
+                train_normal_loader_gen = iter(train_normal_loaders[0])
+                normal_batch = next(train_normal_loader_gen)
+            loss, bad_loss = run_training_batch(bad_batch, normal_batch, idx, epoch_num, bad_loader_len, normal_loader_len)
+            accelerator.backward(loss)
             optimizer.step()
             lr_scheduler.step()
             optimizer.zero_grad()
-            # running_loss.append(accu_bad_loss.item())
-            if abs(accu_bad_loss) > args.max_bad_loss:
+            if idx % args.save_every == 0:
+                model_tokenizer_save_dir = Path(os.path.join(args.model_save_dir, f"checkpoint_{idx}"))
+                model_tokenizer_save_dir.mkdir(parents=True, exist_ok=True)
+
+                model.save_pretrained(model_tokenizer_save_dir, from_pt=True)
+                tokenizer.save_pretrained(model_tokenizer_save_dir)
+            running_loss.append(bad_loss.item())
+            while len(running_loss) > args.num_running_loss:
+                running_loss.popleft()
+            if abs(np.mean(running_loss)) > args.max_bad_loss:
                 break
-        if abs(accu_bad_loss) > args.max_bad_loss:
-            break
 
     end_time = time.time()
     logging.info("Total time: %d sec" % (end_time - start_time))

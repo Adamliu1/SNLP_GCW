@@ -101,7 +101,7 @@ def create_pku_dataloader_from_dataset(tokenizer, dataset, fraction=1.0, batch_s
     return dataloaders
 
 
-def create_truthfulqa_dataloader(tokenizer, batch_size=4, num_samples: int = 64, seed: Optional[int] = 42, splits: int = 1):
+def create_truthfulqa_dataloader(tokenizer, batch_size=4, num_samples: Optional[int] = 64, seed: Optional[int] = 42, splits: int = 1):
     """
     Create the TruthfulQA dataloader for the normal data.
 
@@ -128,17 +128,18 @@ def create_truthfulqa_dataloader(tokenizer, batch_size=4, num_samples: int = 64,
         data["input_ids"].append(tokenized["input_ids"])
         data["attention_mask"].append(tokenized["attention_mask"])
     dataset = Dataset.from_dict(data)
-    assert num_samples < 0.7 * len(dataset), f"num_samples is too large. max is {int(0.7 * len(dataset))}."
+    assert num_samples is None or num_samples < 0.7 * len(dataset), f"num_samples is too large. max is {int(0.7 * len(dataset))}."
 
     # Split train/val/test = 0.7/0.1/0.2.
-    train_len = num_samples
+    train_len = num_samples or int(0.7 * len(dataset))
     val_len = int(0.1 * len(dataset))
     test_len = len(dataset) - train_len - val_len
 
     train_data, val_data, test_data = torch.utils.data.random_split(dataset, [train_len, val_len, test_len])
 
     data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
-
+    if num_samples is None:
+        num_samples = len(train_data)
     train_dataloaders = [
         torch.utils.data.DataLoader(train_batch_ds, batch_size=batch_size, collate_fn=data_collator, shuffle=True)
         for train_batch_ds in torch.utils.data.random_split(train_data, tuple(num_samples // splits for i in range(splits)))
