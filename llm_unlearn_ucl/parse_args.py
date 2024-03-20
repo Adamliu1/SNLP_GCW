@@ -77,9 +77,9 @@ def parse_args() -> argparse.Namespace:
 
     parser.add_argument(
         "--sequential",
-        action="store_true",
-        default=False,
-        help="Whether to use sequential unlearning.",
+        default=1,
+        type=int,
+        help="Number of splits used for sequential unlearning. Should be divisible by epoch_size. Default: 1 (equivalent to batch unlearning)",
     )
 
     parser.add_argument(
@@ -110,7 +110,12 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--num_running_loss", type=int, default=10, help="Number of losses to keep for computing running average loss.")
     parser.add_argument("--epoch_size", type=int, default=64, help="Number of samples per epoch from the unlearning set to unlearn on.")
-    parser.add_argument("--shuffle", action="store_true", default=False, help="Whether to shuffle the unlearning dataset. If true, the seed supplied to --seed will be used.")
+    parser.add_argument(
+        "--shuffle_seed",
+        type=int,
+        default=None,
+        help="if set to an int, shuffle the dataset with this seed. Otherwise, the seed supplied to --seed will be used.",
+    )
     parser.add_argument("--num_epochs", type=int, default=100, help="Number of epochs to unlearn.")
     args = parser.parse_args()
 

@@ -47,7 +47,9 @@ class BatchSamplesLogger:
         self.decode_text = decode_text
         self.data = []
         self.columns = [f"{prefix} Batch Number", f"{prefix} Input IDs"]
-        self.dataframe = pd.DataFrame(columns=(["batch_number", "input_ids_list"] if not self.decode_text else ["batch_number", "input_ids_list", "sample_text"]))
+        self.dataframe = pd.DataFrame(
+            columns=(["batch_number", "input_ids_list"] if not self.decode_text else ["batch_number", "input_ids_list", "sample_text"])
+        )
         if decode_text:
             self.columns.append(f"{prefix} Sample Text")
 
@@ -111,7 +113,10 @@ def save_batch_data(batch, batch_type, idx, save_dir):
 
 def main(args) -> None:
     set_seed(args.seed)
-    assert args.epoch_size % args.batch_size == 0, "epoch_size should be a multiple of batch_size."
+    assert args.epoch_size % args.sequential == 0, "epoch_size should be divisible by number of splits for sequential learning (--sequential)."
+    assert (
+        args.epoch_size // args.sequential
+    ) % args.batch_size == 0, "samples in each 'sequence' (--epoch_size / --sequential) should be a multiple of batch_size."
     accelerator = Accelerator()
     # accelerator = Accelerator(mixed_precision="fp16")
     device = accelerator.device
@@ -132,22 +137,35 @@ def main(args) -> None:
     model.to(device)
     tokenizer = AutoTokenizer.from_pretrained(args.model_name, cache_dir=args.cache_dir)
 
-    # Load harmful data.
-
-    train_dataset = load_dataset("PKU-Alignment/PKU-SafeRLHF", split=f"train[:{args.epoch_size}]")
-    if args.shuffle:
-        train_dataset.shuffle(seed=args.seed)
+    # filter entries with harmful responses and draw random samples from the remaining dataset.
+    full_bad_dataset = load_dataset("PKU-Alignment/PKU-SafeRLHF", split="train").filter(
+        lambda entry: not (entry["is_response_0_safe"] or entry["is_response_1_safe"])
+    )
+    if args.shuffle_seed is not None:
+        # NOTE: Optionally use a different seed for shuffling dataset.
+        generator_state = torch.get_rng_state()
+        torch.manual_seed(args.shuffle_seed)
+    train_bad_dataset = full_bad_dataset.select(torch.randperm(len(full_bad_dataset))[: args.epoch_size].tolist())
+    if args.shuffle_seed is not None:
+        # NOTE: restore torch state to use args.seed for other part of the code.
+        torch.set_rng_state(generator_state)
 
     Path(args.samples_save_dir).mkdir(exist_ok=True)
     bad_sample_path = f"{args.samples_save_dir}/bad_{args.epoch_size}_samples.json"
     with open(bad_sample_path, "w") as fin:
         print(f"Writing bad samples to {bad_sample_path}")
-        json.dump([train_dataset[i] for i in range(args.epoch_size)], fin)
+        json.dump([train_bad_dataset[i] for i in range(args.epoch_size)], fin)
 
-    train_bad_loader = create_pku_dataloader_from_dataset(tokenizer, train_dataset, batch_size=args.batch_size)
+    train_bad_loaders = create_pku_dataloader_from_dataset(tokenizer, train_bad_dataset, batch_size=args.batch_size, splits=args.sequential)
 
     # Get normal data.
-    train_normal_loader, _, _, train_normal_dataset = create_truthfulqa_dataloader(tokenizer, batch_size=args.batch_size, seed=args.seed if args.shuffle else None)
+    train_normal_loaders, val_normal_loader, test_normal_loader, train_normal_dataset = create_truthfulqa_dataloader(
+        tokenizer,
+        batch_size=args.batch_size,
+        seed=args.shuffle_seed if args.shuffle_seed is not None else args.seed,
+        num_samples=args.epoch_size,
+        splits=args.sequential,
+    )
     normal_sample_path = f"{args.samples_save_dir}/normal_{args.epoch_size}_samples.json"
     with open(normal_sample_path, "w") as fin:
         print(f"Writing normal samples to {normal_sample_path}")
@@ -173,10 +191,10 @@ def main(args) -> None:
     (
         model,
         optimizer,
-        train_bad_loader,
-        train_normal_loader,
         lr_scheduler,
-    ) = accelerator.prepare(model, optimizer, train_bad_loader, train_normal_loader, lr_scheduler)
+    ) = accelerator.prepare(model, optimizer, lr_scheduler)
+    for i in range(args.sequential):
+        train_bad_loaders[i], train_normal_loaders[i] = accelerator.prepare(train_bad_loaders[i], train_normal_loaders[i])
 
     model.train()
 
@@ -185,7 +203,7 @@ def main(args) -> None:
     # pretrained_model = AutoModelForCausalLM.from_pretrained(args.model_name, cache_dir=args.cache_dir, load_in_8bit=True, torch_dtype=torch.float32)
     pretrained_model.to(device)
 
-    def run_training_batch(bad_batch, normal_batch, idx, bad_loader_size: int, normal_loader_size: int, epoch: int):
+    def run_training_batch(bad_batch, normal_batch, idx, epoch: int):
         ############ GA on answer only. ############
         bad_loss = get_answer_loss("ga", bad_batch, model, device=device)
 
@@ -211,8 +229,8 @@ def main(args) -> None:
         # lr_scheduler.step()
         # optimizer.zero_grad()
 
-        batch_samples_logger_bad.append_batch_samples(bad_batch, idx % bad_loader_size)
-        batch_samples_logger_normal.append_batch_samples(normal_batch, idx % normal_loader_size)
+        batch_samples_logger_bad.append_batch_samples(bad_batch, idx)
+        batch_samples_logger_normal.append_batch_samples(normal_batch, idx)
 
         # Print.
         if bool(args.wandb_log) and (idx % args.wandb_log_feq == 0):
@@ -293,49 +311,34 @@ def main(args) -> None:
     bad_loss = 0.0
     idx = 0
     start_time = time.time()
-    epoch_num = 0
     running_loss = deque()
     # Here for caching what samples are used so far
     batch_samples_logger_bad = BatchSamplesLogger(tokenizer, prefix="Bad", decode_text=True)
     batch_samples_logger_normal = BatchSamplesLogger(tokenizer, prefix="Normal", decode_text=True)
-    normal_loader_size = len(train_normal_loader)
-    bad_loader_size = len(train_bad_loader)
+
     num_batches_per_epoch = args.epoch_size // args.batch_size
-    while epoch_num < args.num_epochs:
-        accu_bad_loss = None
-        for normal_batch, bad_batch in zip(train_normal_loader, train_bad_loader):
-            loss, bad_loss = run_training_batch(bad_batch, normal_batch, idx, bad_loader_size, normal_loader_size, epoch_num)
-            idx += 1
-            if args.sequential:
-                accelerator.backward(loss)
-                optimizer.step()
-                lr_scheduler.step()
-                optimizer.zero_grad()
-                if np.mean(running_loss) > args.max_bad_loss:
-                    break
-            else:
-                # Non-sequential
+    for seq, (train_normal_loader, train_bad_loader) in enumerate(zip(train_normal_loaders, train_bad_loaders)):
+        epoch_num = 0
+        accu_bad_loss = 0
+        while epoch_num < args.num_epochs:
+            accu_bad_loss = 0
+            for normal_batch, bad_batch in zip(train_normal_loader, train_bad_loader):
+                loss, bad_loss = run_training_batch(bad_batch, normal_batch, idx, epoch_num)
+                idx += 1
                 # NOTE: the whole dataset is considered to be one single batch.
                 # Back-prop after the whole dataset has been finished.
                 accelerator.backward(loss / num_batches_per_epoch)
                 bad_loss /= num_batches_per_epoch
-                if accu_bad_loss is None:
-                    accu_bad_loss = bad_loss.item()
-                else:
-                    accu_bad_loss += bad_loss.item()
-                print(accu_bad_loss)
-        epoch_num += 1
-        if args.sequential:
-            if np.mean(running_loss) > args.max_bad_loss:
-                break
-        else:
-            # NOTE: non-sequential.
+                accu_bad_loss += bad_loss.item()
+            epoch_num += 1
             optimizer.step()
             lr_scheduler.step()
             optimizer.zero_grad()
             # running_loss.append(accu_bad_loss.item())
             if abs(accu_bad_loss) > args.max_bad_loss:
                 break
+        if abs(accu_bad_loss) > args.max_bad_loss:
+            break
 
     end_time = time.time()
     logging.info("Total time: %d sec" % (end_time - start_time))

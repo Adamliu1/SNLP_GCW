@@ -6,7 +6,6 @@
 import random
 from typing import Optional
 
-import numpy as np
 import pandas as pd
 import torch
 from datasets import Dataset
@@ -17,7 +16,7 @@ from transformers import DataCollatorForLanguageModeling
 # random.seed(8888)
 
 
-def create_pku_dataloader_from_dataset(tokenizer, dataset, fraction=1.0, batch_size=4):
+def create_pku_dataloader_from_dataset(tokenizer, dataset, fraction=1.0, batch_size=4, splits: int = 1):
     """
     Given the PKU dataset, create the dataloader on the unlearned harmful Q&A pairs.
 
@@ -25,10 +24,10 @@ def create_pku_dataloader_from_dataset(tokenizer, dataset, fraction=1.0, batch_s
         tokenizer: Tokenizer.
         dataset: Loaded PKU dataset.
         fraction: <1 will do downsampling.
-        batch_size: Batch size.
-
+        batch_size: Batch size used for each step.
+        splits: The number of splits that the dataset will be sliced into.
     Returns:
-        Data loader of PKU harmful Q&A pairs.
+        A List of DataLoader of PKU harmful Q&A pairs.
     """
 
     # Preproccess function.
@@ -54,7 +53,7 @@ def create_pku_dataloader_from_dataset(tokenizer, dataset, fraction=1.0, batch_s
             # Add only bad samples.
             if not examples["is_response_0_safe"][i]:
                 response_list.append(examples["response_0"][i])
-            if not examples["is_response_1_safe"][i]:
+            elif not examples["is_response_1_safe"][i]:
                 response_list.append(examples["response_1"][i])
 
             # Add all responses to results or skip if none.
@@ -93,21 +92,27 @@ def create_pku_dataloader_from_dataset(tokenizer, dataset, fraction=1.0, batch_s
     # Add labels and make it data loader.
     data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
 
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, collate_fn=data_collator)
+    # TODO: data_collator introduces extra/less processed samples.
+    dataloaders = [
+        torch.utils.data.DataLoader(train_split_dataset, batch_size=batch_size, collate_fn=data_collator)
+        for train_split_dataset in torch.utils.data.random_split(dataset, tuple(len(dataset) // splits for i in range(splits)))
+    ]
 
-    return dataloader
+    return dataloaders
 
 
-def create_truthfulqa_dataloader(tokenizer, batch_size=4, num_samples: int = 64, seed: Optional[int] = 42):
+def create_truthfulqa_dataloader(tokenizer, batch_size=4, num_samples: int = 64, seed: Optional[int] = 42, splits: int = 1):
     """
     Create the TruthfulQA dataloader for the normal data.
 
     Args:
         tokenizer: Tokenizer.
-        batch_size: Batch size.
-
+        batch_size: Batch size used for each step.
+        num_samples: Number of samples used in the training set.
+        seed: seed used for sampling and shuffling of the dataset.
+        splits: Number of splits to divide the training samples into. Default: 1
     Returns:
-        Data loader of TruthfulQA normal Q&A pairs.
+        A list of DataLoaders of TruthfulQA normal Q&A pairs.
     """
     df = pd.read_csv("data/TruthfulQA.csv")
     if seed is not None:
@@ -123,6 +128,7 @@ def create_truthfulqa_dataloader(tokenizer, batch_size=4, num_samples: int = 64,
         data["input_ids"].append(tokenized["input_ids"])
         data["attention_mask"].append(tokenized["attention_mask"])
     dataset = Dataset.from_dict(data)
+    assert num_samples < 0.7 * len(dataset), f"num_samples is too large. max is {int(0.7 * len(dataset))}."
 
     # Split train/val/test = 0.7/0.1/0.2.
     train_len = num_samples
@@ -133,11 +139,16 @@ def create_truthfulqa_dataloader(tokenizer, batch_size=4, num_samples: int = 64,
 
     data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
 
-    train_dataloader = torch.utils.data.DataLoader(train_data, batch_size=batch_size, collate_fn=data_collator, shuffle=True)
+    train_dataloaders = [
+        torch.utils.data.DataLoader(train_batch_ds, batch_size=batch_size, collate_fn=data_collator, shuffle=True)
+        for train_batch_ds in torch.utils.data.random_split(train_data, tuple(num_samples // splits for i in range(splits)))
+    ]
+
+    # train_dataloader = torch.utils.data.DataLoader(train_data, batch_size=batch_size, collate_fn=data_collator, shuffle=True)
     val_dataloader = torch.utils.data.DataLoader(val_data, batch_size=batch_size, collate_fn=data_collator, shuffle=True)
     test_dataloader = torch.utils.data.DataLoader(test_data, batch_size=batch_size, collate_fn=data_collator, shuffle=True)
 
-    return train_dataloader, val_dataloader, test_dataloader, raw_train_data
+    return train_dataloaders, val_dataloader, test_dataloader, raw_train_data
 
 
 def get_truthfulQA_answers_plaintext(tqa_file_path="data/TruthfulQA.csv"):
