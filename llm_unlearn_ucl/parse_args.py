@@ -6,12 +6,12 @@ def parse_args() -> argparse.Namespace:
 
     parser.add_argument("--use_lora", action="store_true")
 
-    # parser.add_argument(
-    #     "--max_unlearn_steps",
-    #     type=int,
-    #     default=1000,
-    #     help="Max number of unlearning steps.",
-    # )
+    parser.add_argument(
+        "--max_unlearn_steps",
+        type=int,
+        default=1000,
+        help="Max number of unlearning steps for vanilla GA unlearning (bytedance).",
+    )
     parser.add_argument("--bad_weight", type=float, default=0.5, help="Weight on the bad loss.")
     parser.add_argument(
         "--random_weight",
@@ -77,9 +77,9 @@ def parse_args() -> argparse.Namespace:
 
     parser.add_argument(
         "--sequential",
-        default=1,
+        default=-1,
         type=int,
-        help="Number of splits used for sequential unlearning. Should be divisible by epoch_size. Default: 1 (equivalent to batch unlearning)",
+        help="Number of splits used for sequential unlearning. Should be divisible by epoch_size. Default: -1 (Do not use). For batch unlearning, use 1.",
     )
 
     parser.add_argument(
