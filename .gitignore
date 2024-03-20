@@ -23,3 +23,5 @@ models
 out
 mink_data_probability/out
 mink_data_probability/src/out
+
+llm_unlearn_ucl/wandb

@@ -42,3 +42,4 @@ accelerate
 bitsandbytes
 matplotlib
 scikit-learn
+wandb
