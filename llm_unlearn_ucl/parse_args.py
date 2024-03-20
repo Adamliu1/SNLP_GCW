@@ -6,12 +6,12 @@ def parse_args() -> argparse.Namespace:
 
     parser.add_argument("--use_lora", action="store_true")
 
-    parser.add_argument(
-        "--max_unlearn_steps",
-        type=int,
-        default=1000,
-        help="Max number of unlearning steps.",
-    )
+    # parser.add_argument(
+    #     "--max_unlearn_steps",
+    #     type=int,
+    #     default=1000,
+    #     help="Max number of unlearning steps.",
+    # )
     parser.add_argument("--bad_weight", type=float, default=0.5, help="Weight on the bad loss.")
     parser.add_argument(
         "--random_weight",

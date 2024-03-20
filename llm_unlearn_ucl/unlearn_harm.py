@@ -163,12 +163,12 @@ def main(args) -> None:
     optimizer = AdamW(model.parameters(), lr=args.lr)
 
     # Prepare.
-    num_training_steps = args.max_unlearn_steps
+    # num_training_steps = args.max_unlearn_steps
     lr_scheduler = get_scheduler(
         name="linear",
         optimizer=optimizer,
         num_warmup_steps=0,
-        num_training_steps=num_training_steps,
+        num_training_steps=args.num_epochs * args.epoch_size,
     )
 
     (
@@ -312,7 +312,6 @@ def main(args) -> None:
                 optimizer.step()
                 lr_scheduler.step()
                 optimizer.zero_grad()
-                running_loss.append(bad_loss.item())
                 if np.mean(running_loss) > args.max_bad_loss:
                     break
             else:
@@ -320,10 +319,12 @@ def main(args) -> None:
                 # NOTE: the whole dataset is considered to be one single batch.
                 # Back-prop after the whole dataset has been finished.
                 accelerator.backward(loss / num_batches_per_epoch)
+                bad_loss /= num_batches_per_epoch
                 if accu_bad_loss is None:
-                    accu_bad_loss = bad_loss
+                    accu_bad_loss = bad_loss.item()
                 else:
-                    accu_bad_loss += bad_loss
+                    accu_bad_loss += bad_loss.item()
+                print(accu_bad_loss)
         epoch_num += 1
         if args.sequential:
             if np.mean(running_loss) > args.max_bad_loss:
@@ -333,8 +334,8 @@ def main(args) -> None:
             optimizer.step()
             lr_scheduler.step()
             optimizer.zero_grad()
-            running_loss.append(accu_bad_loss.item())
-            if np.mean(running_loss) > args.max_bad_loss:
+            # running_loss.append(accu_bad_loss.item())
+            if abs(accu_bad_loss) > args.max_bad_loss:
                 break
 
     end_time = time.time()
