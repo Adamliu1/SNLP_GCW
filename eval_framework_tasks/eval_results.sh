@@ -1,11 +1,12 @@
 #! /bin/bash
 
-EXPERIMENT_NAME=$1
+# TODO: Add instructions how to use.
+EXPERIMENT_NAME=opt1.3b_unlearned_harmful-eval1
 
-LOGS_BASE_PATH=/scratch0/aszablew
+LOGS_BASE_PATH=/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks/experiment_data/
 BASE_PATH="/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks"
 ANALYSIS_BASE_PATH=$BASE_PATH/analysis/$EXPERIMENT_NAME
-ANALYSIS_LOGS_PATH=$ANALYSIS_BASE_PATH/logs
+ANALYSIS_LOGS_PATH=$ANALYSIS_BASE_PATH/eval_results
 
 
 mkdir -p $ANALYSIS_BASE_PATH
