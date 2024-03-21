@@ -1,87 +1,94 @@
 nohup: ignoring input
+WARNING: You need to log in using huggingface-cli and make sure you have access to the toxigen dataset!
 Evaluating opt1.3b_unlearned_mathqa_idx_0...
-strangepork-205-4
-Sun 17 Mar 02:45:13 GMT 2024
-Sun 17 Mar 04:58:13 GMT 2024
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity/wandb’: No such file or directory
+strangepork-205-1
+Wed 20 Mar 02:21:27 GMT 2024
+Wed 20 Mar 02:39:32 GMT 2024
 Evaluating opt1.3b_unlearned_mathqa_idx_100...
-mkdir: cannot create directory ‘/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks/math-qa-experiment-toxicity’: File exists
-mkdir: cannot create directory ‘/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks/math-qa-experiment-toxicity/results’: File exists
-mkdir: cannot create directory ‘/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks/math-qa-experiment-toxicity/logs’: File exists
-strangepork-205-4
-Sun 17 Mar 04:58:13 GMT 2024
-./run_mathqa_experiment_toxicity.sh: line 10: 1745767 Killed                  $BASE_PATH/evaluate_model.sh $EXPERIMENT_NAME $model
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity’: File exists
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity/results’: File exists
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity/logs’: File exists
+strangepork-205-1
+Wed 20 Mar 02:39:32 GMT 2024
+Wed 20 Mar 02:57:26 GMT 2024
 Evaluating opt1.3b_unlearned_mathqa_idx_1000...
-mkdir: cannot create directory ‘/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks/math-qa-experiment-toxicity’: File exists
-mkdir: cannot create directory ‘/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks/math-qa-experiment-toxicity/results’: File exists
-mkdir: cannot create directory ‘/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks/math-qa-experiment-toxicity/logs’: File exists
-strangepork-205-4
-Sun 17 Mar 05:33:48 GMT 2024
-Sun 17 Mar 05:33:51 GMT 2024
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity/wandb’: File exists
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity’: File exists
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity/results’: File exists
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity/logs’: File exists
+strangepork-205-1
+Wed 20 Mar 02:57:26 GMT 2024
+Wed 20 Mar 03:15:25 GMT 2024
 Evaluating opt1.3b_unlearned_mathqa_idx_1100...
-mkdir: cannot create directory ‘/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks/math-qa-experiment-toxicity’: File exists
-mkdir: cannot create directory ‘/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks/math-qa-experiment-toxicity/results’: File exists
-mkdir: cannot create directory ‘/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks/math-qa-experiment-toxicity/logs’: File exists
-strangepork-205-4
-Sun 17 Mar 05:33:51 GMT 2024
-Terminated
-Sun 17 Mar 05:33:53 GMT 2024
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity/wandb’: File exists
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity’: File exists
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity/results’: File exists
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity/logs’: File exists
+strangepork-205-1
+Wed 20 Mar 03:15:25 GMT 2024
+Wed 20 Mar 03:33:39 GMT 2024
 Evaluating opt1.3b_unlearned_mathqa_idx_200...
-mkdir: cannot create directory ‘/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks/math-qa-experiment-toxicity’: File exists
-mkdir: cannot create directory ‘/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks/math-qa-experiment-toxicity/results’: File exists
-mkdir: cannot create directory ‘/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks/math-qa-experiment-toxicity/logs’: File exists
-strangepork-205-4
-Sun 17 Mar 05:33:53 GMT 2024
-./run_mathqa_experiment_toxicity.sh: line 10: 1747916 Killed                  $BASE_PATH/evaluate_model.sh $EXPERIMENT_NAME $model
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity/wandb’: File exists
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity’: File exists
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity/results’: File exists
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity/logs’: File exists
+strangepork-205-1
+Wed 20 Mar 03:33:39 GMT 2024
+Wed 20 Mar 03:50:53 GMT 2024
 Evaluating opt1.3b_unlearned_mathqa_idx_300...
-mkdir: cannot create directory ‘/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks/math-qa-experiment-toxicity’: File exists
-mkdir: cannot create directory ‘/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks/math-qa-experiment-toxicity/results’: File exists
-mkdir: cannot create directory ‘/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks/math-qa-experiment-toxicity/logs’: File exists
-strangepork-205-4
-Sun 17 Mar 05:34:05 GMT 2024
-Sun 17 Mar 05:34:08 GMT 2024
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity/wandb’: File exists
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity’: File exists
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity/results’: File exists
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity/logs’: File exists
+strangepork-205-1
+Wed 20 Mar 03:50:53 GMT 2024
+Wed 20 Mar 04:08:47 GMT 2024
 Evaluating opt1.3b_unlearned_mathqa_idx_400...
-mkdir: cannot create directory ‘/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks/math-qa-experiment-toxicity’: File exists
-mkdir: cannot create directory ‘/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks/math-qa-experiment-toxicity/results’: File exists
-mkdir: cannot create directory ‘/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks/math-qa-experiment-toxicity/logs’: File exists
-strangepork-205-4
-Sun 17 Mar 05:34:08 GMT 2024
-Terminated
-Sun 17 Mar 05:34:09 GMT 2024
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity/wandb’: File exists
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity’: File exists
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity/results’: File exists
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity/logs’: File exists
+strangepork-205-1
+Wed 20 Mar 04:08:47 GMT 2024
+Wed 20 Mar 04:27:16 GMT 2024
 Evaluating opt1.3b_unlearned_mathqa_idx_500...
-mkdir: cannot create directory ‘/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks/math-qa-experiment-toxicity’: File exists
-mkdir: cannot create directory ‘/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks/math-qa-experiment-toxicity/results’: File exists
-mkdir: cannot create directory ‘/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks/math-qa-experiment-toxicity/logs’: File exists
-strangepork-205-4
-Sun 17 Mar 05:34:09 GMT 2024
-./run_mathqa_experiment_toxicity.sh: line 10: 1748625 Killed                  $BASE_PATH/evaluate_model.sh $EXPERIMENT_NAME $model
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity/wandb’: File exists
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity’: File exists
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity/results’: File exists
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity/logs’: File exists
+strangepork-205-1
+Wed 20 Mar 04:27:16 GMT 2024
+Wed 20 Mar 04:34:28 GMT 2024
 Evaluating opt1.3b_unlearned_mathqa_idx_600...
-mkdir: cannot create directory ‘/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks/math-qa-experiment-toxicity’: File exists
-mkdir: cannot create directory ‘/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks/math-qa-experiment-toxicity/results’: File exists
-mkdir: cannot create directory ‘/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks/math-qa-experiment-toxicity/logs’: File exists
-strangepork-205-4
-Sun 17 Mar 05:34:35 GMT 2024
-Sun 17 Mar 05:34:37 GMT 2024
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity/wandb’: File exists
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity’: File exists
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity/results’: File exists
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity/logs’: File exists
+strangepork-205-1
+Wed 20 Mar 04:34:28 GMT 2024
+Wed 20 Mar 04:53:30 GMT 2024
 Evaluating opt1.3b_unlearned_mathqa_idx_700...
-mkdir: cannot create directory ‘/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks/math-qa-experiment-toxicity’: File exists
-mkdir: cannot create directory ‘/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks/math-qa-experiment-toxicity/results’: File exists
-mkdir: cannot create directory ‘/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks/math-qa-experiment-toxicity/logs’: File exists
-strangepork-205-4
-Sun 17 Mar 05:34:37 GMT 2024
-Sun 17 Mar 05:34:39 GMT 2024
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity/wandb’: File exists
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity’: File exists
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity/results’: File exists
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity/logs’: File exists
+strangepork-205-1
+Wed 20 Mar 04:53:30 GMT 2024
+Wed 20 Mar 05:11:39 GMT 2024
 Evaluating opt1.3b_unlearned_mathqa_idx_800...
-mkdir: cannot create directory ‘/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks/math-qa-experiment-toxicity’: File exists
-mkdir: cannot create directory ‘/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks/math-qa-experiment-toxicity/results’: File exists
-mkdir: cannot create directory ‘/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks/math-qa-experiment-toxicity/logs’: File exists
-strangepork-205-4
-Sun 17 Mar 05:34:39 GMT 2024
-Sun 17 Mar 05:34:42 GMT 2024
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity/wandb’: File exists
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity’: File exists
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity/results’: File exists
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity/logs’: File exists
+strangepork-205-1
+Wed 20 Mar 05:11:39 GMT 2024
+Wed 20 Mar 05:29:47 GMT 2024
 Evaluating opt1.3b_unlearned_mathqa_idx_900...
-mkdir: cannot create directory ‘/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks/math-qa-experiment-toxicity’: File exists
-mkdir: cannot create directory ‘/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks/math-qa-experiment-toxicity/results’: File exists
-mkdir: cannot create directory ‘/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks/math-qa-experiment-toxicity/logs’: File exists
-strangepork-205-4
-Sun 17 Mar 05:34:42 GMT 2024
-Terminated
-Sun 17 Mar 05:34:42 GMT 2024
-./run_mathqa_experiment_toxicity.sh: line 19: unexpected EOF while looking for matching `"'
-./run_mathqa_experiment_toxicity.sh: line 22: syntax error: unexpected end of file
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity/wandb’: File exists
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity’: File exists
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity/results’: File exists
+mkdir: cannot create directory ‘/scratch0/aszablew/math-qa-experiment-toxicity/logs’: File exists
+strangepork-205-1
+Wed 20 Mar 05:29:47 GMT 2024
+Wed 20 Mar 05:48:26 GMT 2024
