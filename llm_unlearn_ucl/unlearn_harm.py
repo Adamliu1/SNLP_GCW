@@ -406,6 +406,11 @@ def main(args) -> None:
             if avg_loss > args.max_bad_loss:
                 print(f"bad_loss {avg_loss} exceeding args.max_bad_loss {args.max_bad_loss}. Unlearning stopped.")
                 break
+        model_tokenizer_save_dir = Path(os.path.join(args.model_save_dir, "final"))
+        model_tokenizer_save_dir.mkdir(parents=True, exist_ok=True)
+
+        model.save_pretrained(model_tokenizer_save_dir, from_pt=True)
+        tokenizer.save_pretrained(model_tokenizer_save_dir)
 
     end_time = time.time()
     logging.info("Total time: %d sec" % (end_time - start_time))
