@@ -280,6 +280,9 @@ def main(args) -> None:
         answer_prefix_str = "### Answer:"
 
     elif args.unlearning_dataset == "math_qa":
+        assert (
+            False
+        ), "Mathqa temporarirly disabled - requries implementing returning a List of Datasets for sequential unlearning with equal sizes!"
         train_dataset = load_dataset("math_qa", split="train")
         train_bad_loader = create_mathqa_dataloader_from_dataset(
             tokenizer, train_dataset, batch_size=args.batch_size
