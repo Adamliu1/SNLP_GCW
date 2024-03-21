@@ -472,7 +472,7 @@ def main(args) -> None:
             f"epoch: {epoch}, batch: {idx}, "
             f"bad_loss: {-bad_loss:.2f}, "
             f"current_div_loss: {normal_loss:.2f}, "
-            f"ratio (bad) mink unlearning/reference: {np.mean(mink_probs_after_step)/np.mean(mink_probs_base):.3f}"
+            f"ratio (bad) mink unlearning/reference: {np.mean(mink_probs_after_step)/np.mean(mink_probs_base):.3f}, "
             f"ratio (normal) mink unlearning/reference: {np.mean(mink_probs_after_step_normal)/np.mean(mink_probs_base_normal):.3f}"
         )
         logging.info(stats)
