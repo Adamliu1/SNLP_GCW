@@ -16,29 +16,23 @@ import random
 import time
 from collections import deque
 from pathlib import Path
+from typing import List
 
 # Added
 import numpy as np
 import torch
+import wandb
 from accelerate import Accelerator
 from datasets import load_dataset
 from parse_args import parse_args
 from peft import AdaLoraConfig, TaskType, get_peft_model
 from torch.optim import AdamW
 from transformers import AutoModelForCausalLM, AutoTokenizer, get_scheduler
-from utils import (
-    compute_kl,
-    create_pku_dataloader_from_dataset,
-    create_mathqa_dataloader_from_dataset,
-    create_truthfulqa_dataloader,
-    get_answer_loss,
-    get_rand_ans_loss,
-    get_truthfulQA_answers_plaintext,
-)
-
-import wandb
-from typing import List
 from transformers.tokenization_utils_base import BatchEncoding
+from utils import (compute_kl, create_mathqa_dataloader_from_dataset,
+                   create_pku_dataloader_from_dataset,
+                   create_truthfulqa_dataloader, get_answer_loss,
+                   get_rand_ans_loss, get_truthfulQA_answers_plaintext)
 
 
 def set_seed(seed_num: int) -> None:
@@ -46,7 +40,63 @@ def set_seed(seed_num: int) -> None:
     np.random.seed(seed_num)
     random.seed(seed_num)
 
-    
+
+def compute_mink_prob(
+    model: AutoModelForCausalLM,
+    batch: BatchEncoding,
+    K: float,
+    # Compute_for_answer only, or question only? (Normal vs Bad loss)
+    compute_for_answer_only: bool = True,
+) -> List[float]:
+    # Compute the average of min-K% Prob values for the entire batch
+    # TODO: should we do this on just 2 element batch or entire dataset?
+    #
+    # NOTE: Need to properly unpack the batch, compute logits for each batch and
+    # properly mask the output! only compute min K on the part we are checking if is
+    # Unlearned/member in pretraining: output
+    with torch.no_grad():
+        # TODO: verify: in run.py for mink, calculatePerplexity func (49), they also pass labels=input_ids. WHy?
+        # TODO: should we: feeed full sentance (question + answer), and then mask out to compute probabilities,
+        # Or Mask out input, only get logits for the answer and compute probabilities on those
+        # NOTE: For now, we feed full question, as we are unlearning B given A, so we want individual token
+        # probabilities of B, given A (but we don't care about token probabilities of A - the question)
+        outputs = model(batch["input_ids"], attention_mask=batch["attention_mask"])
+        # OR, something along thelines of
+        # outputs = model(batch["input_ids"][batch["start_locs"]:], attention_mask=batch["attention_mask"])
+
+    logits = outputs.logits
+    probabilities = torch.nn.functional.log_softmax(logits, dim=-1)
+    no_of_sentences = batch["input_ids"].shape[0]
+    # If computing for both question and answer, need to set start_locs to 0s!
+    if compute_for_answer_only:
+        assert batch.get("start_locs") != None, (
+            "Compute Min-k % prob: Requested computation only for answer, "
+            "but the batch does not contain start_locs inside tokenised question+answer pairs!"
+        )
+    else:
+        # start locs by default just after <s> starting token!
+        batch["start_locs"] = [torch.IntTensor([1]) for _ in range(no_of_sentences)]
+
+    # Compute for each sentence in the batch
+    pred_mink = []
+    for s_idx in range(no_of_sentences):
+        # extract prob for each token in the unlearned answer given all previous tokens
+        input_ids_sentence = batch["input_ids"][s_idx]  # [1:]
+        all_prob = []
+        for i in range(batch["start_locs"][s_idx].item(), len(input_ids_sentence)):
+            token_id = input_ids_sentence[i]
+            # i is 1 ahead of the actual token, as we want the probability of that token given all previous tokens
+            probability = probabilities[s_idx, i - 1, token_id].item()
+            all_prob.append(probability)
+        # Get top-K % probs and compute their mean (it was log_softmax, so top k% is actually mink% prob)
+        k_length = int(len(all_prob) * K)
+        topk_prob = np.sort(all_prob)[:k_length]
+        pred_mink.append(-np.mean(topk_prob).item())
+
+    # All mean MIN-K% prob in: pred_mink. For now, return all
+    return pred_mink
+
+
 def run_training_batch(
     model,
     pretrained_model,
@@ -59,7 +109,9 @@ def run_training_batch(
     epoch: int,
     bad_loader_size: int = 0,
     normal_loader_size: int = 0,
-):        
+    question_prefix_str: str = "",
+    answer_prefix_str: str = "",
+):
     mink_probs_base = compute_mink_prob(
         model=pretrained_model,
         batch=bad_batch,
@@ -129,9 +181,7 @@ def run_training_batch(
                 "normal_loss": normal_loss,
                 # NOTE: Sould I negative the sign here????
                 "final_loss": loss,
-                "ratio (bad) mink unlearning/reference": np.mean(
-                    mink_probs_after_step
-                )
+                "ratio (bad) mink unlearning/reference": np.mean(mink_probs_after_step)
                 / np.mean(mink_probs_base),
                 "ratio (normal) mink unlearning/reference": np.mean(
                     mink_probs_after_step_normal
@@ -173,62 +223,6 @@ def run_training_batch(
     return loss, bad_loss
 
 
-def compute_mink_prob(
-    model: AutoModelForCausalLM,
-    batch: BatchEncoding,
-    K: float,
-    # Compute_for_answer only, or question only? (Normal vs Bad loss)
-    compute_for_answer_only: bool = True,
-) -> List[float]:
-    # Compute the average of min-K% Prob values for the entire batch
-    # TODO: should we do this on just 2 element batch or entire dataset?
-    #
-    # NOTE: Need to properly unpack the batch, compute logits for each batch and
-    # properly mask the output! only compute min K on the part we are checking if is
-    # Unlearned/member in pretraining: output
-    with torch.no_grad():
-        # TODO: verify: in run.py for mink, calculatePerplexity func (49), they also pass labels=input_ids. WHy?
-        # TODO: should we: feeed full sentance (question + answer), and then mask out to compute probabilities,
-        # Or Mask out input, only get logits for the answer and compute probabilities on those
-        # NOTE: For now, we feed full question, as we are unlearning B given A, so we want individual token
-        # probabilities of B, given A (but we don't care about token probabilities of A - the question)
-        outputs = model(batch["input_ids"], attention_mask=batch["attention_mask"])
-        # OR, something along thelines of
-        # outputs = model(batch["input_ids"][batch["start_locs"]:], attention_mask=batch["attention_mask"])
-
-    logits = outputs.logits
-    probabilities = torch.nn.functional.log_softmax(logits, dim=-1)
-    no_of_sentences = batch["input_ids"].shape[0]
-    # If computing for both question and answer, need to set start_locs to 0s!
-    if compute_for_answer_only:
-        assert batch.get("start_locs") != None, (
-            "Compute Min-k % prob: Requested computation only for answer, "
-            "but the batch does not contain start_locs inside tokenised question+answer pairs!"
-        )
-    else:
-        # start locs by default just after <s> starting token!
-        batch["start_locs"] = [torch.IntTensor([1]) for _ in range(no_of_sentences)]
-
-    # Compute for each sentence in the batch
-    pred_mink = []
-    for s_idx in range(no_of_sentences):
-        # extract prob for each token in the unlearned answer given all previous tokens
-        input_ids_sentence = batch["input_ids"][s_idx]  # [1:]
-        all_prob = []
-        for i in range(batch["start_locs"][s_idx].item(), len(input_ids_sentence)):
-            token_id = input_ids_sentence[i]
-            # i is 1 ahead of the actual token, as we want the probability of that token given all previous tokens
-            probability = probabilities[s_idx, i - 1, token_id].item()
-            all_prob.append(probability)
-        # Get top-K % probs and compute their mean (it was log_softmax, so top k% is actually mink% prob)
-        k_length = int(len(all_prob) * K)
-        topk_prob = np.sort(all_prob)[:k_length]
-        pred_mink.append(-np.mean(topk_prob).item())
-
-    # All mean MIN-K% prob in: pred_mink. For now, return all
-    return pred_mink
-
-
 def main(args) -> None:
     set_seed(args.seed)
     assert (
@@ -239,7 +233,6 @@ def main(args) -> None:
     ) % args.batch_size == 0, "samples in each 'sequence' (--samples_count / --sequential) should be a multiple of batch_size."
     accelerator = Accelerator()  # accelerator precision can be specified if required.
     device = accelerator.device
-
 
     print(f"Loading model {args.model_name} for training...")
     if args.use_quantized:
@@ -271,7 +264,6 @@ def main(args) -> None:
         model.to(device)
 
     tokenizer = AutoTokenizer.from_pretrained(args.model_name, cache_dir=args.cache_dir)
-
 
     # Load data to unlearn.
     if args.unlearning_dataset == "PKU-Alignment/PKU-SafeRLHF":
@@ -337,7 +329,6 @@ def main(args) -> None:
     else:
         print(f"Unlearning dataset not known! dataset: {args.unlearning_dataset}")
         return
-
 
     # Get normal data.
     (
@@ -454,6 +445,8 @@ def main(args) -> None:
                         normal_batch,
                         idx,
                         epoch_num,
+                        question_prefix_str,
+                        answer_prefix_str,
                     )
                     idx += 1
                     # NOTE: the whole dataset is considered to be one single batch.
@@ -518,6 +511,8 @@ def main(args) -> None:
                 epoch_num,
                 bad_loader_len,
                 normal_loader_len,
+                question_prefix_str,
+                answer_prefix_str,
             )
             accelerator.backward(loss)
             optimizer.step()
