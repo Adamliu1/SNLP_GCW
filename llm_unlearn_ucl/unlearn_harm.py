@@ -51,6 +51,7 @@ def compute_mink_prob(
     batch: BatchEncoding,
     K: float,
     # Compute_for_answer only, or question only? (Normal vs Bad loss)
+    device: torch.device,
     compute_for_answer_only: bool = True,
 ) -> List[float]:
     # Compute the average of min-K% Prob values for the entire batch
@@ -65,7 +66,7 @@ def compute_mink_prob(
         # Or Mask out input, only get logits for the answer and compute probabilities on those
         # NOTE: For now, we feed full question, as we are unlearning B given A, so we want individual token
         # probabilities of B, given A (but we don't care about token probabilities of A - the question)
-        outputs = model(batch["input_ids"], attention_mask=batch["attention_mask"])
+        outputs = model(batch["input_ids"].to(device), attention_mask=batch["attention_mask"].to(device))
         # OR, something along thelines of
         # outputs = model(batch["input_ids"][batch["start_locs"]:], attention_mask=batch["attention_mask"])
 
@@ -117,31 +118,37 @@ def run_training_batch(
     question_prefix_str: str = "",
     answer_prefix_str: str = "",
 ):
+    # Calculate min-k% prob score on bad_batch using the unmodified pre-trained model 
     mink_probs_base = compute_mink_prob(
         model=pretrained_model,
         batch=bad_batch,
         K=args.mink_prob_k,
+        device=device,
         compute_for_answer_only=True,
     )
-
+    # Calculate min-k% prob score on normal_batch using the unmodified pre-trained model 
     mink_probs_base_normal = compute_mink_prob(
         model=pretrained_model,
         batch=normal_batch,
         K=args.mink_prob_k,
+        device=device,
         compute_for_answer_only=False,
     )
     # TODO: THIS NEED TO BE CALCULATED AFTER GRADIENT STEP!!! (otherwise we are comparing against previous gradient update!)
+    # Calculate min-k% prob score on bad_batch using the model under unlearning
     mink_probs_after_step = compute_mink_prob(
         model=model,
         batch=bad_batch,
         K=args.mink_prob_k,
+        device=device,
         compute_for_answer_only=True,
     )
-
+    # Calculate min-k% prob score on normal_batch using the model under unlearning
     mink_probs_after_step_normal = compute_mink_prob(
         model=model,
         batch=normal_batch,
         K=args.mink_prob_k,
+        device=device,
         compute_for_answer_only=False,
     )
     ############ GA on answer only. ############
@@ -256,20 +263,20 @@ def main(args) -> None:
             full_bad_dataset = full_bad_dataset.shuffle(seed=args.shuffle_seed)
         if args.sequential > 0:
             # NOTE: sequential/batch unlearning using sliced dataset.
-            train_bad_dataset = full_bad_dataset.select(range(args.epoch_size))
+            train_bad_dataset = full_bad_dataset.select(range(args.samples_count))
         else:
             # NOTE: full dataset like bytedance.
             train_bad_dataset = full_bad_dataset
 
         Path(args.samples_save_dir).mkdir(exist_ok=True)
-        bad_sample_path = f"{args.samples_save_dir}/bad_{args.epoch_size if args.sequential > 0 else 'full'}_samples.json"
+        bad_sample_path = f"{args.samples_save_dir}/bad_{args.samples_count if args.sequential > 0 else 'full'}_samples.json"
         with open(bad_sample_path, "w") as fin:
             print(f"Writing bad samples to {bad_sample_path}")
             json.dump(
                 [
                     train_bad_dataset[i]
                     for i in range(
-                        args.epoch_size
+                        args.samples_count
                         if args.sequential > 0
                         else len(train_bad_dataset)
                     )
@@ -412,17 +419,17 @@ def main(args) -> None:
                     train_normal_loader, train_bad_loader
                 ):
                     loss, bad_loss = run_training_batch(
-                        model,
-                        pretrained_model,
-                        tokenizer,
-                        device,
-                        normal_ans,
-                        bad_batch,
-                        normal_batch,
-                        idx,
-                        epoch_num,
-                        question_prefix_str,
-                        answer_prefix_str,
+                        model=model,
+                        pretrained_model=pretrained_model,
+                        tokenizer=tokenizer,
+                        device=device,
+                        normal_ans=normal_ans,
+                        bad_batch=bad_batch,
+                        normal_batch=normal_batch,
+                        idx=idx,
+                        epoch=epoch_num,
+                        question_prefix_str=question_prefix_str,
+                        answer_prefix_str=answer_prefix_str,
                     )
                     idx += 1
                     # NOTE: the whole dataset is considered to be one single batch.
@@ -476,19 +483,19 @@ def main(args) -> None:
                 train_normal_loader_gen = iter(train_normal_loaders[0])
                 normal_batch = next(train_normal_loader_gen)
             loss, bad_loss = run_training_batch(
-                model,
-                pretrained_model,
-                tokenizer,
-                device,
-                normal_ans,
-                bad_batch,
-                normal_batch,
-                idx,
-                epoch_num,
-                bad_loader_len,
-                normal_loader_len,
-                question_prefix_str,
-                answer_prefix_str,
+                model=model,
+                pretrained_model=pretrained_model,
+                tokenizer=tokenizer,
+                device=device,
+                normal_ans=normal_ans,
+                bad_batch=bad_batch,
+                normal_batch=normal_batch,
+                idx=idx,
+                epoch=epoch_num,
+                bad_loader_size=bad_loader_len,
+                normal_loader_size=normal_loader_len,
+                question_prefix_str=question_prefix_str,
+                answer_prefix_str=answer_prefix_str,
             )
             accelerator.backward(loss)
             optimizer.step()
