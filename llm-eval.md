@@ -83,3 +83,16 @@ It might be necessary to adjust the learning rate so that the rate of re-learnin
 ## Using Min-k% prob as an unlearning metric - part of the unlearning loss?
 
 @Willmish
+
+## Unlearning using Bytedance paper
+
+To run unlearning on any dataset (currently WIP), added : `--unlearning_dataset` param.
+To use custom datasets you need to define a corresponding `create_pku_dataloader_from_dataset()` function in utils.py.
+
+You can use below, but do change the cache dir and names accordingly!
+```bash
+ python3 unlearn_harm.py --unlearning_dataset=math_qa --model_name=facebook/opt-1.3b --model_save_dir=models/opt1.3b_unlearned_mathqa --log_file=logs/opt-1.3b-unlearn-mathqa.log --lr=1e-4 --cache_dir=/cs/student/projects1/2020/sduchnie/SNLP_GCW/.cache --use_quantized=True
+
+ python3 unlearn_harm.py --unlearning_dataset=PKU-Alignment/PKU-SafeRLHF --model_name=facebook/opt-1.3b --model_save_dir=models/opt1.3b_unlearned_harmful --log_file=logs/opt-1.3b-unlearn-harmful.log --lr=1e-4 --cache_dir=/cs/student/projects1/2020/sduchnie/SNLP_GCW/.cache --use_quantized=True
+ 
+```

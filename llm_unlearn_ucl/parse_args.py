@@ -3,11 +3,34 @@ import argparse
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        description="Unlearn data/skill based on a particular dataset.",
+    )
+
+    parser.add_argument(
+        "--mink_prob_k",
+        type=float,
+        default=0.2,
+        help="K value as a float for percentage of of lowest "
+        "probability tokens to consider, used by Min-K percent PROB https://arxiv.org/pdf/2310.16789.pdf",
     )
 
     parser.add_argument("--use_lora", action="store_true")
 
+    parser.add_argument(
+        "--use_quantized",
+        type=bool,
+        default=False,
+        help="Set to True if using quantised models.",
+    )
+
+    parser.add_argument(
+        "--unlearning_dataset",
+        type=str,
+        default="PKU-Alignment/PKU-SafeRLHF",
+        help="Name of the dataset to unlearn (NOTE: it needs to have"
+        " a custom dataloader creation script in utils.py)",
+    )
     parser.add_argument(
         "--max_unlearn_steps",
         type=int,
@@ -52,7 +75,6 @@ def parse_args() -> argparse.Namespace:
         help="Directory to save model.",
     )
 
-    # TODO: the default path needs to be reviewed
     parser.add_argument(
         "--samples_save_dir",
         type=str,
