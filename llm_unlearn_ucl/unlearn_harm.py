@@ -132,9 +132,10 @@ def save_batch_data(batch, batch_type, idx, save_dir):
 
 def compute_mink_prob(
     model: AutoModelForCausalLM,
-    tokenizer: AutoTokenizer,
     batch: BatchEncoding,
     K: float,
+    # Compute_for_answer only, or question only? (Normal vs Bad loss)
+    compute_for_answer_only: bool = True,
 ) -> List[float]:
     # Compute the average of min-K% Prob values for the entire batch
     # TODO: should we do this on just 2 element batch or entire dataset?
@@ -151,10 +152,20 @@ def compute_mink_prob(
         outputs = model(batch["input_ids"], attention_mask=batch["attention_mask"])
         # OR, something along thelines of
         # outputs = model(batch["input_ids"][batch["start_locs"]:], attention_mask=batch["attention_mask"])
-    logits = outputs.logits
 
+    logits = outputs.logits
     probabilities = torch.nn.functional.log_softmax(logits, dim=-1)
     no_of_sentences = batch["input_ids"].shape[0]
+    # If computing for both question and answer, need to set start_locs to 0s!
+    if compute_for_answer_only:
+        assert batch.get("start_locs") != None, (
+            "Compute Min-k % prob: Requested computation only for answer, "
+            "but the batch does not contain start_locs inside tokenised question+answer pairs!"
+        )
+    else:
+        # start locs by default just after <s> starting token!
+        batch["start_locs"] = [torch.IntTensor([1]) for _ in range(no_of_sentences)]
+
     # Compute for each sentence in the batch
     pred_mink = []
     for s_idx in range(no_of_sentences):
@@ -376,27 +387,30 @@ def main(args) -> None:
         # )
         mink_probs_base = compute_mink_prob(
             model=pretrained_model,
-            tokenizer=tokenizer,
             batch=bad_batch,
             K=args.mink_prob_k,
+            compute_for_answer_only=True,
         )
 
         mink_probs_base_normal = compute_mink_prob(
             model=pretrained_model,
-            tokenizer=tokenizer,
             batch=normal_batch,
             K=args.mink_prob_k,
+            compute_for_answer_only=False,
         )
         # TODO: THIS NEED TO BE CALCULATED AFTER GRADIENT STEP!!! (otherwise we are comparing against previous gradient update!)
         mink_probs_after_step = compute_mink_prob(
-            model=model, tokenizer=tokenizer, batch=bad_batch, K=args.mink_prob_k
+            model=model,
+            batch=bad_batch,
+            K=args.mink_prob_k,
+            compute_for_answer_only=True,
         )
 
         mink_probs_after_step_normal = compute_mink_prob(
             model=model,
-            tokenizer=tokenizer,
             batch=normal_batch,
             K=args.mink_prob_k,
+            compute_for_answer_only=False,
         )
         ############ GA on answer only. ############
         bad_loss = get_answer_loss("ga", bad_batch, model, device=device)
