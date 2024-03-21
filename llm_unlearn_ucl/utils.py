@@ -16,7 +16,9 @@ from transformers import DataCollatorForLanguageModeling
 # random.seed(8888)
 
 
-def create_pku_dataloader_from_dataset(tokenizer, dataset, fraction=1.0, batch_size=4, splits: int = 1):
+def create_pku_dataloader_from_dataset(
+    tokenizer, dataset, fraction=1.0, batch_size=4, splits: int = 1
+):
     """
     Given the PKU dataset, create the dataloader on the unlearned harmful Q&A pairs.
 
@@ -65,7 +67,9 @@ def create_pku_dataloader_from_dataset(tokenizer, dataset, fraction=1.0, batch_s
                 results["attention_mask"].append(tokenized["attention_mask"])
                 # Calculate start idx for answer
                 test_text = f"### Question: {prompt}\n ### Answer: "
-                test_tokenized = tokenizer(test_text, truncation=True, padding="max_length")
+                test_tokenized = tokenizer(
+                    test_text, truncation=True, padding="max_length"
+                )
                 results["start_locs"].append(len(test_tokenized["input_ids"]) - 1)
 
         return results
@@ -94,14 +98,24 @@ def create_pku_dataloader_from_dataset(tokenizer, dataset, fraction=1.0, batch_s
 
     # TODO: data_collator introduces extra/less processed samples.
     dataloaders = [
-        torch.utils.data.DataLoader(train_split_dataset, batch_size=batch_size, collate_fn=data_collator)
-        for train_split_dataset in torch.utils.data.random_split(dataset, tuple(len(dataset) // splits for i in range(splits)))
+        torch.utils.data.DataLoader(
+            train_split_dataset, batch_size=batch_size, collate_fn=data_collator
+        )
+        for train_split_dataset in torch.utils.data.random_split(
+            dataset, tuple(len(dataset) // splits for i in range(splits))
+        )
     ]
 
     return dataloaders
 
 
-def create_truthfulqa_dataloader(tokenizer, batch_size=4, num_samples: Optional[int] = 64, seed: Optional[int] = 42, splits: int = 1):
+def create_truthfulqa_dataloader(
+    tokenizer,
+    batch_size=4,
+    num_samples: Optional[int] = 64,
+    seed: Optional[int] = 42,
+    splits: int = 1,
+):
     """
     Create the TruthfulQA dataloader for the normal data.
 
@@ -128,26 +142,41 @@ def create_truthfulqa_dataloader(tokenizer, batch_size=4, num_samples: Optional[
         data["input_ids"].append(tokenized["input_ids"])
         data["attention_mask"].append(tokenized["attention_mask"])
     dataset = Dataset.from_dict(data)
-    assert num_samples is None or num_samples < 0.7 * len(dataset), f"num_samples is too large. max is {int(0.7 * len(dataset))}."
+    assert num_samples is None or num_samples < 0.7 * len(
+        dataset
+    ), f"num_samples is too large. max is {int(0.7 * len(dataset))}."
 
     # Split train/val/test = 0.7/0.1/0.2.
     train_len = num_samples or int(0.7 * len(dataset))
     val_len = int(0.1 * len(dataset))
     test_len = len(dataset) - train_len - val_len
 
-    train_data, val_data, test_data = torch.utils.data.random_split(dataset, [train_len, val_len, test_len])
+    train_data, val_data, test_data = torch.utils.data.random_split(
+        dataset, [train_len, val_len, test_len]
+    )
 
     data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
     if num_samples is None:
         num_samples = len(train_data)
     train_dataloaders = [
-        torch.utils.data.DataLoader(train_batch_ds, batch_size=batch_size, collate_fn=data_collator, shuffle=True)
-        for train_batch_ds in torch.utils.data.random_split(train_data, tuple(num_samples // splits for i in range(splits)))
+        torch.utils.data.DataLoader(
+            train_batch_ds,
+            batch_size=batch_size,
+            collate_fn=data_collator,
+            shuffle=True,
+        )
+        for train_batch_ds in torch.utils.data.random_split(
+            train_data, tuple(num_samples // splits for i in range(splits))
+        )
     ]
 
     # train_dataloader = torch.utils.data.DataLoader(train_data, batch_size=batch_size, collate_fn=data_collator, shuffle=True)
-    val_dataloader = torch.utils.data.DataLoader(val_data, batch_size=batch_size, collate_fn=data_collator, shuffle=True)
-    test_dataloader = torch.utils.data.DataLoader(test_data, batch_size=batch_size, collate_fn=data_collator, shuffle=True)
+    val_dataloader = torch.utils.data.DataLoader(
+        val_data, batch_size=batch_size, collate_fn=data_collator, shuffle=True
+    )
+    test_dataloader = torch.utils.data.DataLoader(
+        test_data, batch_size=batch_size, collate_fn=data_collator, shuffle=True
+    )
 
     return train_dataloaders, val_dataloader, test_dataloader, raw_train_data
 
@@ -290,7 +319,9 @@ def get_rand_ans_loss(bad_batch, tokenizer, normal_ans, model, K=5, device="cuda
         # Get question.
         question = ori_text.split("###")[1].split("Question:")[-1].strip()
         question_prefix = f"### Question: {question}\n ### Answer: "
-        tokenized_question_prefix = tokenizer(question_prefix, truncation=True, padding="max_length")
+        tokenized_question_prefix = tokenizer(
+            question_prefix, truncation=True, padding="max_length"
+        )
         # Doesn't need to minus 1 because there's a starting token in the beginning.
         start_loc = len(tokenized_question_prefix)
 
@@ -299,7 +330,9 @@ def get_rand_ans_loss(bad_batch, tokenizer, normal_ans, model, K=5, device="cuda
             random_sample = f"{question_prefix}{rand_ans}"
 
             # Tokenize.
-            tokenized_rs = tokenizer(random_sample, truncation=True, padding="max_length")
+            tokenized_rs = tokenizer(
+                random_sample, truncation=True, padding="max_length"
+            )
             batch_random_features.append(
                 {
                     "input_ids": tokenized_rs["input_ids"],

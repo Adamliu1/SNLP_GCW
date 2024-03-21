@@ -2,7 +2,9 @@ import argparse
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
 
     parser.add_argument("--use_lora", action="store_true")
 
@@ -12,7 +14,9 @@ def parse_args() -> argparse.Namespace:
         default=1000,
         help="Max number of unlearning steps for vanilla GA unlearning (bytedance).",
     )
-    parser.add_argument("--bad_weight", type=float, default=0.5, help="Weight on the bad loss.")
+    parser.add_argument(
+        "--bad_weight", type=float, default=0.5, help="Weight on the bad loss."
+    )
     parser.add_argument(
         "--random_weight",
         type=float,
@@ -25,7 +29,9 @@ def parse_args() -> argparse.Namespace:
         default=1,
         help="Weight on normal loss.",
     )
-    parser.add_argument("--batch_size", type=int, default=2, help="Batch size of unlearning.")
+    parser.add_argument(
+        "--batch_size", type=int, default=2, help="Batch size of unlearning."
+    )
     parser.add_argument("--lr", type=float, default=2e-6, help="Unlearning LR.")
     parser.add_argument(
         "--max_bad_loss",
@@ -54,7 +60,9 @@ def parse_args() -> argparse.Namespace:
         help="The directory that saves the sample used for unlearning",
     )
 
-    parser.add_argument("--save_every", type=int, default=500, help="How many steps to save model.")
+    parser.add_argument(
+        "--save_every", type=int, default=500, help="How many steps to save model."
+    )
     parser.add_argument(
         "--log_file",
         type=str,
@@ -108,15 +116,27 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="The name of the wandb run,",
     )
-    parser.add_argument("--num_running_loss", type=int, default=10, help="Number of losses to keep for computing running average loss.")
-    parser.add_argument("--epoch_size", type=int, default=64, help="Number of samples per epoch from the unlearning set to unlearn on.")
+    parser.add_argument(
+        "--num_running_loss",
+        type=int,
+        default=10,
+        help="Number of losses to keep for computing running average loss.",
+    )
+    parser.add_argument(
+        "--epoch_size",
+        type=int,
+        default=64,
+        help="Number of samples per epoch from the unlearning set to unlearn on.",
+    )
     parser.add_argument(
         "--shuffle_seed",
         type=int,
         default=None,
         help="if set to an int, shuffle the dataset with this seed. Otherwise, the seed supplied to --seed will be used.",
     )
-    parser.add_argument("--num_epochs", type=int, default=100, help="Number of epochs to unlearn.")
+    parser.add_argument(
+        "--num_epochs", type=int, default=100, help="Number of epochs to unlearn."
+    )
     args = parser.parse_args()
 
     return args
