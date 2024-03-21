@@ -19,7 +19,6 @@ from pathlib import Path
 
 # Added
 import numpy as np
-import pandas as pd
 import torch
 from accelerate import Accelerator
 from datasets import load_dataset
@@ -27,14 +26,9 @@ from parse_args import parse_args
 from peft import AdaLoraConfig, TaskType, get_peft_model
 from torch.optim import AdamW
 from transformers import AutoModelForCausalLM, AutoTokenizer, get_scheduler
-from utils import (
-    compute_kl,
-    create_pku_dataloader_from_dataset,
-    create_truthfulqa_dataloader,
-    get_answer_loss,
-    get_rand_ans_loss,
-    get_truthfulQA_answers_plaintext,
-)
+from utils import (compute_kl, create_pku_dataloader_from_dataset,
+                   create_truthfulqa_dataloader, get_answer_loss,
+                   get_rand_ans_loss, get_truthfulQA_answers_plaintext)
 
 import wandb
 
@@ -45,87 +39,91 @@ def set_seed(seed_num: int) -> None:
     random.seed(seed_num)
 
 
-class BatchSamplesLogger:
-    def __init__(self, tokenizer, prefix="", decode_text=True):
-        self.tokenizer = tokenizer
-        self.prefix = prefix
-        self.decode_text = decode_text
-        self.data = []
-        self.columns = [f"{prefix} Batch Number", f"{prefix} Input IDs"]
-        self.dataframe = pd.DataFrame(
-            columns=(
-                ["batch_number", "input_ids_list"]
-                if not self.decode_text
-                else ["batch_number", "input_ids_list", "sample_text"]
-            )
-        )
-        if decode_text:
-            self.columns.append(f"{prefix} Sample Text")
+def run_training_batch(
+    model,
+    pretrained_model,
+    tokenizer,
+    device,
+    normal_ans,
+    bad_batch,
+    normal_batch,
+    idx,
+    epoch: int,
+    bad_loader_size: int = 0,
+    normal_loader_size: int = 0,
+):
+    ############ GA on answer only. ############
+    bad_loss = get_answer_loss("ga", bad_batch, model, device=device)
 
-    def append_batch_samples(self, batch, batch_number):
-        """Accumulate samples from the batch along with the batch number."""
-        batch_size = batch["input_ids"].size(0)
-        new_rows = []
+    ############ Random mismatch. ############
+    random_loss = get_rand_ans_loss(
+        bad_batch,
+        tokenizer,
+        normal_ans,
+        model,
+        K=5,
+        device=device,
+    )
+    # time.sleep(20)
+    ############ KL on normal samples. ############
+    normal_loss = compute_kl(pretrained_model, model, normal_batch, device)
 
-        for i in range(batch_size):
-            input_ids_list = batch["input_ids"][i].tolist()
-            sample_text = (
-                self.tokenizer.decode(batch["input_ids"][i], skip_special_tokens=True)
-                if self.decode_text
-                else ""
-            )
-            # Wanb info
-            data_row = (
-                [batch_number, input_ids_list]
-                if not self.decode_text
-                else [batch_number, input_ids_list, sample_text]
-            )
-            self.data.append(data_row)
-            #
-            data_dict = {
-                "batch_number": batch_number,
-                "input_ids_list": input_ids_list,
-                "sample_text": sample_text if self.decode_text else pd.NA,
+    # Final loss = bad loss + random smoothing + normal loss.
+    loss = (
+        args.bad_weight * bad_loss
+        + args.random_weight * random_loss
+        + args.normal_weight * normal_loss
+    )
+
+    # NOTE: backwardnd optimisation is done outside of this function in the
+    # training loop for gradient accumulation compatibility.
+    bad_batch_idx = idx
+    normal_batch_idx = idx
+    if bad_loader_size:
+        bad_batch_idx %= bad_loader_size
+    if normal_loader_size:
+        normal_batch_idx %= normal_loader_size
+        # Print.
+    if bool(args.wandb_log) and (idx % args.wandb_log_feq == 0):
+        wandb.log(
+            {
+                "batch": idx,
+                "bad_loss": -bad_loss,
+                "normal_loss": normal_loss,
+                # NOTE: Sould I negative the sign here????
+                "final_loss": loss,
             }
-            new_rows.append(data_dict)
+        )
 
-        new_rows_df = pd.DataFrame(new_rows)
-        self.dataframe = pd.concat([self.dataframe, new_rows_df])
+    stats = (
+        f"epoch: {epoch}, batch: {idx}, "
+        f"bad_loss: {-bad_loss:.2f}, "
+        f"current_div_loss: {normal_loss:.2f}, "
+    )
+    logging.info(stats)
+    print(stats)
+    idx += 1
 
-    def export_dataframe(self, path):
-        self.dataframe.to_csv(path)
+    if idx % args.save_every == 0:
+        sample_save_dir = Path(args.samples_save_dir)
+        sample_save_dir.mkdir(parents=True, exist_ok=True)
 
-    def log_accumulated_samples(self, wandb, reset=True):
-        """Log the accumulated data as a wandb Table and optionally reset."""
-        table = wandb.Table(data=self.data, columns=self.columns)
-        wandb.log({f"Accumulated {self.prefix} Batch Samples": table})
-        if reset:
-            self.data = []  # Reset the data for the next accumulation
+        if bool(args.wandb_log):  # Create a new artifact for this batch
+            artifact = wandb.Artifact(name=f"batch_data_{idx}", type="batch_data")
 
+            artifact.add_file(args.log_file, name=f"full_logging_{idx}.log")
+            artifact.add_file(
+                os.path.join(args.samples_save_dir, f"bad_batch_{idx}.csv"),
+                name=f"bad_batch_{idx}.csv",
+            )
+            artifact.add_file(
+                os.path.join(args.samples_save_dir, f"normal_batch_{idx}.csv"),
+                name=f"normal_batch_{idx}.csv",
+            )
+            # Log the artifact to wandb
+            wandb.log_artifact(artifact)
 
-def save_batch_data(batch, batch_type, idx, save_dir):
-    """
-    Saves input_ids and attention_mask from a batch to files.
-
-    Args:
-        batch: The batch containing the samples to save.
-        batch_type: A string indicating whether the batch is 'bad' or 'normal'.
-        idx: The index of the batch (e.g., batch number in the training loop).
-        save_dir: The directory where the files should be saved.
-    """
-    # Ensure save_dir exists
-    save_dir = Path(save_dir)
-    save_dir.mkdir(parents=True, exist_ok=True)
-
-    # Define file paths
-    input_ids_path = f"{save_dir}/{batch_type}_input_ids_{idx}.pt"
-    attention_mask_path = f"{save_dir}/{batch_type}_attention_mask_{idx}.pt"
-
-    # Save tensors
-    torch.save(batch["input_ids"], input_ids_path)
-    torch.save(batch["attention_mask"], attention_mask_path)
-
-    return input_ids_path, attention_mask_path
+    return loss, bad_loss
 
 
 def main(args) -> None:
@@ -136,8 +134,7 @@ def main(args) -> None:
     assert (
         args.samples_count // args.sequential
     ) % args.batch_size == 0, "samples in each 'sequence' (--samples_count / --sequential) should be a multiple of batch_size."
-    accelerator = Accelerator()
-    # accelerator = Accelerator(mixed_precision="fp16")
+    accelerator = Accelerator()  # accelerator precision can be specified if required.
     device = accelerator.device
 
     model = AutoModelForCausalLM.from_pretrained(
@@ -266,132 +263,6 @@ def main(args) -> None:
     # pretrained_model = AutoModelForCausalLM.from_pretrained(args.model_name, cache_dir=args.cache_dir, load_in_8bit=True, torch_dtype=torch.float32)
     pretrained_model.to(device)
 
-    def run_training_batch(
-        bad_batch,
-        normal_batch,
-        idx,
-        epoch: int,
-        bad_loader_size: int = 0,
-        normal_loader_size: int = 0,
-    ):
-        ############ GA on answer only. ############
-        bad_loss = get_answer_loss("ga", bad_batch, model, device=device)
-
-        ############ Random mismatch. ############
-        random_loss = get_rand_ans_loss(
-            bad_batch,
-            tokenizer,
-            normal_ans,
-            model,
-            K=5,
-            device=device,
-        )
-        # time.sleep(20)
-        ############ KL on normal samples. ############
-        normal_loss = compute_kl(pretrained_model, model, normal_batch, device)
-
-        # Final loss = bad loss + random smoothing + normal loss.
-        loss = (
-            args.bad_weight * bad_loss
-            + args.random_weight * random_loss
-            + args.normal_weight * normal_loss
-        )
-
-        # Backprop.
-        # accelerator.backward(loss)
-        # optimizer.step()
-        # lr_scheduler.step()
-        # optimizer.zero_grad()
-        bad_batch_idx = idx
-        normal_batch_idx = idx
-        if bad_loader_size:
-            bad_batch_idx %= bad_loader_size
-        if normal_loader_size:
-            normal_batch_idx %= normal_loader_size
-        batch_samples_logger_bad.append_batch_samples(bad_batch, bad_batch_idx)
-        batch_samples_logger_normal.append_batch_samples(normal_batch, normal_batch_idx)
-
-        # Print.
-        if bool(args.wandb_log) and (idx % args.wandb_log_feq == 0):
-            wandb.log(
-                {
-                    "batch": idx,
-                    "bad_loss": -bad_loss,
-                    "normal_loss": normal_loss,
-                    # NOTE: Sould I negative the sign here????
-                    "final_loss": loss,
-                }
-            )
-            # Log batch samples with optional decoding
-            batch_samples_logger_bad.log_accumulated_samples(wandb)
-            batch_samples_logger_normal.log_accumulated_samples(wandb)
-
-        stats = (
-            f"epoch: {epoch}, batch: {idx}, "
-            f"bad_loss: {-bad_loss:.2f}, "
-            f"current_div_loss: {normal_loss:.2f}, "
-        )
-        logging.info(stats)
-        print(stats)
-        idx += 1
-
-        if idx % args.save_every == 0:
-            # model_tokenizer_save_dir = Path(os.path.join(args.model_save_dir, f"checkpoint_{idx}"))
-            # model_tokenizer_save_dir.mkdir(parents=True, exist_ok=True)
-
-            # model.save_pretrained(model_tokenizer_save_dir, from_pt=True)
-            # tokenizer.save_pretrained(model_tokenizer_save_dir)
-
-            sample_save_dir = Path(args.samples_save_dir)
-            sample_save_dir.mkdir(parents=True, exist_ok=True)
-
-            batch_samples_logger_bad.export_dataframe(
-                os.path.join(sample_save_dir, f"bad_batch_{idx}.csv")
-            )
-            batch_samples_logger_normal.export_dataframe(
-                os.path.join(sample_save_dir, f"normal_batch_{idx}.csv")
-            )
-            if bool(args.wandb_log):
-                # Save batch data to files
-                # bad_input_ids_path, bad_attention_mask_path = save_batch_data(
-                #     bad_batch, "bad", idx, args.samples_save_dir
-                # )
-                # normal_input_ids_path, normal_attention_mask_path = save_batch_data(
-                #     normal_batch, "normal", idx, args.samples_save_dir
-                # )
-
-                # Create a new artifact for this batch
-                artifact = wandb.Artifact(name=f"batch_data_{idx}", type="batch_data")
-
-                # Add files to the artifact
-                # artifact.add_file(
-                #     bad_input_ids_path, name=f"bad_batch_input_ids_{idx}.pt"
-                # )
-                # artifact.add_file(
-                #     bad_attention_mask_path,
-                #     name=f"bad_batch_attention_mask_{idx}.pt",
-                # )
-                # artifact.add_file(
-                #     normal_input_ids_path, name=f"normal_batch_input_ids_{idx}.pt"
-                # )
-                # artifact.add_file(
-                #     normal_attention_mask_path,
-                #     name=f"normal_batch_attention_mask_{idx}.pt",
-                # )
-                artifact.add_file(args.log_file, name=f"full_logging_{idx}.log")
-                artifact.add_file(
-                    os.path.join(args.samples_save_dir, f"bad_batch_{idx}.csv"),
-                    name=f"bad_batch_{idx}.csv",
-                )
-                artifact.add_file(
-                    os.path.join(args.samples_save_dir, f"normal_batch_{idx}.csv"),
-                    name=f"normal_batch_{idx}.csv",
-                )
-                # Log the artifact to wandb
-                wandb.log_artifact(artifact)
-
-        return loss, bad_loss
-
     print("#################### START UNLEARNING ####################")
     # Start unlearning.
     bad_loss = 0.0
@@ -399,12 +270,6 @@ def main(args) -> None:
     start_time = time.time()
     running_loss = deque()
     # Here for caching what samples are used so far
-    batch_samples_logger_bad = BatchSamplesLogger(
-        tokenizer, prefix="Bad", decode_text=True
-    )
-    batch_samples_logger_normal = BatchSamplesLogger(
-        tokenizer, prefix="Normal", decode_text=True
-    )
 
     if args.sequential > 0:
         # NOTE: sequential/batch unlearning
@@ -420,7 +285,15 @@ def main(args) -> None:
                     train_normal_loader, train_bad_loader
                 ):
                     loss, bad_loss = run_training_batch(
-                        bad_batch, normal_batch, idx, epoch_num
+                        model,
+                        pretrained_model,
+                        tokenizer,
+                        device,
+                        normal_ans,
+                        bad_batch,
+                        normal_batch,
+                        idx,
+                        epoch_num,
                     )
                     idx += 1
                     # NOTE: the whole dataset is considered to be one single batch.
@@ -452,11 +325,6 @@ def main(args) -> None:
                     f"bad_loss {abs(accu_bad_loss)} exceeding args.max_bad_loss {args.max_bad_loss}. Unlearning stopped."
                 )
                 break
-        model_tokenizer_save_dir = Path(os.path.join(args.model_save_dir, "final"))
-        model_tokenizer_save_dir.mkdir(parents=True, exist_ok=True)
-
-        model.save_pretrained(model_tokenizer_save_dir, from_pt=True)
-        tokenizer.save_pretrained(model_tokenizer_save_dir)
 
     else:
         # NOTE: Original ByteDance Unlearning.
@@ -478,6 +346,11 @@ def main(args) -> None:
                 train_normal_loader_gen = iter(train_normal_loaders[0])
                 normal_batch = next(train_normal_loader_gen)
             loss, bad_loss = run_training_batch(
+                model,
+                pretrained_model,
+                tokenizer,
+                device,
+                normal_ans,
                 bad_batch,
                 normal_batch,
                 idx,
@@ -506,11 +379,6 @@ def main(args) -> None:
                     f"bad_loss {avg_loss} exceeding args.max_bad_loss {args.max_bad_loss}. Unlearning stopped."
                 )
                 break
-        model_tokenizer_save_dir = Path(os.path.join(args.model_save_dir, "final"))
-        model_tokenizer_save_dir.mkdir(parents=True, exist_ok=True)
-
-        model.save_pretrained(model_tokenizer_save_dir, from_pt=True)
-        tokenizer.save_pretrained(model_tokenizer_save_dir)
 
     end_time = time.time()
     logging.info("Total time: %d sec" % (end_time - start_time))
