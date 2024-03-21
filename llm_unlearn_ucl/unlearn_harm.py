@@ -357,9 +357,11 @@ def main(args) -> None:
                     tokenizer.save_pretrained(model_tokenizer_save_dir)
 
                 if abs(accu_bad_loss) > args.max_bad_loss:
+                    # Only printing warning at the outer loop to avoid repeated warnings.
                     break
 
             if abs(accu_bad_loss) > args.max_bad_loss:
+                print(f"bad_loss {abs(accu_bad_loss)} exceeding args.max_bad_loss {args.max_bad_loss}. Unlearning stopped.")
                 break
         model_tokenizer_save_dir = Path(os.path.join(args.model_save_dir, "final"))
         model_tokenizer_save_dir.mkdir(parents=True, exist_ok=True)
@@ -400,7 +402,9 @@ def main(args) -> None:
             running_loss.append(bad_loss.item())
             while len(running_loss) > args.num_running_loss:
                 running_loss.popleft()
-            if abs(np.mean(running_loss)) > args.max_bad_loss:
+            avg_loss = abs(np.mean(running_loss))
+            if avg_loss > args.max_bad_loss:
+                print(f"bad_loss {avg_loss} exceeding args.max_bad_loss {args.max_bad_loss}. Unlearning stopped.")
                 break
 
     end_time = time.time()
