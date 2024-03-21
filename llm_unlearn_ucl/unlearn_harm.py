@@ -29,10 +29,15 @@ from peft import AdaLoraConfig, TaskType, get_peft_model
 from torch.optim import AdamW
 from transformers import AutoModelForCausalLM, AutoTokenizer, get_scheduler
 from transformers.tokenization_utils_base import BatchEncoding
-from utils import (compute_kl, create_mathqa_dataloader_from_dataset,
-                   create_pku_dataloader_from_dataset,
-                   create_truthfulqa_dataloader, get_answer_loss,
-                   get_rand_ans_loss, get_truthfulQA_answers_plaintext)
+from utils import (
+    compute_kl,
+    create_mathqa_dataloader_from_dataset,
+    create_pku_dataloader_from_dataset,
+    create_truthfulqa_dataloader,
+    get_answer_loss,
+    get_rand_ans_loss,
+    get_truthfulQA_answers_plaintext,
+)
 
 
 def set_seed(seed_num: int) -> None:
