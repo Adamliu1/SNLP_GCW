@@ -46,7 +46,7 @@ def set_seed(seed_num: int) -> None:
     np.random.seed(seed_num)
     random.seed(seed_num)
 
-    
+
 def run_training_batch(
     model,
     pretrained_model,
@@ -59,7 +59,7 @@ def run_training_batch(
     epoch: int,
     bad_loader_size: int = 0,
     normal_loader_size: int = 0,
-):        
+):
     mink_probs_base = compute_mink_prob(
         model=pretrained_model,
         batch=bad_batch,
@@ -129,9 +129,7 @@ def run_training_batch(
                 "normal_loss": normal_loss,
                 # NOTE: Sould I negative the sign here????
                 "final_loss": loss,
-                "ratio (bad) mink unlearning/reference": np.mean(
-                    mink_probs_after_step
-                )
+                "ratio (bad) mink unlearning/reference": np.mean(mink_probs_after_step)
                 / np.mean(mink_probs_base),
                 "ratio (normal) mink unlearning/reference": np.mean(
                     mink_probs_after_step_normal
@@ -240,7 +238,6 @@ def main(args) -> None:
     accelerator = Accelerator()  # accelerator precision can be specified if required.
     device = accelerator.device
 
-
     print(f"Loading model {args.model_name} for training...")
     if args.use_quantized:
         # Uncomment for quantized
@@ -271,7 +268,6 @@ def main(args) -> None:
         model.to(device)
 
     tokenizer = AutoTokenizer.from_pretrained(args.model_name, cache_dir=args.cache_dir)
-
 
     # Load data to unlearn.
     if args.unlearning_dataset == "PKU-Alignment/PKU-SafeRLHF":
@@ -337,7 +333,6 @@ def main(args) -> None:
     else:
         print(f"Unlearning dataset not known! dataset: {args.unlearning_dataset}")
         return
-
 
     # Get normal data.
     (
