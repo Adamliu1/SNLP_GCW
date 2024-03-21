@@ -141,20 +141,15 @@ def main(args) -> None:
     full_bad_dataset = load_dataset("PKU-Alignment/PKU-SafeRLHF", split="train").filter(
         lambda entry: not (entry["is_response_0_safe"] or entry["is_response_1_safe"])
     )
-    if args.shuffle_seed is not None:
-        # NOTE: Optionally use a different seed for shuffling dataset.
-        generator_state = torch.get_rng_state()
-        torch.manual_seed(args.shuffle_seed)
+    if args.shuffle_seed:
+        # shuffle the dataset with a given seed for reproducibility
+        full_bad_dataset = full_bad_dataset.shuffle(seed=args.shuffle_seed)
     if args.sequential > 0:
         # NOTE: sequential/batch unlearning using sliced dataset.
-        train_bad_dataset = full_bad_dataset.select(torch.randperm(len(full_bad_dataset))[: args.epoch_size].tolist())
+        train_bad_dataset = full_bad_dataset.select(range(args.epoch_size))
     else:
         # NOTE: full dataset like bytedance.
-        train_bad_dataset = full_bad_dataset.select(torch.randperm(len(full_bad_dataset)).tolist())
-
-    if args.shuffle_seed is not None:
-        # NOTE: restore torch state to use args.seed for other part of the code.
-        torch.set_rng_state(generator_state)
+        train_bad_dataset = full_bad_dataset
 
     Path(args.samples_save_dir).mkdir(exist_ok=True)
     bad_sample_path = f"{args.samples_save_dir}/bad_{args.epoch_size if args.sequential > 0 else 'full'}_samples.json"
