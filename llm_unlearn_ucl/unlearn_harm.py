@@ -26,9 +26,14 @@ from parse_args import parse_args
 from peft import AdaLoraConfig, TaskType, get_peft_model
 from torch.optim import AdamW
 from transformers import AutoModelForCausalLM, AutoTokenizer, get_scheduler
-from utils import (compute_kl, create_pku_dataloader_from_dataset,
-                   create_truthfulqa_dataloader, get_answer_loss,
-                   get_rand_ans_loss, get_truthfulQA_answers_plaintext)
+from utils import (
+    compute_kl,
+    create_pku_dataloader_from_dataset,
+    create_truthfulqa_dataloader,
+    get_answer_loss,
+    get_rand_ans_loss,
+    get_truthfulQA_answers_plaintext,
+)
 
 import wandb
 
@@ -269,6 +274,7 @@ def main(args) -> None:
     idx = 0
     start_time = time.time()
     running_loss = deque()
+    final_model_tag = 0
     # Here for caching what samples are used so far
 
     if args.sequential > 0:
@@ -302,6 +308,7 @@ def main(args) -> None:
                     bad_loss /= num_batches_per_epoch
                     accu_bad_loss += bad_loss.item()
                 epoch_num += 1
+                final_model_tag = epoch_num
                 optimizer.step()
                 lr_scheduler.step()
                 optimizer.zero_grad()
@@ -309,7 +316,7 @@ def main(args) -> None:
                 if args.sequential == 1:
                     # NOTE: Batch unlearning, save for every epoch
                     model_tokenizer_save_dir = Path(
-                        os.path.join(args.model_save_dir, f"epoch_{epoch_num}")
+                        os.path.join(args.model_save_dir, f"idx_{epoch_num}")
                     )
                     model_tokenizer_save_dir.mkdir(parents=True, exist_ok=True)
 
@@ -362,9 +369,10 @@ def main(args) -> None:
             optimizer.step()
             lr_scheduler.step()
             optimizer.zero_grad()
+            final_model_tag = idx
             if idx % args.save_every == 0:
                 model_tokenizer_save_dir = Path(
-                    os.path.join(args.model_save_dir, f"checkpoint_{idx}")
+                    os.path.join(args.model_save_dir, f"idx_{idx}")
                 )
                 model_tokenizer_save_dir.mkdir(parents=True, exist_ok=True)
 
@@ -387,8 +395,12 @@ def main(args) -> None:
         model = model.merge_and_unload()
 
     # Save final model.
-    model.save_pretrained(args.model_save_dir, from_pt=True)
-    tokenizer.save_pretrained(args.model_save_dir)
+    model_tokenizer_save_dir = Path(
+        os.path.join(args.model_save_dir, f"idx_{final_model_tag}")
+    )
+    model_tokenizer_save_dir.mkdir(parents=True, exist_ok=True)
+    model.save_pretrained(model_tokenizer_save_dir, from_pt=True)
+    tokenizer.save_pretrained(model_tokenizer_save_dir)
     logging.info("Unlearning finished")
     if bool(args.wandb_log):
         wandb.finish()
