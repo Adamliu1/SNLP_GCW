@@ -12,7 +12,7 @@ def parse_args() -> argparse.Namespace:
         type=float,
         default=0.2,
         help="K value as a float for percentage of of lowest "
-        "probability tokens to consider, used by Min-K% PROB https://arxiv.org/pdf/2310.16789.pdf",
+        "probability tokens to consider, used by Min-K percent PROB https://arxiv.org/pdf/2310.16789.pdf",
     )
 
     parser.add_argument("--use_lora", action="store_true")
