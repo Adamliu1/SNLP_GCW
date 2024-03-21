@@ -29,10 +29,15 @@ from peft import AdaLoraConfig, TaskType, get_peft_model
 from torch.optim import AdamW
 from transformers import AutoModelForCausalLM, AutoTokenizer, get_scheduler
 from transformers.tokenization_utils_base import BatchEncoding
-from utils import (compute_kl, create_mathqa_dataloader_from_dataset,
-                   create_pku_dataloader_from_dataset,
-                   create_truthfulqa_dataloader, get_answer_loss,
-                   get_rand_ans_loss, get_truthfulQA_answers_plaintext)
+from utils import (
+    compute_kl,
+    create_mathqa_dataloader_from_dataset,
+    create_pku_dataloader_from_dataset,
+    create_truthfulqa_dataloader,
+    get_answer_loss,
+    get_rand_ans_loss,
+    get_truthfulQA_answers_plaintext,
+)
 
 
 def set_seed(seed_num: int) -> None:
@@ -153,7 +158,6 @@ def run_training_batch(
         question_prefix_str=question_prefix_str,
         answer_prefix_str=answer_prefix_str,
     )
-    # time.sleep(20)
     ############ KL on normal samples. ############
     normal_loss = compute_kl(pretrained_model, model, normal_batch, device)
 
@@ -166,20 +170,12 @@ def run_training_batch(
 
     # NOTE: backwardnd optimisation is done outside of this function in the
     # training loop for gradient accumulation compatibility.
-    bad_batch_idx = idx
-    normal_batch_idx = idx
-    if bad_loader_size:
-        bad_batch_idx %= bad_loader_size
-    if normal_loader_size:
-        normal_batch_idx %= normal_loader_size
-        # Print.
     if bool(args.wandb_log) and (idx % args.wandb_log_feq == 0):
         wandb.log(
             {
                 "batch": idx,
                 "bad_loss": -bad_loss,
                 "normal_loss": normal_loss,
-                # NOTE: Sould I negative the sign here????
                 "final_loss": loss,
                 "ratio (bad) mink unlearning/reference": np.mean(mink_probs_after_step)
                 / np.mean(mink_probs_base),
@@ -199,26 +195,6 @@ def run_training_batch(
     )
     logging.info(stats)
     print(stats)
-    idx += 1
-
-    if idx % args.save_every == 0:
-        sample_save_dir = Path(args.samples_save_dir)
-        sample_save_dir.mkdir(parents=True, exist_ok=True)
-
-        if bool(args.wandb_log):  # Create a new artifact for this batch
-            artifact = wandb.Artifact(name=f"batch_data_{idx}", type="batch_data")
-
-            artifact.add_file(args.log_file, name=f"full_logging_{idx}.log")
-            artifact.add_file(
-                os.path.join(args.samples_save_dir, f"bad_batch_{idx}.csv"),
-                name=f"bad_batch_{idx}.csv",
-            )
-            artifact.add_file(
-                os.path.join(args.samples_save_dir, f"normal_batch_{idx}.csv"),
-                name=f"normal_batch_{idx}.csv",
-            )
-            # Log the artifact to wandb
-            wandb.log_artifact(artifact)
 
     return loss, bad_loss
 
