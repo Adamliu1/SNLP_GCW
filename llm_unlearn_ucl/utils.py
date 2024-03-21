@@ -116,7 +116,7 @@ def create_truthfulqa_dataloader(tokenizer, batch_size=4, num_samples: Optional[
     """
     df = pd.read_csv("data/TruthfulQA.csv")
     if seed is not None:
-        df.sample(frac=1, random_state=seed)
+        df = df.sample(frac=1, random_state=seed)
     questions, good_answers = df["Question"].values, df["Best Answer"].values
 
     data = {"input_ids": [], "attention_mask": []}
