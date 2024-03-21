@@ -11,10 +11,6 @@ import torch
 from datasets import Dataset
 from transformers import DataCollatorForLanguageModeling
 
-# torch.manual_seed(8888)
-# np.random.seed(8888)
-# random.seed(8888)
-
 
 def create_mathqa_dataloader_from_dataset(
     tokenizer, dataset, fraction=1.0, batch_size=4
@@ -239,7 +235,6 @@ def create_truthfulqa_dataloader(
         )
     ]
 
-    # train_dataloader = torch.utils.data.DataLoader(train_data, batch_size=batch_size, collate_fn=data_collator, shuffle=True)
     val_dataloader = torch.utils.data.DataLoader(
         val_data, batch_size=batch_size, collate_fn=data_collator, shuffle=True
     )
@@ -339,7 +334,6 @@ def get_answer_loss(operation, batch, model, device="cuda:0"):
     shift_logits = outputs.logits[:, :-1, :]
     shift_labels = labels[:, 1:]
     losses = []
-    # print("SHape inputs: ", input_ids.shape[0])
     for bid in range(input_ids.shape[0]):
         one_inp, one_st = input_ids[bid], start_locs[bid]
 
@@ -347,7 +341,6 @@ def get_answer_loss(operation, batch, model, device="cuda:0"):
         position_loss = loss_fct(shift_logits[bid], shift_labels[bid])
         if operation == "ga":  # Negative the direction for GA.
             position_loss = -position_loss
-        # print(position_loss)
 
         # Simply put equal weights on all answers.
         position_weight = torch.zeros_like(one_inp)
@@ -362,10 +355,6 @@ def get_answer_loss(operation, batch, model, device="cuda:0"):
         one_loss = (position_weight[:-1] * position_loss).sum()
         losses.append(one_loss)
     final_loss = torch.stack(losses).mean()
-    # print(final_loss)
-    # from sys import exit
-
-    # exit(1)
 
     return final_loss
 
