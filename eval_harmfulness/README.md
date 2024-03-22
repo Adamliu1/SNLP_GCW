@@ -1,5 +1,17 @@
 # Evaluation
 
+First you need to generate model outputs on beavtertails PKU dataset. Then evaluate using a moderation model.
+
+## Generate model answers
+
+```bash
+python3 beavertails_get_model_answers.py \
+    --model_path ../snlp-unlearned-models/models/opt1.3b_unlearned_harmful-for-real42/idx_0 \
+    --device "cuda" 
+```
+
+## Evaluate generated model answers
+
 Eval the training results:
 
 ```bash

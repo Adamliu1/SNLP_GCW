@@ -12,20 +12,17 @@ import json
 import os
 
 import torch
-from torch.utils.data import DataLoader
 from datasets import load_dataset
 from transformers import AutoTokenizer, pipeline
-from tqdm import tqdm
 
-from parse_args import parse_args
+from generation_scripts.parse_args import parse_args
+from generation_scripts.generation import generate_answers
 
 
 def main(args) -> None:
     # load dataset
     dataset = load_dataset(args.dataset_path)["test"]
-    dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False)
 
-    evaluations = []
     # load model for eval
     if args.device is None:
         device = None
@@ -40,25 +37,18 @@ def main(args) -> None:
         batch_size=args.batch_size,
     )
 
-    for batch in tqdm(dataloader):
-        responses = generator(
-            batch["prompt"], max_new_tokens=512, return_full_text=False
-        )
-        for idx, response in enumerate(responses):
-            evaluations.append(
-                {
-                    "prompt": batch["prompt"][idx],
-                    "response": response[0]["generated_text"],
-                    "model": os.path.basename(args.model_path),
-                    "category_id": batch["category_id"][idx].item(),
-                }
-            )
+    model_name = os.path.basename(args.model_path)
+
+    evaluations = generate_answers(
+        dataset=dataset,
+        generator=generator,
+        batch_size=args.batch_size,
+        model_name=model_name,
+    )
 
     # Save evaluations to JSON file
     os.makedirs(args.output_dir, exist_ok=True)
-    with open(
-        f"{args.output_dir}/evaluation_{os.path.basename(args.model_path)}.json", "w+"
-    ) as outfile:
+    with open(f"{args.output_dir}/evaluation_{model_name}.json", "w+") as outfile:
         json.dump(evaluations, outfile, ensure_ascii=False, indent=4)
 
 

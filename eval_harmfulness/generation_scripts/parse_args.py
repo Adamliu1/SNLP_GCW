@@ -47,7 +47,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output_dir",
         type=str,
-        default="./output",
+        default="./model_generations",
         help="Directory to which the output JSON is saved.",
     )
 
