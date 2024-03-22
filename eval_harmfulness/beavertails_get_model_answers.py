@@ -24,11 +24,14 @@ def main(args) -> None:
 
     evaluations = []
     # load model for eval
-    device = (
-        torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
-    )
+    if args.device is None:
+        device = None
+    else:
+        device = torch.device(args.device)
     tokenizer = AutoTokenizer.from_pretrained(args.model_path)
-    generator = pipeline("text-generation", model=args.model_path, tokenizer=tokenizer)
+    generator = pipeline(
+        "text-generation", model=args.model_path, tokenizer=tokenizer, device=device
+    )
 
     for batch in dataloader:
         responses = generator(batch["prompt"], max_new_tokens=50)

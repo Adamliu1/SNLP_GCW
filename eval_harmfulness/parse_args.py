@@ -38,6 +38,13 @@ def parse_args() -> argparse.Namespace:
     )
 
     parser.add_argument(
+        "--device",
+        type=str,
+        default=None,
+        help="Select the device to run this on. By default will be None (so quantised model will succeed)",
+    )
+
+    parser.add_argument(
         "--output_dir",
         type=str,
         default="./output",
