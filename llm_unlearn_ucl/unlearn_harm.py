@@ -1,11 +1,11 @@
-# Copyright (C) 2024 UCL CS SNLP Naturalnego 语言 Töötlus group 
+# Copyright (C) 2024 UCL CS SNLP Naturalnego 语言 Töötlus group
 #    - Carmen Meinson
-#    - Szymon Duchniewicz 
+#    - Szymon Duchniewicz
 #    - Yadong Liu
 #    - Andrzej Szablewski
 #    - Zhe Yu
 #
-# Adapted from https://github.com/kevinyaobytedance/llm_unlearn. 
+# Adapted from https://github.com/kevinyaobytedance/llm_unlearn.
 #
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
