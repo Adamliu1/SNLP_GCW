@@ -180,7 +180,7 @@ def run_training_batch(
 
     # NOTE: backwardnd optimisation is done outside of this function in the
     # training loop for gradient accumulation compatibility.
-    if bool(args.wandb_log) and (idx % args.wandb_log_feq == 0):
+    if bool(args.wandb_log) and (idx % args.wandb_log_freq == 0):
         wandb.log(
             {
                 "batch": idx,
