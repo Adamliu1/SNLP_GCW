@@ -50,11 +50,11 @@ do
     nohup $LAUNCHER -m lm_eval --model hf \
     --model_args pretrained=$MODELS_PATH/$model \
     --tasks $TASKS \
-    --device "cuda:2" \
+    --device "cuda:0" \
     --batch_size auto \
     --trust_remote_code True \
     --output_path $RESULTS_PATH/$model/$model.json \
-    --wandb_args project=snlp-lm-eval-harness,name=$EXPERIMENT_NAME-$model,mode=offline,dir=$WANDB_PATH \
+    --wandb_args project=snlp,name=$EXPERIMENT_NAME-$model,group=$EXPERIMENT_NAME,mode=offline,dir=$WANDB_PATH \
     --use_cache $EXPERIMENT_SCRATCH_PATH/.cache/$model/cache &> $LOGS_PATH/$model.log 
 
 done
