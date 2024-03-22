@@ -40,37 +40,116 @@ def set_seed(seed_num: int) -> None:
     random.seed(seed_num)
 
 
-class BatchSamplesLogger:
-    def __init__(self, tokenizer, prefix="", decode_text=True):
-        self.tokenizer = tokenizer
-        self.prefix = prefix
-        self.decode_text = decode_text
-        self.data = []
-        self.columns = [f"{prefix} Batch Number", f"{prefix} Input IDs"]
-        self.dataframe = pd.DataFrame(
-            columns=(["batch_number", "input_ids_list"] if not self.decode_text else ["batch_number", "input_ids_list", "sample_text"])
+def compute_mink_prob(
+    model: AutoModelForCausalLM,
+    batch: BatchEncoding,
+    K: float,
+    # Compute_for_answer only, or question only? (Normal vs Bad loss)
+    device: torch.device,
+    compute_for_answer_only: bool = True,
+) -> List[float]:
+    # Compute the average of min-K% Prob values for the entire batch
+    # TODO: should we do this on just 2 element batch or entire dataset?
+    #
+    # NOTE: Need to properly unpack the batch, compute logits for each batch and
+    # properly mask the output! only compute min K on the part we are checking if is
+    # Unlearned/member in pretraining: output
+    with torch.no_grad():
+        # TODO: verify: in run.py for mink, calculatePerplexity func (49), they also pass labels=input_ids. WHy?
+        # TODO: should we: feeed full sentance (question + answer), and then mask out to compute probabilities,
+        # Or Mask out input, only get logits for the answer and compute probabilities on those
+        # NOTE: For now, we feed full question, as we are unlearning B given A, so we want individual token
+        # probabilities of B, given A (but we don't care about token probabilities of A - the question)
+        outputs = model(
+            batch["input_ids"].to(device),
+            attention_mask=batch["attention_mask"].to(device),
         )
-        if decode_text:
-            self.columns.append(f"{prefix} Sample Text")
+        # OR, something along thelines of
+        # outputs = model(batch["input_ids"][batch["start_locs"]:], attention_mask=batch["attention_mask"])
 
-    def append_batch_samples(self, batch, batch_number):
-        """Accumulate samples from the batch along with the batch number."""
-        batch_size = batch["input_ids"].size(0)
-        new_rows = []
+    logits = outputs.logits
+    probabilities = torch.nn.functional.log_softmax(logits, dim=-1)
+    no_of_sentences = batch["input_ids"].shape[0]
+    # If computing for both question and answer, need to set start_locs to 0s!
+    if compute_for_answer_only:
+        assert batch.get("start_locs") != None, (
+            "Compute Min-k % prob: Requested computation only for answer, "
+            "but the batch does not contain start_locs inside tokenised question+answer pairs!"
+        )
+    else:
+        # start locs by default just after <s> starting token!
+        batch["start_locs"] = [torch.IntTensor([1]) for _ in range(no_of_sentences)]
 
-        for i in range(batch_size):
-            input_ids_list = batch["input_ids"][i].tolist()
-            sample_text = self.tokenizer.decode(batch["input_ids"][i], skip_special_tokens=True) if self.decode_text else ""
-            # Wanb info
-            data_row = [batch_number, input_ids_list] if not self.decode_text else [batch_number, input_ids_list, sample_text]
-            self.data.append(data_row)
-            #
-            data_dict = {
-                "batch_number": batch_number,
-                "input_ids_list": input_ids_list,
-                "sample_text": sample_text if self.decode_text else pd.NA,
-            }
-            new_rows.append(data_dict)
+    # Compute for each sentence in the batch
+    pred_mink = []
+    for s_idx in range(no_of_sentences):
+        # extract prob for each token in the unlearned answer given all previous tokens
+        input_ids_sentence = batch["input_ids"][s_idx]  # [1:]
+        all_prob = []
+        for i in range(batch["start_locs"][s_idx].item(), len(input_ids_sentence)):
+            token_id = input_ids_sentence[i]
+            # i is 1 ahead of the actual token, as we want the probability of that token given all previous tokens
+            probability = probabilities[s_idx, i - 1, token_id].item()
+            all_prob.append(probability)
+        # Get top-K % probs and compute their mean (it was log_softmax, so top k% is actually mink% prob)
+        k_length = int(len(all_prob) * K)
+        topk_prob = np.sort(all_prob)[:k_length]
+        pred_mink.append(-np.mean(topk_prob).item())
+
+    # All mean MIN-K% prob in: pred_mink. For now, return all
+    return pred_mink
+
+
+def run_training_batch(
+    model,
+    pretrained_model,
+    tokenizer,
+    device,
+    normal_ans,
+    bad_batch,
+    normal_batch,
+    idx,
+    epoch: int,
+    bad_loader_size: int = 0,
+    normal_loader_size: int = 0,
+    question_prefix_str: str = "",
+    answer_prefix_str: str = "",
+):
+    # Calculate min-k% prob score on bad_batch using the unmodified pre-trained model
+    mink_probs_base = compute_mink_prob(
+        model=pretrained_model,
+        batch=bad_batch,
+        K=args.mink_prob_k,
+        device=device,
+        compute_for_answer_only=True,
+    )
+    # Calculate min-k% prob score on normal_batch using the unmodified pre-trained model
+    mink_probs_base_normal = compute_mink_prob(
+        model=pretrained_model,
+        batch=normal_batch,
+        K=args.mink_prob_k,
+        device=device,
+        compute_for_answer_only=False,
+    )
+    # TODO: THIS NEED TO BE CALCULATED AFTER GRADIENT STEP!!! (otherwise we are comparing against previous gradient update!)
+    # Calculate min-k% prob score on bad_batch using the model under unlearning
+    mink_probs_after_step = compute_mink_prob(
+        model=model,
+        batch=bad_batch,
+        K=args.mink_prob_k,
+        device=device,
+        compute_for_answer_only=True,
+    )
+    # Calculate min-k% prob score on normal_batch using the model under unlearning
+    mink_probs_after_step_normal = compute_mink_prob(
+        model=model,
+        batch=normal_batch,
+        K=args.mink_prob_k,
+        device=device,
+        compute_for_answer_only=False,
+    )
+    ############ GA on answer only. ############
+    bad_loss = get_answer_loss("ga", bad_batch, model, device=device)
 
         new_rows_df = pd.DataFrame(new_rows)
         self.dataframe = pd.concat([self.dataframe, new_rows_df])
