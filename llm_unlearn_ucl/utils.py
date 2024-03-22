@@ -391,6 +391,7 @@ def get_rand_ans_loss(
     for batch_idx in range(bad_input_ids.shape[0]):
         single_input_id = bad_input_ids[batch_idx, :]
         ori_text = tokenizer.decode(single_input_id)
+
         # Get question. For custom question prefix
         question = (
             ori_text.split(question_prefix_str)[1].split(answer_prefix_str)[0].strip()

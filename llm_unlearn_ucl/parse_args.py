@@ -109,7 +109,7 @@ def parse_args() -> argparse.Namespace:
         "--sequential",
         default=-1,
         type=int,
-        help="Number of splits used for sequential unlearning. Should be divisible by epoch_size. Default: -1 (Do not use). For batch unlearning, use 1.",
+        help="Number of splits used for sequential unlearning. Should be divisible by samples_count. Default: -1 (Do not use). For batch unlearning, use 1.",
     )
 
     parser.add_argument(
@@ -145,7 +145,7 @@ def parse_args() -> argparse.Namespace:
         help="Number of losses to keep for computing running average loss.",
     )
     parser.add_argument(
-        "--epoch_size",
+        "--samples_count",
         type=int,
         default=64,
         help="Number of samples per epoch from the unlearning set to unlearn on.",
