@@ -410,6 +410,14 @@ def main(args) -> None:
     print("Model loaded.")
 
     print("#################### START UNLEARNING ####################")
+    # Save model at step 0.
+    model_tokenizer_save_dir = Path(os.path.join(args.model_save_dir, f"idx_0"))
+    model_tokenizer_save_dir.mkdir(parents=True, exist_ok=True)
+
+    model.save_pretrained(model_tokenizer_save_dir, from_pt=True)
+    tokenizer.save_pretrained(model_tokenizer_save_dir)
+    print("Saved model at step 0.")
+
     # Start unlearning.
     bad_loss = 0.0
     idx = 0
@@ -466,6 +474,7 @@ def main(args) -> None:
 
                     model.save_pretrained(model_tokenizer_save_dir, from_pt=True)
                     tokenizer.save_pretrained(model_tokenizer_save_dir)
+                    print(f"Saved model at step {epoch_num}.")
 
                 if abs(accu_bad_loss) > args.max_bad_loss:
                     # Only printing warning at the outer loop to avoid repeated warnings.
@@ -516,6 +525,8 @@ def main(args) -> None:
 
                     model.save_pretrained(model_tokenizer_save_dir, from_pt=True)
                     tokenizer.save_pretrained(model_tokenizer_save_dir)
+                    print(f"Saved model at step {idx}.")
+
                 running_loss.append(bad_loss.item())
                 while len(running_loss) > args.num_running_loss:
                     running_loss.popleft()
@@ -550,6 +561,8 @@ def main(args) -> None:
     model_tokenizer_save_dir.mkdir(parents=True, exist_ok=True)
     model.save_pretrained(model_tokenizer_save_dir, from_pt=True)
     tokenizer.save_pretrained(model_tokenizer_save_dir)
+    print("Saved final model.")
+
     logging.info("Unlearning finished")
     if bool(args.wandb_log):
         wandb.finish()
