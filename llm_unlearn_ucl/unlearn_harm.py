@@ -513,9 +513,11 @@ def main(args) -> None:
                 while len(running_loss) > args.num_running_loss:
                     running_loss.popleft()
                 avg_loss = abs(np.mean(running_loss))
-                if avg_loss > args.max_bad_loss:
+                if avg_loss > args.max_bad_loss or idx >= args.max_unlearn_steps:
                     break
 
+            if idx >= args.max_unlearn_steps:
+                print("max_unlearn_steps reached. Unlearning stopped.")
             epoch_num += 1
             if abs(np.mean(running_loss)) > args.max_bad_loss:
                 print(
