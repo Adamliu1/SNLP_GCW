@@ -1,6 +1,7 @@
 from datasets import load_dataset
 from datasets import Dataset
 from ipdb import set_trace as bp
+
 # from options import Options
 from src.eval import *
 
@@ -17,6 +18,7 @@ def process_each_dict_length_data(data, length=32):
         new_data.append(ex_copy)
     return new_data
 
+
 def change_type(data):
     new_data = {"input": [], "label": []}
     for ex in data:
@@ -25,8 +27,11 @@ def change_type(data):
         new_data["label"].append(ex["label"])
     return new_data
 
+
 if __name__ == "__main__":
-    dataset = load_jsonl("/fsx-onellm/swj0419/attack/detect-pretrain-code/data/wikimia.jsonl")
+    dataset = load_jsonl(
+        "/fsx-onellm/swj0419/attack/detect-pretrain-code/data/wikimia.jsonl"
+    )
     # bp()
     data = convert_huggingface_data_to_list_dic(dataset)
     for length in [128, 256]:
@@ -35,5 +40,3 @@ if __name__ == "__main__":
         dump_jsonl(new_data, f"data/WikiMIA_length{length}.jsonl")
         huggingface_dataset = Dataset.from_dict(change_type(new_data))
         huggingface_dataset.push_to_hub("swj0419/WikiMIA", f"WikiMIA_length{length}")
-
-
