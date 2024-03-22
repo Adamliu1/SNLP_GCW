@@ -472,56 +472,52 @@ def main(args) -> None:
 
     else:
         # NOTE: Original ByteDance Unlearning.
-        train_bad_loader_gen = iter(train_bad_loaders[0])
-        train_normal_loader_gen = iter(train_normal_loaders[0])
         bad_loader_len = len(train_bad_loaders[0])
         normal_loader_len = len(train_normal_loaders[0])
         epoch_num = 0
-        for idx in range(args.max_unlearn_steps):
-            try:
-                bad_batch = next(train_bad_loader_gen)
-            except StopIteration:
-                epoch_num += 1
-                train_bad_loader_gen = iter(train_bad_loaders[0])
-                bad_batch = next(train_bad_loader_gen)
-            try:
-                normal_batch = next(train_normal_loader_gen)
-            except StopIteration:
-                train_normal_loader_gen = iter(train_normal_loaders[0])
-                normal_batch = next(train_normal_loader_gen)
-            loss, bad_loss = run_training_batch(
-                model=model,
-                pretrained_model=pretrained_model,
-                tokenizer=tokenizer,
-                device=device,
-                normal_ans=normal_ans,
-                bad_batch=bad_batch,
-                normal_batch=normal_batch,
-                idx=idx,
-                epoch=epoch_num,
-                bad_loader_size=bad_loader_len,
-                normal_loader_size=normal_loader_len,
-                question_prefix_str=question_prefix_str,
-                answer_prefix_str=answer_prefix_str,
-            )
-            accelerator.backward(loss)
-            optimizer.step()
-            lr_scheduler.step()
-            optimizer.zero_grad()
-            final_model_tag = idx
-            if idx % args.save_every == 0:
-                model_tokenizer_save_dir = Path(
-                    os.path.join(args.model_save_dir, f"idx_{idx}")
+        while idx < args.max_unlearn_steps:
+            for bad_batch, normal_batch in zip(
+                train_bad_loaders[0], train_normal_loaders[0]
+            ):
+                loss, bad_loss = run_training_batch(
+                    model=model,
+                    pretrained_model=pretrained_model,
+                    tokenizer=tokenizer,
+                    device=device,
+                    normal_ans=normal_ans,
+                    bad_batch=bad_batch,
+                    normal_batch=normal_batch,
+                    idx=idx,
+                    epoch=epoch_num,
+                    bad_loader_size=bad_loader_len,
+                    normal_loader_size=normal_loader_len,
+                    question_prefix_str=question_prefix_str,
+                    answer_prefix_str=answer_prefix_str,
                 )
-                model_tokenizer_save_dir.mkdir(parents=True, exist_ok=True)
+                accelerator.backward(loss)
+                optimizer.step()
+                lr_scheduler.step()
+                optimizer.zero_grad()
+                idx += 1
+                final_model_tag = idx
+                if idx % args.save_every == 0:
+                    # Save model and tokenizer.
+                    model_tokenizer_save_dir = Path(
+                        os.path.join(args.model_save_dir, f"idx_{idx}")
+                    )
+                    model_tokenizer_save_dir.mkdir(parents=True, exist_ok=True)
 
-                model.save_pretrained(model_tokenizer_save_dir, from_pt=True)
-                tokenizer.save_pretrained(model_tokenizer_save_dir)
-            running_loss.append(bad_loss.item())
-            while len(running_loss) > args.num_running_loss:
-                running_loss.popleft()
-            avg_loss = abs(np.mean(running_loss))
-            if avg_loss > args.max_bad_loss:
+                    model.save_pretrained(model_tokenizer_save_dir, from_pt=True)
+                    tokenizer.save_pretrained(model_tokenizer_save_dir)
+                running_loss.append(bad_loss.item())
+                while len(running_loss) > args.num_running_loss:
+                    running_loss.popleft()
+                avg_loss = abs(np.mean(running_loss))
+                if avg_loss > args.max_bad_loss:
+                    break
+
+            epoch_num += 1
+            if abs(np.mean(running_loss)) > args.max_bad_loss:
                 print(
                     f"bad_loss {avg_loss} exceeding args.max_bad_loss {args.max_bad_loss}. Unlearning stopped."
                 )
