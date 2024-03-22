@@ -1,6 +1,6 @@
-# Copyright (C) 2024 UCL CS SNLP Naturalnego 语言 Töötlus group 
+# Copyright (C) 2024 UCL CS SNLP Naturalnego 语言 Töötlus group
 #    - Carmen Meinson
-#    - Szymon Duchniewicz 
+#    - Szymon Duchniewicz
 #    - Yadong Liu
 #    - Andrzej Szablewski
 #    - Zhe Yu
@@ -16,7 +16,9 @@ import pandas as pd
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Perform analysis of lm-eval-harness eval runs.")
+    parser = argparse.ArgumentParser(
+        description="Perform analysis of lm-eval-harness eval runs."
+    )
 
     parser.add_argument(
         "--log_dir",
