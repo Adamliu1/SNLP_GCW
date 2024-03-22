@@ -120,9 +120,9 @@ def parse_args() -> argparse.Namespace:
     )
 
     parser.add_argument(
-        "--wandb_log_feq",
+        "--wandb_log_freq",
         type=int,
-        default=50,
+        default=1,
         help="The logging frequency for wandb to upload data",
     )
 
