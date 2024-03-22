@@ -51,6 +51,12 @@ def parse_args() -> argparse.Namespace:
         help="Directory to which the output JSON is saved.",
     )
 
+    parser.add_argument(
+        "--use_prompt_prefix",
+        action="store_true",
+        help="Add to add ### Question: and ### Answer: prefixes to PKU-Alignment/BeaverTails-Evaluation prompts.",
+    )
+
     args = parser.parse_args()
 
     return args

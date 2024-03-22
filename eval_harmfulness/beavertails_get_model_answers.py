@@ -44,6 +44,7 @@ def main(args) -> None:
         generator=generator,
         batch_size=args.batch_size,
         model_name=model_name,
+        use_prompt_prefix=args.use_prompt_prefix,
     )
 
     # Save evaluations to JSON file

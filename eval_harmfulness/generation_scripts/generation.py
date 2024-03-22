@@ -15,9 +15,21 @@ from datasets import Dataset
 from tqdm import tqdm
 
 
+def add_prompt_prefix(instance: dict) -> dict:
+    instance["prompt"] = f"### Question: {instance['prompt']} ### Answer:"
+    return instance
+
+
 def generate_answers(
-    dataset: Dataset, generator: Pipeline, batch_size: int, model_name: str
+    dataset: Dataset,
+    generator: Pipeline,
+    batch_size: int,
+    model_name: str,
+    use_prompt_prefix: bool = False,
 ) -> list[dict]:
+    if use_prompt_prefix:
+        # Add modify prompts to: f"### Question: {prompt} ### Answer:"
+        dataset = dataset.map(add_prompt_prefix, num_proc=4, batched=False)
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
 
     evaluations = []
