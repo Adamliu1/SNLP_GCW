@@ -1,3 +1,13 @@
+# Copyright (C) 2024 UCL CS SNLP Naturalnego 语言 Töötlus group 
+#    - Carmen Meinson
+#    - Szymon Duchniewicz 
+#    - Yadong Liu
+#    - Andrzej Szablewski
+#    - Zhe Yu
+#
+# This software is released under the MIT License.
+# https://opensource.org/licenses/MIT
+
 import json
 import argparse
 import os
