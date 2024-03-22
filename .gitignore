@@ -31,4 +31,4 @@ mink_data_probability/src/out
 llm_unlearn_ucl/wandb
 
 # do not upload harmfulness eval model weights
-eval_harmfulness_andrzej/beaver-dam-7_weights
+eval_harmfulness/beaver-dam-7_weights
