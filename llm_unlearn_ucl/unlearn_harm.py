@@ -66,7 +66,10 @@ def compute_mink_prob(
         # Or Mask out input, only get logits for the answer and compute probabilities on those
         # NOTE: For now, we feed full question, as we are unlearning B given A, so we want individual token
         # probabilities of B, given A (but we don't care about token probabilities of A - the question)
-        outputs = model(batch["input_ids"].to(device), attention_mask=batch["attention_mask"].to(device))
+        outputs = model(
+            batch["input_ids"].to(device),
+            attention_mask=batch["attention_mask"].to(device),
+        )
         # OR, something along thelines of
         # outputs = model(batch["input_ids"][batch["start_locs"]:], attention_mask=batch["attention_mask"])
 
@@ -118,7 +121,7 @@ def run_training_batch(
     question_prefix_str: str = "",
     answer_prefix_str: str = "",
 ):
-    # Calculate min-k% prob score on bad_batch using the unmodified pre-trained model 
+    # Calculate min-k% prob score on bad_batch using the unmodified pre-trained model
     mink_probs_base = compute_mink_prob(
         model=pretrained_model,
         batch=bad_batch,
@@ -126,7 +129,7 @@ def run_training_batch(
         device=device,
         compute_for_answer_only=True,
     )
-    # Calculate min-k% prob score on normal_batch using the unmodified pre-trained model 
+    # Calculate min-k% prob score on normal_batch using the unmodified pre-trained model
     mink_probs_base_normal = compute_mink_prob(
         model=pretrained_model,
         batch=normal_batch,
@@ -362,7 +365,11 @@ def main(args) -> None:
         name="linear",
         optimizer=optimizer,
         num_warmup_steps=0,
-        num_training_steps=args.num_epochs * args.samples_count,
+        num_training_steps=(
+            (args.num_epochs * args.samples_count)
+            if args.sequential > 0
+            else args.max_unlearn_steps
+        ),
     )
 
     (
