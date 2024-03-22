@@ -5,7 +5,7 @@
 #    - Andrzej Szablewski
 #    - Zhe Yu
 #
-# Adapted from https://github.com/kevinyaobytedance/llm_unlearn. 
+# Adapted from https://github.com/kevinyaobytedance/llm_unlearn.
 #
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
