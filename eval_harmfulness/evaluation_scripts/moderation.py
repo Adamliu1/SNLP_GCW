@@ -222,7 +222,8 @@ class Moderation(nn.Module):
         batch_size: int,
         return_bool: Literal[False],
         threshold: float,
-    ) -> list[dict[str, float]]: ...
+    ) -> list[dict[str, float]]:
+        ...
 
     @overload
     def predict(
@@ -231,7 +232,8 @@ class Moderation(nn.Module):
         batch_size: int,
         return_bool: Literal[True],
         threshold: float,
-    ) -> list[dict[str, bool]]: ...
+    ) -> list[dict[str, bool]]:
+        ...
 
     @overload
     def predict(
@@ -240,7 +242,8 @@ class Moderation(nn.Module):
         batch_size: int,
         return_bool: Literal[False],
         threshold: float,
-    ) -> dict[str, float]: ...
+    ) -> dict[str, float]:
+        ...
 
     @overload
     def predict(
@@ -249,7 +252,8 @@ class Moderation(nn.Module):
         batch_size: int,
         return_bool: Literal[True],
         threshold: float,
-    ) -> dict[str, bool]: ...
+    ) -> dict[str, bool]:
+        ...
 
     @torch.inference_mode()
     def predict(
@@ -322,7 +326,8 @@ class QAModeration(Moderation):
         batch_size: int,
         return_bool: Literal[False],
         threshold: float,
-    ) -> list[dict[str, float]]: ...
+    ) -> list[dict[str, float]]:
+        ...
 
     @overload
     def predict(  # pylint: disable=arguments-differ
@@ -332,7 +337,8 @@ class QAModeration(Moderation):
         batch_size: int,
         return_bool: Literal[True],
         threshold: float,
-    ) -> list[dict[str, bool]]: ...
+    ) -> list[dict[str, bool]]:
+        ...
 
     @overload
     def predict(  # pylint: disable=arguments-differ
@@ -342,7 +348,8 @@ class QAModeration(Moderation):
         batch_size: int,
         return_bool: Literal[False],
         threshold: float,
-    ) -> dict[str, float]: ...
+    ) -> dict[str, float]:
+        ...
 
     @overload
     def predict(  # pylint: disable=arguments-differ
@@ -352,7 +359,8 @@ class QAModeration(Moderation):
         batch_size: int,
         return_bool: Literal[True],
         threshold: float,
-    ) -> dict[str, bool]: ...
+    ) -> dict[str, bool]:
+        ...
 
     @torch.inference_mode()
     def predict(  # pylint: disable=arguments-differ,arguments-renamed
