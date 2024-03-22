@@ -13,7 +13,7 @@ mkdir -p $ANALYSIS_BASE_PATH
 mkdir $ANALYSIS_LOGS_PATH
 
 # Copy all results files to the analysis directory for the given experiment
-for file in `find $LOGS_BASE_PATH/$EXPERIMENT_NAME/results/ -name "*_idx_*.json"`
+for file in `find $LOGS_BASE_PATH/$EXPERIMENT_NAME/results/ -name "*_*.json"`
 do
     cp $file $ANALYSIS_LOGS_PATH
 done
