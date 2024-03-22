@@ -1,3 +1,13 @@
+# Copyright (C) 2024 UCL CS SNLP Naturalnego 语言 Töötlus group
+#    - Szymon Duchniewicz
+#    - Yadong Liu
+#    - Carmen Meinson
+#    - Andrzej Szablewski
+#    - Zhe Yu
+#
+# This software is released under the MIT License.
+# https://opensource.org/licenses/MIT
+
 import json
 import argparse
 import os
@@ -6,7 +16,9 @@ import pandas as pd
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Perform analysis of lm-eval-harness eval runs.")
+    parser = argparse.ArgumentParser(
+        description="Perform analysis of lm-eval-harness eval runs."
+    )
 
     parser.add_argument(
         "--log_dir",

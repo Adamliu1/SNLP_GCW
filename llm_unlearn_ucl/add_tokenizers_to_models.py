@@ -1,3 +1,13 @@
+# Copyright (C) 2024 UCL CS SNLP Naturalnego 语言 Töötlus group
+#    - Szymon Duchniewicz
+#    - Yadong Liu
+#    - Carmen Meinson
+#    - Andrzej Szablewski
+#    - Zhe Yu
+#
+# This software is released under the MIT License.
+# https://opensource.org/licenses/MIT
+
 from transformers import AutoTokenizer
 import argparse
 
