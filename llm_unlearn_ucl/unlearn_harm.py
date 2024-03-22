@@ -1,4 +1,11 @@
-# Copyright (C) 2023 ByteDance. All Rights Reserved.
+# Copyright (C) 2024 UCL CS SNLP Naturalnego 语言 Töötlus group
+#    - Szymon Duchniewicz
+#    - Yadong Liu
+#    - Carmen Meinson
+#    - Andrzej Szablewski
+#    - Zhe Yu
+#
+# Adapted from https://github.com/kevinyaobytedance/llm_unlearn. 
 #
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
@@ -6,7 +13,7 @@
 """
 A script to show an example of how to unlearn harmfulness.
 
-The dataset used in is `PKU-SafeRLHF`. Model support OPT-1.3B, OPT-2.7B, and Llama 2 (7B).
+The dataset used in is `PKU-SafeRLHF` and TruthfulQA. Model supports OPT-1.3B.
 """
 
 import json
