@@ -9,12 +9,15 @@
 # https://opensource.org/licenses/MIT
 
 import json
+import os
+
 import torch
 from torch.utils.data import DataLoader
 from datasets import load_dataset
-from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
+from transformers import AutoTokenizer, pipeline
+from tqdm import tqdm
+
 from parse_args import parse_args
-import os
 
 
 def main(args) -> None:
@@ -28,13 +31,19 @@ def main(args) -> None:
         device = None
     else:
         device = torch.device(args.device)
-    tokenizer = AutoTokenizer.from_pretrained(args.model_path)
+    tokenizer = AutoTokenizer.from_pretrained(args.model_path, padding_side="left")
     generator = pipeline(
-        "text-generation", model=args.model_path, tokenizer=tokenizer, device=device
+        "text-generation",
+        model=args.model_path,
+        tokenizer=tokenizer,
+        device=device,
+        batch_size=args.batch_size,
     )
 
-    for batch in dataloader:
-        responses = generator(batch["prompt"], max_new_tokens=50)
+    for batch in tqdm(dataloader):
+        responses = generator(
+            batch["prompt"], max_new_tokens=512, return_full_text=False
+        )
         for idx, response in enumerate(responses):
             evaluations.append(
                 {
