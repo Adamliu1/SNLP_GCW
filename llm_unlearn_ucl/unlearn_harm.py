@@ -5,7 +5,7 @@
 #    - Andrzej Szablewski
 #    - Zhe Yu
 #
-# Adapted from https://github.com/kevinyaobytedance/llm_unlearn. 
+# Adapted from https://github.com/kevinyaobytedance/llm_unlearn.
 #
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
@@ -520,7 +520,10 @@ def main(args) -> None:
                 while len(running_loss) > args.num_running_loss:
                     running_loss.popleft()
 
-                if abs(np.mean(running_loss)) > args.max_bad_loss or idx >= args.max_unlearn_steps:
+                if (
+                    abs(np.mean(running_loss)) > args.max_bad_loss
+                    or idx >= args.max_unlearn_steps
+                ):
                     break
 
             epoch_num += 1

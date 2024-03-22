@@ -16,7 +16,9 @@ import pandas as pd
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Perform analysis of lm-eval-harness eval runs.")
+    parser = argparse.ArgumentParser(
+        description="Perform analysis of lm-eval-harness eval runs."
+    )
 
     parser.add_argument(
         "--log_dir",
