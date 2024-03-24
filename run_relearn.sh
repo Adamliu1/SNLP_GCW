@@ -1,0 +1,23 @@
+models=()
+model_save_dir="../snlp-unlearned-models/models/opt1.3b_unlearned_harmful-for-real1234"
+
+readarray -t models < <(find \
+    $model_save_dir \
+    -type d \
+    -name 'idx_*')
+
+JSON_DIR=./jsons
+[ -d $JSON_DIR ] || mkdir -p $JSON_DIR
+
+for model_path in "${models[@]}"; do
+    echo $model_path
+    python ./relearn/relearn.py \
+        --original_model facebook/opt-1.3b \
+        --unlearned_model $model_path \
+        --batch_size 2 \
+        --lr 5e-4 \
+        --json_dir $JSON_DIR \
+        --use_lora \
+        --dataset PKU-Alignment/PKU-SafeRLHF \
+        -v
+done
