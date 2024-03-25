@@ -174,7 +174,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--no_scheduler",
         action="store_true",
-        default=True,
         help="Whether to enable lr_scheduler",
     )
     args = parser.parse_args()
