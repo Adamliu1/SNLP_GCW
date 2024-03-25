@@ -428,7 +428,7 @@ def main(args) -> None:
 
     if args.sequential > 0:
         # NOTE: sequential/batch unlearning
-        num_batches_per_epoch = args.samples_count // args.batch_size
+        num_batches_per_epoch = args.samples_count // args.sequential // args.batch_size
 
         for seq, (train_normal_loader, train_bad_loader) in enumerate(
             zip(train_normal_loaders, train_bad_loaders)
@@ -459,6 +459,7 @@ def main(args) -> None:
                     accelerator.backward(loss / num_batches_per_epoch)
                     bad_loss /= num_batches_per_epoch
                     accu_bad_loss += bad_loss.item()
+                # If args.batch_size < args.samples_count//args.sequential, always perform gradient accumulation.
                 epoch_num += 1
                 final_model_tag = epoch_num
                 optimizer.step()
