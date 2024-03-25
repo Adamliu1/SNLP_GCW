@@ -368,22 +368,28 @@ def main(args) -> None:
 
     # Prepare.
     # num_training_steps = args.max_unlearn_steps
-    lr_scheduler = get_scheduler(
-        name="linear",
-        optimizer=optimizer,
-        num_warmup_steps=0,
-        num_training_steps=(
-            (args.num_epochs * args.samples_count)
-            if args.sequential > 0
-            else args.max_unlearn_steps
-        ),
-    )
+    if args.no_scheduler:
+        (
+            model,
+            optimizer,
+        ) = accelerator.prepare(model, optimizer)
+    else:
+        lr_scheduler = get_scheduler(
+            name="linear",
+            optimizer=optimizer,
+            num_warmup_steps=0,
+            num_training_steps=(
+                (args.num_epochs * args.samples_count)
+                if args.sequential > 0
+                else args.max_unlearn_steps
+            ),
+        )
+        (
+            model,
+            optimizer,
+            lr_scheduler,
+        ) = accelerator.prepare(model, optimizer, lr_scheduler)
 
-    (
-        model,
-        optimizer,
-        lr_scheduler,
-    ) = accelerator.prepare(model, optimizer, lr_scheduler)
     for i in range(args.sequential):
         train_bad_loaders[i], train_normal_loaders[i] = accelerator.prepare(
             train_bad_loaders[i], train_normal_loaders[i]
@@ -463,7 +469,8 @@ def main(args) -> None:
                 epoch_num += 1
                 final_model_tag = epoch_num
                 optimizer.step()
-                lr_scheduler.step()
+                if not args.no_scheduler:
+                    lr_scheduler.step()
                 optimizer.zero_grad()
 
                 if args.sequential == 1:
@@ -513,7 +520,8 @@ def main(args) -> None:
                 )
                 accelerator.backward(loss)
                 optimizer.step()
-                lr_scheduler.step()
+                if not args.no_scheduler:
+                    lr_scheduler.step()
                 optimizer.zero_grad()
                 idx += 1
                 final_model_tag = idx
