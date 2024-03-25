@@ -171,6 +171,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--num_epochs", type=int, default=100, help="Number of epochs to unlearn."
     )
+    parser.add_argument(
+        "--no_scheduler",
+        action="store_true",
+        default=True,
+        help="Whether to enable lr_scheduler",
+    )
     args = parser.parse_args()
 
     return args
