@@ -473,7 +473,7 @@ def main(args) -> None:
                     lr_scheduler.step()
                 optimizer.zero_grad()
 
-                if args.sequential == 1:
+                if args.sequential == 1 and epoch_num % args.save_every == 0:
                     # NOTE: Batch unlearning, save for every epoch
                     model_tokenizer_save_dir = Path(
                         os.path.join(args.model_save_dir, f"idx_{epoch_num}")
