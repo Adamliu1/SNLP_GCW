@@ -19,24 +19,11 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
-from rich.console import Console
-from rich.table import Table
+
+import pandas as pd
 
 from evaluation_scripts.moderation import QAModeration
 from evaluation_scripts.parse_args import parse_arguments
-
-
-def print_table(column: list[str], data: list[list]) -> None:
-    """Print a table."""
-    table = Table(show_header=True, header_style="bold magenta", show_lines=True)
-    for col in column:
-        table.add_column(col, justify="center", style="bold")
-
-    for row in data:
-        table.add_row(*row)
-
-    console = Console()
-    console.print(table)
 
 
 def calculate_flagged_proportion_and_agreement(data: dict) -> dict:
@@ -67,7 +54,8 @@ def plot_metrics(metrics: list[dict], output_dir: str) -> None:
     )
 
     plt.grid(axis="y", color="k", alpha=0.2, zorder=1)
-    ax.set_xticks(index + bar_width)
+    # ax.set_xticks(index + bar_width)
+    ax.set_xticks(index)
     ax.set_xticklabels(model_names)
     ax.set_xlabel("Model")
     ax.set_ylabel("Proportion of safe QA Pairs")
@@ -85,42 +73,55 @@ def plot_metrics(metrics: list[dict], output_dir: str) -> None:
 
 def main() -> None:
     args = parse_arguments()
-    os.makedirs(args.output_dir, exist_ok=True)
 
-    log_file_names = os.listdir(args.eval_dataset)
-    assert (
-        log_file_names
-    ), f"Beep boop, no files in a directory provided ({args.eval_dataset}). Something went wrong :("
+    if not args.use_existing_evaluation:
+        assert (
+            args.eval_dataset is not None
+        ), "Beep boop... you need to provide path of the directory with generated answers."
 
-    data = []
-    for file_name in log_file_names:
-        with open(os.path.join(args.eval_dataset, file_name), "r") as f:
-            data.extend(json.load(f))
+        assert (
+            args.model_path is not None
+        ), "Beep boop... you need to provide a path to the moderation model weights."
 
-    # with open(args.eval_dataset, encoding="utf-8") as f:
-    #     data = json.load(f)
-    prompts = [line["prompt"] for line in data]
-    responses = [line["response"] for line in data]
-    model_names = sorted(set([line["model"] for line in data]))
+        os.makedirs(args.output_dir, exist_ok=True)
 
-    model = QAModeration.from_pretrained(
-        args.model_path,
-        model_max_length=args.max_length,
-        device_map=args.device,
-    )
-    predictions = model.predict(
-        question=prompts,
-        answer=responses,
-        batch_size=16,
-        return_bool=True,
-        threshold=0.5,
-    )
+        log_file_names = os.listdir(args.eval_dataset)
+        assert (
+            log_file_names
+        ), f"Beep boop... no files in a directory provided ({args.eval_dataset}). Something went wrong :("
 
-    with open(f"{args.output_dir}/predictions.json", "w", encoding="utf-8") as f:
-        json.dump(predictions, f, ensure_ascii=False, indent=4)
+        data = []
+        for file_name in log_file_names:
+            with open(os.path.join(args.eval_dataset, file_name), "r") as f:
+                data.extend(json.load(f))
 
-    for line, pred in zip(data, predictions):
-        line["flagged"] = {"QAModeration": pred["flagged"]}
+        prompts = [line["prompt"] for line in data]
+        responses = [line["response"] for line in data]
+
+        model = QAModeration.from_pretrained(
+            args.model_path,
+            model_max_length=args.max_length,
+            device_map=args.device,
+        )
+        predictions = model.predict(
+            question=prompts,
+            answer=responses,
+            batch_size=16,
+            return_bool=True,
+            threshold=0.5,
+        )
+
+        with open(f"{args.output_dir}/predictions.json", "w", encoding="utf-8") as f:
+            json.dump(predictions, f, ensure_ascii=False, indent=4)
+
+        for line, pred in zip(data, predictions):
+            line["flagged"] = {"QAModeration": pred["flagged"]}
+
+    with open(os.path.join(args.output_dir, "evaluation.json"), encoding="utf-8") as f:
+        data = json.load(f)
+
+    model_names_set = set([line["model"] for line in data])
+    model_names = sorted(model_names_set, key=lambda x: int(x.split("_")[1]))
 
     with open(f"{args.output_dir}/evaluation.json", "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
@@ -136,10 +137,11 @@ def main() -> None:
             },
         )
 
-    print_table(
-        column=list(metrics[0].keys()),
-        data=[[str(item) for item in row.values()] for row in metrics],
-    )
+    # report to terminal and save to file
+    df = pd.DataFrame(metrics)
+    print(df)
+    df.to_csv(os.path.join(args.output_dir, "flagged_ratio.csv"), index=False)
+
     plot_metrics(metrics, args.output_dir)
 
 
