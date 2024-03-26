@@ -410,14 +410,6 @@ def main(args) -> None:
     print("Model loaded.")
 
     print("#################### START UNLEARNING ####################")
-    # Save model at step 0.
-    model_tokenizer_save_dir = Path(os.path.join(args.model_save_dir, f"idx_0"))
-    model_tokenizer_save_dir.mkdir(parents=True, exist_ok=True)
-
-    model.save_pretrained(model_tokenizer_save_dir, from_pt=True)
-    tokenizer.save_pretrained(model_tokenizer_save_dir)
-    print("Saved model at step 0.")
-
     # Start unlearning.
     bad_loss = 0.0
     idx = 0
