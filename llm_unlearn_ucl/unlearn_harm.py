@@ -46,6 +46,8 @@ from utils import (
     get_truthfulQA_answers_plaintext,
 )
 
+import gc
+
 
 def set_seed(seed_num: int) -> None:
     torch.manual_seed(seed_num)
@@ -457,6 +459,9 @@ def main(args) -> None:
                     accelerator.backward(loss / num_batches_per_epoch)
                     bad_loss /= num_batches_per_epoch
                     accu_bad_loss += bad_loss.item()
+                    del bad_batch
+                    del normal_batch
+                    torch.cuda.empty_cache()
                 # If args.batch_size < args.samples_count//args.sequential, always perform gradient accumulation.
                 epoch_num += 1
                 final_model_tag = epoch_num
