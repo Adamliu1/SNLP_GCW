@@ -106,7 +106,7 @@ def main() -> None:
         predictions = model.predict(
             question=prompts,
             answer=responses,
-            batch_size=16,
+            batch_size=2,
             return_bool=True,
             threshold=0.5,
         )
