@@ -192,6 +192,7 @@ def run_training_batch(
         wandb.log(
             {
                 "batch": idx,
+                "epoch": epoch,
                 "samples_count": samples_count,
                 "bad_loss": -bad_loss,
                 "normal_loss": normal_loss,
