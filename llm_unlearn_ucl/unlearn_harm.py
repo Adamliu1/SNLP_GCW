@@ -122,6 +122,7 @@ def run_training_batch(
     bad_batch,
     normal_batch,
     idx,
+    samples_count,
     epoch: int,
     bad_loader_size: int = 0,
     normal_loader_size: int = 0,
@@ -191,6 +192,7 @@ def run_training_batch(
         wandb.log(
             {
                 "batch": idx,
+                "samples_count": samples_count,
                 "bad_loss": -bad_loss,
                 "normal_loss": normal_loss,
                 "final_loss": loss,
@@ -205,6 +207,7 @@ def run_training_batch(
 
     stats = (
         f"epoch: {epoch}, batch: {idx}, "
+        f"samples seen: {samples_count}, "
         f"bad_loss: {-bad_loss:.2f}, "
         f"current_div_loss: {normal_loss:.2f}, "
         f"ratio (bad) mink unlearning/reference: {np.mean(mink_probs_after_step)/np.mean(mink_probs_base):.3f}, "
@@ -417,10 +420,13 @@ def main(args) -> None:
 
     print("#################### START UNLEARNING ####################")
     # Start unlearning.
-    bad_loss = 0.0
-    idx = 0
-    start_time = time.time()
-    running_loss = deque()
+    bad_loss = 0.0  # Running value of the "bad loss"
+    idx = 0  # Number of "unlearning steps" that has occurred (e.g. processed batches)
+    samples_count = 0  # Total number of samples that "passed through" the model (for 1 pass of batch 32: 32 samples)
+    start_time = time.time()  # Start time of unlearning process
+    running_loss = (
+        deque()
+    )  # averaging running value of "bad loss", used in ByteDance paper unlearning method
     final_model_tag = 0
     # Here for caching what samples are used so far
 
@@ -438,6 +444,7 @@ def main(args) -> None:
                 for normal_batch, bad_batch in zip(
                     train_normal_loader, train_bad_loader
                 ):
+                    samples_count += len(bad_batch["input_ids"])
                     loss, bad_loss = run_training_batch(
                         model=model,
                         pretrained_model=pretrained_model,
@@ -447,6 +454,7 @@ def main(args) -> None:
                         bad_batch=bad_batch,
                         normal_batch=normal_batch,
                         idx=idx,
+                        samples_count=samples_count,
                         epoch=epoch_num,
                         question_prefix_str=question_prefix_str,
                         answer_prefix_str=answer_prefix_str,
@@ -495,6 +503,7 @@ def main(args) -> None:
             for bad_batch, normal_batch in zip(
                 train_bad_loaders[0], train_normal_loaders[0]
             ):
+                samples_count += len(bad_batch["input_ids"])
                 loss, bad_loss = run_training_batch(
                     model=model,
                     pretrained_model=pretrained_model,
@@ -504,6 +513,7 @@ def main(args) -> None:
                     bad_batch=bad_batch,
                     normal_batch=normal_batch,
                     idx=idx,
+                    samples_count=samples_count,
                     epoch=epoch_num,
                     bad_loader_size=bad_loader_len,
                     normal_loader_size=normal_loader_len,
