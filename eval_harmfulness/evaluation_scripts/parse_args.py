@@ -7,13 +7,11 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--eval_dataset",
         type=str,
-        required=True,
         help="Path to the input JSON file.",
     )
     parser.add_argument(
         "--model_path",
         type=str,
-        required=True,
         help="Path to the model.",
     )
     parser.add_argument(
@@ -33,5 +31,10 @@ def parse_arguments() -> argparse.Namespace:
         type=str,
         default="cuda",
         help="Device on which to run the evaluation.",
+    )
+    parser.add_argument(
+        "--use_existing_evaluation",
+        action="store_true",
+        help="Uses already existing evaluation file at output_dir to just print and plot its contents!",
     )
     return parser.parse_args()
