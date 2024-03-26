@@ -23,4 +23,14 @@ python evaluate_outputs.py \
     --device "cuda"
 ```
 
+## Print evaluation results and generate plot using an existing evaluation file
+
+If you already have an output of evaluation (in `output_dir` path) and want to re-generate a plot you can run the following: 
+
+```bash
+python evaluate_outputs.py \
+    --output_dir eval_results/evaluation \
+    --use_existing_evaluation
+```
+
 Model weights on Hugging Face: [`PKU-Alignment/beaver-dam-7b`](https://huggingface.co/PKU-Alignment/beaver-dam-7b).
