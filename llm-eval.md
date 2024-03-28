@@ -80,6 +80,10 @@ python relearn/relearn.py --original_model <original_model> --unlearned_model <u
 
 It might be necessary to adjust the learning rate so that the rate of re-learning shows significant differences.
 
+Use the script `./relearn/run_relearn.sh` to evaluate checkpoints of a model in
+batch. `--use_lora` is kept because turning lora off alternates the behaviour of
+relearning.
+
 ## Using Min-k% prob as an unlearning metric - part of the unlearning loss?
 
 @Willmish
