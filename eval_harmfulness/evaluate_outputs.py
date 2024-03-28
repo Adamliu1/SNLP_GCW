@@ -19,9 +19,7 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
-
 import pandas as pd
-
 from evaluation_scripts.moderation import QAModeration
 from evaluation_scripts.parse_args import parse_arguments
 
@@ -116,9 +114,11 @@ def main() -> None:
 
         for line, pred in zip(data, predictions):
             line["flagged"] = {"QAModeration": pred["flagged"]}
-
-    with open(os.path.join(args.output_dir, "evaluation.json"), encoding="utf-8") as f:
-        data = json.load(f)
+    else:
+        with open(
+            os.path.join(args.output_dir, "evaluation.json"), encoding="utf-8"
+        ) as f:
+            data = json.load(f)
 
     model_names_set = set([line["model"] for line in data])
     model_names = sorted(model_names_set, key=lambda x: int(x.split("_")[1]))
