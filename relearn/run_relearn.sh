@@ -1,13 +1,15 @@
 models=()
-model_save_dir="../snlp-unlearned-models/models/opt1.3b_unlearned_harmful-for-real1234"
+model_name=opt1.3b_unlearned_harmful-for-real1234
+model_save_dir="../snlp-unlearned-models/models/$model_name"
 
 readarray -t models < <(find \
     $model_save_dir \
     -type d \
     -name 'idx_*')
 
-JSON_DIR=./jsons
+JSON_DIR=./relearn_jsons/$model_name
 [ -d $JSON_DIR ] || mkdir -p $JSON_DIR
+echo output JSON directory: $JSON_DIR
 
 for model_path in "${models[@]}"; do
     echo $model_path
