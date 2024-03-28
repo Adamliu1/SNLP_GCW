@@ -3,13 +3,13 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 import argparse
-import logging
-import random
-import os
-from collections import deque
-from typing import Tuple, Dict
 import json
+import logging
+import os
+import random
+from collections import deque
 from pathlib import Path
+from typing import Dict, Tuple
 
 import numpy as np
 import torch
@@ -152,7 +152,6 @@ def main(args):
     tokenizer = AutoTokenizer.from_pretrained(
         args.original_model, cache_dir=args.cache_dir
     )
-    num_training_steps = args.max_relearn_epochs
     original_model = accelerator.prepare(original_model)
 
     print(f"Constructing dataloader for {args.dataset}")
@@ -236,13 +235,10 @@ def main(args):
         args.unlearned_model, cache_dir=args.cache_dir
     )
     optimizer = AdamW(unlearned_model.parameters(), lr=args.lr)
-    # num_training_steps = args.max_relearn_epochs
-    num_training_steps = 10000
     lr_scheduler = get_scheduler(
-        "cosine",
+        "constant",
         optimizer=optimizer,
         num_warmup_steps=0,
-        num_training_steps=num_training_steps,
     )
     unlearned_model, lr_scheduler = accelerator.prepare(unlearned_model, lr_scheduler)
     optimizer = AcceleratedOptimizer(optimizer, True)
