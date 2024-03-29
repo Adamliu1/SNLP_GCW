@@ -6,112 +6,112 @@
       "alias": "winogrande"
     },
     "truthfulqa": {
-      "rougeL_diff,none": -9.802553194140101,
-      "rougeL_diff_stderr,none": 0.8310580341816266,
-      "bleu_max,none": 18.361850302474398,
-      "bleu_max_stderr,none": 0.6447177743023662,
-      "rouge2_max,none": 22.359017519410386,
-      "rouge2_max_stderr,none": 0.9089855665040715,
-      "rougeL_max,none": 36.69534838749927,
-      "rougeL_max_stderr,none": 0.8783163200820898,
-      "rouge1_diff,none": -9.713201168313347,
-      "rouge1_diff_stderr,none": 0.8438881951204874,
-      "bleu_diff,none": -5.797165127130471,
-      "bleu_diff_stderr,none": 0.6506262413076769,
-      "rouge1_max,none": 39.40713122466985,
-      "rouge1_max_stderr,none": 0.8916794691506517,
-      "rougeL_acc,none": 0.26438188494492043,
-      "rougeL_acc_stderr,none": 0.015438211119522517,
-      "rouge2_diff,none": -11.163433719115089,
-      "rouge2_diff_stderr,none": 0.8883411071684906,
-      "rouge2_acc,none": 0.17870257037943696,
-      "rouge2_acc_stderr,none": 0.013411289952324454,
-      "acc,none": 0.3147266770346705,
-      "acc_stderr,none": 0.010261543692891303,
-      "rouge1_acc,none": 0.27906976744186046,
-      "rouge1_acc_stderr,none": 0.015702107090627915,
-      "bleu_acc,none": 0.35006119951040393,
-      "bleu_acc_stderr,none": 0.016697949420151036,
+      "bleu_max,none": 18.50413629275818,
+      "bleu_max_stderr,none": 0.6546358627527056,
+      "bleu_diff,none": -5.563292800700237,
+      "bleu_diff_stderr,none": 0.6551825483849284,
+      "rouge2_acc,none": 0.18237454100367198,
+      "rouge2_acc_stderr,none": 0.01351805563618721,
+      "rouge2_max,none": 22.651336797312357,
+      "rouge2_max_stderr,none": 0.920741590114374,
+      "rougeL_acc,none": 0.26560587515299877,
+      "rougeL_acc_stderr,none": 0.0154610276272536,
+      "rouge1_diff,none": -9.471792238223962,
+      "rouge1_diff_stderr,none": 0.8524689209790719,
+      "rouge2_diff,none": -10.844871132029162,
+      "rouge2_diff_stderr,none": 0.9015673580219916,
+      "rouge1_max,none": 39.66663358450963,
+      "rouge1_max_stderr,none": 0.8915368457047127,
+      "rougeL_max,none": 37.01905582683755,
+      "rougeL_max_stderr,none": 0.8800913412198677,
+      "bleu_acc,none": 0.3525091799265606,
+      "bleu_acc_stderr,none": 0.01672464638075655,
+      "rougeL_diff,none": -9.548991652956762,
+      "rougeL_diff_stderr,none": 0.8399837168591444,
+      "rouge1_acc,none": 0.2778457772337821,
+      "rouge1_acc_stderr,none": 0.015680929364024664,
+      "acc,none": 0.3187739669036237,
+      "acc_stderr,none": 0.010312776436393622,
       "alias": "truthfulqa"
     },
     "truthfulqa_gen": {
-      "bleu_max,none": 18.361850302474398,
-      "bleu_max_stderr,none": 0.6447177743023662,
-      "bleu_acc,none": 0.35006119951040393,
-      "bleu_acc_stderr,none": 0.016697949420151036,
-      "bleu_diff,none": -5.797165127130471,
-      "bleu_diff_stderr,none": 0.650626241307677,
-      "rouge1_max,none": 39.40713122466985,
-      "rouge1_max_stderr,none": 0.8916794691506517,
-      "rouge1_acc,none": 0.27906976744186046,
-      "rouge1_acc_stderr,none": 0.015702107090627915,
-      "rouge1_diff,none": -9.713201168313347,
-      "rouge1_diff_stderr,none": 0.8438881951204874,
-      "rouge2_max,none": 22.359017519410386,
-      "rouge2_max_stderr,none": 0.9089855665040715,
-      "rouge2_acc,none": 0.17870257037943696,
-      "rouge2_acc_stderr,none": 0.013411289952324454,
-      "rouge2_diff,none": -11.163433719115089,
-      "rouge2_diff_stderr,none": 0.8883411071684906,
-      "rougeL_max,none": 36.69534838749927,
-      "rougeL_max_stderr,none": 0.8783163200820898,
-      "rougeL_acc,none": 0.26438188494492043,
-      "rougeL_acc_stderr,none": 0.015438211119522517,
-      "rougeL_diff,none": -9.802553194140101,
-      "rougeL_diff_stderr,none": 0.8310580341816266,
+      "bleu_max,none": 18.50413629275818,
+      "bleu_max_stderr,none": 0.6546358627527056,
+      "bleu_acc,none": 0.3525091799265606,
+      "bleu_acc_stderr,none": 0.01672464638075655,
+      "bleu_diff,none": -5.563292800700237,
+      "bleu_diff_stderr,none": 0.6551825483849284,
+      "rouge1_max,none": 39.66663358450963,
+      "rouge1_max_stderr,none": 0.8915368457047128,
+      "rouge1_acc,none": 0.2778457772337821,
+      "rouge1_acc_stderr,none": 0.015680929364024664,
+      "rouge1_diff,none": -9.471792238223962,
+      "rouge1_diff_stderr,none": 0.8524689209790719,
+      "rouge2_max,none": 22.651336797312357,
+      "rouge2_max_stderr,none": 0.920741590114374,
+      "rouge2_acc,none": 0.18237454100367198,
+      "rouge2_acc_stderr,none": 0.013518055636187212,
+      "rouge2_diff,none": -10.844871132029162,
+      "rouge2_diff_stderr,none": 0.9015673580219916,
+      "rougeL_max,none": 37.01905582683755,
+      "rougeL_max_stderr,none": 0.8800913412198677,
+      "rougeL_acc,none": 0.26560587515299877,
+      "rougeL_acc_stderr,none": 0.0154610276272536,
+      "rougeL_diff,none": -9.548991652956762,
+      "rougeL_diff_stderr,none": 0.8399837168591444,
       "alias": " - truthfulqa_gen"
     },
     "truthfulqa_mc1": {
-      "acc,none": 0.24112607099143207,
-      "acc_stderr,none": 0.014974827279752339,
+      "acc,none": 0.2460220318237454,
+      "acc_stderr,none": 0.015077219200662587,
       "alias": " - truthfulqa_mc1"
     },
     "truthfulqa_mc2": {
-      "acc,none": 0.3883272830779088,
-      "acc_stderr,none": 0.014033946835657255,
+      "acc,none": 0.39152590198350196,
+      "acc_stderr,none": 0.014074476632660751,
       "alias": " - truthfulqa_mc2"
     },
     "toxigen": {
-      "acc,none": 0.548936170212766,
-      "acc_stderr,none": 0.016238545606460795,
+      "acc,none": 0.55,
+      "acc_stderr,none": 0.01623509392520971,
       "acc_norm,none": 0.4297872340425532,
       "acc_norm_stderr,none": 0.016155203301509467,
       "alias": "toxigen"
     },
     "mmlu": {
-      "acc,none": 0.2502492522432702,
-      "acc_stderr,none": 0.003654154832418333,
+      "acc,none": 0.2505341119498647,
+      "acc_stderr,none": 0.0036555953176947618,
       "alias": "mmlu"
     },
     "mmlu_humanities": {
       "alias": " - humanities",
       "acc,none": 0.25356004250797026,
-      "acc_stderr,none": 0.00633917880065464
+      "acc_stderr,none": 0.00634056078241568
     },
     "mmlu_formal_logic": {
       "alias": "  - formal_logic",
-      "acc,none": 0.20634920634920634,
-      "acc_stderr,none": 0.036196045241242494
+      "acc,none": 0.21428571428571427,
+      "acc_stderr,none": 0.03670066451047182
     },
     "mmlu_high_school_european_history": {
       "alias": "  - high_school_european_history",
-      "acc,none": 0.23636363636363636,
-      "acc_stderr,none": 0.033175059300091805
+      "acc,none": 0.2545454545454545,
+      "acc_stderr,none": 0.0340150671524904
     },
     "mmlu_high_school_us_history": {
       "alias": "  - high_school_us_history",
-      "acc,none": 0.24509803921568626,
-      "acc_stderr,none": 0.03019028245350195
+      "acc,none": 0.23529411764705882,
+      "acc_stderr,none": 0.02977177522814563
     },
     "mmlu_high_school_world_history": {
       "alias": "  - high_school_world_history",
-      "acc,none": 0.2109704641350211,
-      "acc_stderr,none": 0.02655837250266192
+      "acc,none": 0.21940928270042195,
+      "acc_stderr,none": 0.026939106581553945
     },
     "mmlu_international_law": {
       "alias": "  - international_law",
       "acc,none": 0.32231404958677684,
-      "acc_stderr,none": 0.04266416363352167
+      "acc_stderr,none": 0.04266416363352168
     },
     "mmlu_jurisprudence": {
       "alias": "  - jurisprudence",
@@ -125,18 +125,18 @@
     },
     "mmlu_moral_disputes": {
       "alias": "  - moral_disputes",
-      "acc,none": 0.2774566473988439,
-      "acc_stderr,none": 0.024105712607754307
+      "acc,none": 0.26878612716763006,
+      "acc_stderr,none": 0.02386800326250011
     },
     "mmlu_moral_scenarios": {
       "alias": "  - moral_scenarios",
-      "acc,none": 0.23910614525139665,
-      "acc_stderr,none": 0.014265554192331152
+      "acc,none": 0.2424581005586592,
+      "acc_stderr,none": 0.014333522059217887
     },
     "mmlu_philosophy": {
       "alias": "  - philosophy",
-      "acc,none": 0.2572347266881029,
-      "acc_stderr,none": 0.024826171289250888
+      "acc,none": 0.24758842443729903,
+      "acc_stderr,none": 0.024513879973621967
     },
     "mmlu_prehistory": {
       "alias": "  - prehistory",
@@ -145,18 +145,18 @@
     },
     "mmlu_professional_law": {
       "alias": "  - professional_law",
-      "acc,none": 0.2457627118644068,
-      "acc_stderr,none": 0.010996156635142692
+      "acc,none": 0.24445893089960888,
+      "acc_stderr,none": 0.010976425013113886
     },
     "mmlu_world_religions": {
       "alias": "  - world_religions",
-      "acc,none": 0.25146198830409355,
-      "acc_stderr,none": 0.033275044238468436
+      "acc,none": 0.2573099415204678,
+      "acc_stderr,none": 0.03352799844161865
     },
     "mmlu_other": {
       "alias": " - other",
-      "acc,none": 0.24975860959124557,
-      "acc_stderr,none": 0.007764015855242538
+      "acc,none": 0.2471837785645317,
+      "acc_stderr,none": 0.007733508037650822
     },
     "mmlu_business_ethics": {
       "alias": "  - business_ethics",
@@ -165,58 +165,58 @@
     },
     "mmlu_clinical_knowledge": {
       "alias": "  - clinical_knowledge",
-      "acc,none": 0.24528301886792453,
-      "acc_stderr,none": 0.0264803571798957
+      "acc,none": 0.22264150943396227,
+      "acc_stderr,none": 0.025604233470899095
     },
     "mmlu_college_medicine": {
       "alias": "  - college_medicine",
-      "acc,none": 0.26011560693641617,
-      "acc_stderr,none": 0.03345036916788991
+      "acc,none": 0.24855491329479767,
+      "acc_stderr,none": 0.03295304696818318
     },
     "mmlu_global_facts": {
       "alias": "  - global_facts",
-      "acc,none": 0.25,
-      "acc_stderr,none": 0.04351941398892446
+      "acc,none": 0.27,
+      "acc_stderr,none": 0.0446196043338474
     },
     "mmlu_human_aging": {
       "alias": "  - human_aging",
-      "acc,none": 0.3094170403587444,
-      "acc_stderr,none": 0.031024411740572223
+      "acc,none": 0.29596412556053814,
+      "acc_stderr,none": 0.030636591348699796
     },
     "mmlu_management": {
       "alias": "  - management",
-      "acc,none": 0.1941747572815534,
-      "acc_stderr,none": 0.03916667762822584
+      "acc,none": 0.1553398058252427,
+      "acc_stderr,none": 0.03586594738573973
     },
     "mmlu_marketing": {
       "alias": "  - marketing",
-      "acc,none": 0.2863247863247863,
-      "acc_stderr,none": 0.02961432369045666
+      "acc,none": 0.28205128205128205,
+      "acc_stderr,none": 0.02948036054954119
     },
     "mmlu_medical_genetics": {
       "alias": "  - medical_genetics",
       "acc,none": 0.24,
-      "acc_stderr,none": 0.04292346959909283
+      "acc_stderr,none": 0.04292346959909284
     },
     "mmlu_miscellaneous": {
       "alias": "  - miscellaneous",
-      "acc,none": 0.25287356321839083,
-      "acc_stderr,none": 0.015543377313719681
+      "acc,none": 0.2554278416347382,
+      "acc_stderr,none": 0.015594955384455765
     },
     "mmlu_nutrition": {
       "alias": "  - nutrition",
-      "acc,none": 0.22549019607843138,
-      "acc_stderr,none": 0.023929155517351277
+      "acc,none": 0.23529411764705882,
+      "acc_stderr,none": 0.02428861946604611
     },
     "mmlu_professional_accounting": {
       "alias": "  - professional_accounting",
-      "acc,none": 0.2695035460992908,
-      "acc_stderr,none": 0.026469036818590638
+      "acc,none": 0.2765957446808511,
+      "acc_stderr,none": 0.02668456434046099
     },
     "mmlu_professional_medicine": {
       "alias": "  - professional_medicine",
-      "acc,none": 0.19117647058823528,
-      "acc_stderr,none": 0.02388688192244033
+      "acc,none": 0.1875,
+      "acc_stderr,none": 0.023709788253811766
     },
     "mmlu_virology": {
       "alias": "  - virology",
@@ -225,73 +225,73 @@
     },
     "mmlu_social_sciences": {
       "alias": " - social_sciences",
-      "acc,none": 0.2398440038999025,
-      "acc_stderr,none": 0.007698714738345494
+      "acc,none": 0.24049398765030874,
+      "acc_stderr,none": 0.007707422668311752
     },
     "mmlu_econometrics": {
       "alias": "  - econometrics",
-      "acc,none": 0.2719298245614035,
-      "acc_stderr,none": 0.04185774424022056
+      "acc,none": 0.2543859649122807,
+      "acc_stderr,none": 0.040969851398436716
     },
     "mmlu_high_school_geography": {
       "alias": "  - high_school_geography",
-      "acc,none": 0.23232323232323232,
-      "acc_stderr,none": 0.030088629490217483
+      "acc,none": 0.2474747474747475,
+      "acc_stderr,none": 0.03074630074212451
     },
     "mmlu_high_school_government_and_politics": {
       "alias": "  - high_school_government_and_politics",
-      "acc,none": 0.24352331606217617,
-      "acc_stderr,none": 0.030975436386845447
+      "acc,none": 0.24870466321243523,
+      "acc_stderr,none": 0.031195840877700286
     },
     "mmlu_high_school_macroeconomics": {
       "alias": "  - high_school_macroeconomics",
-      "acc,none": 0.2230769230769231,
-      "acc_stderr,none": 0.021107730127244
+      "acc,none": 0.21794871794871795,
+      "acc_stderr,none": 0.02093244577446319
     },
     "mmlu_high_school_microeconomics": {
       "alias": "  - high_school_microeconomics",
-      "acc,none": 0.21008403361344538,
-      "acc_stderr,none": 0.026461398717471874
+      "acc,none": 0.2184873949579832,
+      "acc_stderr,none": 0.02684151432295895
     },
     "mmlu_high_school_psychology": {
       "alias": "  - high_school_psychology",
-      "acc,none": 0.22752293577981653,
-      "acc_stderr,none": 0.017974463578776502
+      "acc,none": 0.23669724770642203,
+      "acc_stderr,none": 0.018224078117299092
     },
     "mmlu_human_sexuality": {
       "alias": "  - human_sexuality",
-      "acc,none": 0.21374045801526717,
-      "acc_stderr,none": 0.0359546161177469
+      "acc,none": 0.20610687022900764,
+      "acc_stderr,none": 0.03547771004159463
     },
     "mmlu_professional_psychology": {
       "alias": "  - professional_psychology",
-      "acc,none": 0.28594771241830064,
-      "acc_stderr,none": 0.018280485072954676
+      "acc,none": 0.2826797385620915,
+      "acc_stderr,none": 0.018217269552053435
     },
     "mmlu_public_relations": {
       "alias": "  - public_relations",
-      "acc,none": 0.23636363636363636,
-      "acc_stderr,none": 0.04069306319721376
+      "acc,none": 0.20909090909090908,
+      "acc_stderr,none": 0.03895091015724138
     },
     "mmlu_security_studies": {
       "alias": "  - security_studies",
-      "acc,none": 0.22448979591836735,
-      "acc_stderr,none": 0.02671143055553842
+      "acc,none": 0.22857142857142856,
+      "acc_stderr,none": 0.026882144922307748
     },
     "mmlu_sociology": {
       "alias": "  - sociology",
       "acc,none": 0.22885572139303484,
-      "acc_stderr,none": 0.029705284056772436
+      "acc_stderr,none": 0.02970528405677244
     },
     "mmlu_us_foreign_policy": {
       "alias": "  - us_foreign_policy",
       "acc,none": 0.23,
-      "acc_stderr,none": 0.042295258468165065
+      "acc_stderr,none": 0.04229525846816507
     },
     "mmlu_stem": {
       "alias": " - stem",
-      "acc,none": 0.2559467174119886,
-      "acc_stderr,none": 0.007770233320699987
+      "acc,none": 0.2591183000317158,
+      "acc_stderr,none": 0.007802415394547288
     },
     "mmlu_abstract_algebra": {
       "alias": "  - abstract_algebra",
@@ -300,23 +300,23 @@
     },
     "mmlu_anatomy": {
       "alias": "  - anatomy",
-      "acc,none": 0.31851851851851853,
-      "acc_stderr,none": 0.04024778401977109
+      "acc,none": 0.3111111111111111,
+      "acc_stderr,none": 0.03999262876617721
     },
     "mmlu_astronomy": {
       "alias": "  - astronomy",
-      "acc,none": 0.2565789473684211,
-      "acc_stderr,none": 0.0355418036802569
+      "acc,none": 0.27631578947368424,
+      "acc_stderr,none": 0.03639057569952925
     },
     "mmlu_college_biology": {
       "alias": "  - college_biology",
-      "acc,none": 0.24305555555555555,
-      "acc_stderr,none": 0.03586879280080341
+      "acc,none": 0.2361111111111111,
+      "acc_stderr,none": 0.03551446610810826
     },
     "mmlu_college_chemistry": {
       "alias": "  - college_chemistry",
-      "acc,none": 0.17,
-      "acc_stderr,none": 0.03775251680686371
+      "acc,none": 0.19,
+      "acc_stderr,none": 0.03942772444036624
     },
     "mmlu_college_computer_science": {
       "alias": "  - college_computer_science",
@@ -335,18 +335,18 @@
     },
     "mmlu_computer_security": {
       "alias": "  - computer_security",
-      "acc,none": 0.25,
-      "acc_stderr,none": 0.04351941398892446
+      "acc,none": 0.28,
+      "acc_stderr,none": 0.04512608598542128
     },
     "mmlu_conceptual_physics": {
       "alias": "  - conceptual_physics",
-      "acc,none": 0.2127659574468085,
-      "acc_stderr,none": 0.026754391348039787
+      "acc,none": 0.2,
+      "acc_stderr,none": 0.026148818018424502
     },
     "mmlu_electrical_engineering": {
       "alias": "  - electrical_engineering",
-      "acc,none": 0.25517241379310346,
-      "acc_stderr,none": 0.03632984052707842
+      "acc,none": 0.27586206896551724,
+      "acc_stderr,none": 0.037245636197746325
     },
     "mmlu_elementary_mathematics": {
       "alias": "  - elementary_mathematics",
@@ -355,13 +355,13 @@
     },
     "mmlu_high_school_biology": {
       "alias": "  - high_school_biology",
-      "acc,none": 0.25161290322580643,
-      "acc_stderr,none": 0.02468597928623993
+      "acc,none": 0.25483870967741934,
+      "acc_stderr,none": 0.0247901184593322
     },
     "mmlu_high_school_chemistry": {
       "alias": "  - high_school_chemistry",
-      "acc,none": 0.3103448275862069,
-      "acc_stderr,none": 0.032550867699701024
+      "acc,none": 0.30049261083743845,
+      "acc_stderr,none": 0.032257994762334846
     },
     "mmlu_high_school_computer_science": {
       "alias": "  - high_school_computer_science",
@@ -370,13 +370,13 @@
     },
     "mmlu_high_school_mathematics": {
       "alias": "  - high_school_mathematics",
-      "acc,none": 0.24814814814814815,
-      "acc_stderr,none": 0.026335739404055803
+      "acc,none": 0.25925925925925924,
+      "acc_stderr,none": 0.026719240783712177
     },
     "mmlu_high_school_physics": {
       "alias": "  - high_school_physics",
-      "acc,none": 0.26490066225165565,
-      "acc_stderr,none": 0.036030385453603826
+      "acc,none": 0.2781456953642384,
+      "acc_stderr,none": 0.03658603262763743
     },
     "mmlu_high_school_statistics": {
       "alias": "  - high_school_statistics",
@@ -389,81 +389,81 @@
       "acc_stderr,none": 0.043270409325787296
     },
     "hellaswag": {
-      "acc,none": 0.41147181836287594,
-      "acc_stderr,none": 0.004910946424771619,
-      "acc_norm,none": 0.536247759410476,
-      "acc_norm_stderr,none": 0.004976651989757638,
+      "acc,none": 0.41127265484963155,
+      "acc_stderr,none": 0.00491058844933002,
+      "acc_norm,none": 0.5374427404899422,
+      "acc_norm_stderr,none": 0.004975770805464638,
       "alias": "hellaswag"
     },
     "gsm8k": {
-      "exact_match,strict-match": 0.0075815011372251705,
-      "exact_match_stderr,strict-match": 0.002389281512077239,
-      "exact_match,flexible-extract": 0.016679302501895376,
-      "exact_match_stderr,flexible-extract": 0.0035275958887224417,
+      "exact_match,strict-match": 0.006823351023502654,
+      "exact_match_stderr,strict-match": 0.0022675371022544783,
+      "exact_match,flexible-extract": 0.01288855193328279,
+      "exact_match_stderr,flexible-extract": 0.003106901266499644,
       "alias": "gsm8k"
     },
     "arc_challenge": {
       "acc,none": 0.22866894197952217,
-      "acc_stderr,none": 0.01227285358254082,
-      "acc_norm,none": 0.2773037542662116,
-      "acc_norm_stderr,none": 0.013082095839059374,
+      "acc_stderr,none": 0.012272853582540818,
+      "acc_norm,none": 0.27303754266211605,
+      "acc_norm_stderr,none": 0.013019332762635746,
       "alias": "arc_challenge"
     }
   },
   "groups": {
     "truthfulqa": {
-      "rougeL_diff,none": -9.802553194140101,
-      "rougeL_diff_stderr,none": 0.8310580341816266,
-      "bleu_max,none": 18.361850302474398,
-      "bleu_max_stderr,none": 0.6447177743023662,
-      "rouge2_max,none": 22.359017519410386,
-      "rouge2_max_stderr,none": 0.9089855665040715,
-      "rougeL_max,none": 36.69534838749927,
-      "rougeL_max_stderr,none": 0.8783163200820898,
-      "rouge1_diff,none": -9.713201168313347,
-      "rouge1_diff_stderr,none": 0.8438881951204874,
-      "bleu_diff,none": -5.797165127130471,
-      "bleu_diff_stderr,none": 0.6506262413076769,
-      "rouge1_max,none": 39.40713122466985,
-      "rouge1_max_stderr,none": 0.8916794691506517,
-      "rougeL_acc,none": 0.26438188494492043,
-      "rougeL_acc_stderr,none": 0.015438211119522517,
-      "rouge2_diff,none": -11.163433719115089,
-      "rouge2_diff_stderr,none": 0.8883411071684906,
-      "rouge2_acc,none": 0.17870257037943696,
-      "rouge2_acc_stderr,none": 0.013411289952324454,
-      "acc,none": 0.3147266770346705,
-      "acc_stderr,none": 0.010261543692891303,
-      "rouge1_acc,none": 0.27906976744186046,
-      "rouge1_acc_stderr,none": 0.015702107090627915,
-      "bleu_acc,none": 0.35006119951040393,
-      "bleu_acc_stderr,none": 0.016697949420151036,
+      "bleu_max,none": 18.50413629275818,
+      "bleu_max_stderr,none": 0.6546358627527056,
+      "bleu_diff,none": -5.563292800700237,
+      "bleu_diff_stderr,none": 0.6551825483849284,
+      "rouge2_acc,none": 0.18237454100367198,
+      "rouge2_acc_stderr,none": 0.01351805563618721,
+      "rouge2_max,none": 22.651336797312357,
+      "rouge2_max_stderr,none": 0.920741590114374,
+      "rougeL_acc,none": 0.26560587515299877,
+      "rougeL_acc_stderr,none": 0.0154610276272536,
+      "rouge1_diff,none": -9.471792238223962,
+      "rouge1_diff_stderr,none": 0.8524689209790719,
+      "rouge2_diff,none": -10.844871132029162,
+      "rouge2_diff_stderr,none": 0.9015673580219916,
+      "rouge1_max,none": 39.66663358450963,
+      "rouge1_max_stderr,none": 0.8915368457047127,
+      "rougeL_max,none": 37.01905582683755,
+      "rougeL_max_stderr,none": 0.8800913412198677,
+      "bleu_acc,none": 0.3525091799265606,
+      "bleu_acc_stderr,none": 0.01672464638075655,
+      "rougeL_diff,none": -9.548991652956762,
+      "rougeL_diff_stderr,none": 0.8399837168591444,
+      "rouge1_acc,none": 0.2778457772337821,
+      "rouge1_acc_stderr,none": 0.015680929364024664,
+      "acc,none": 0.3187739669036237,
+      "acc_stderr,none": 0.010312776436393622,
       "alias": "truthfulqa"
     },
     "mmlu": {
-      "acc,none": 0.2502492522432702,
-      "acc_stderr,none": 0.003654154832418333,
+      "acc,none": 0.2505341119498647,
+      "acc_stderr,none": 0.0036555953176947618,
       "alias": "mmlu"
     },
     "mmlu_humanities": {
       "alias": " - humanities",
       "acc,none": 0.25356004250797026,
-      "acc_stderr,none": 0.00633917880065464
+      "acc_stderr,none": 0.00634056078241568
     },
     "mmlu_other": {
       "alias": " - other",
-      "acc,none": 0.24975860959124557,
-      "acc_stderr,none": 0.007764015855242538
+      "acc,none": 0.2471837785645317,
+      "acc_stderr,none": 0.007733508037650822
     },
     "mmlu_social_sciences": {
       "alias": " - social_sciences",
-      "acc,none": 0.2398440038999025,
-      "acc_stderr,none": 0.007698714738345494
+      "acc,none": 0.24049398765030874,
+      "acc_stderr,none": 0.007707422668311752
     },
     "mmlu_stem": {
       "alias": " - stem",
-      "acc,none": 0.2559467174119886,
-      "acc_stderr,none": 0.007770233320699987
+      "acc,none": 0.2591183000317158,
+      "acc_stderr,none": 0.007802415394547288
     }
   },
   "group_subtasks": {
@@ -3221,20 +3221,20 @@
   },
   "config": {
     "model": "hf",
-    "model_args": "pretrained=/home/shared/SNLP_GCW/snlp-unlearned-models-repo/models/models_batch_unlearning/batch_size_8/idx_12,trust_remote_code=True",
+    "model_args": "pretrained=/root/autodl-tmp/model_tmp_cache/batch_size_8/idx_12,trust_remote_code=True",
     "batch_size": "auto",
     "batch_sizes": [
-      8
+      32
     ],
     "device": "cuda:0",
-    "use_cache": "/home/shared/SNLP_GCW/eval_framework_tasks/scratch/batch_unlearn/.cache/idx_12/cache",
+    "use_cache": "/root/autodl-tmp/SNLP_GCW/eval_framework_tasks/scratch_2/batch_unlearn_8/.cache/idx_12/cache",
     "limit": null,
     "bootstrap_iters": 100000,
     "gen_kwargs": null
   },
-  "git_hash": "485510d",
-  "date": 1711575301.3848119,
-  "pretty_env_info": "PyTorch version: 2.2.1+cu121\nIs debug build: False\nCUDA used to build PyTorch: 12.1\nROCM used to build PyTorch: N/A\n\nOS: Rocky Linux 9.3 (Blue Onyx) (x86_64)\nGCC version: (GCC) 11.4.1 20230605 (Red Hat 11.4.1-2)\nClang version: Could not collect\nCMake version: Could not collect\nLibc version: glibc-2.34\n\nPython version: 3.9.18 (main, Jan  4 2024, 00:00:00)  [GCC 11.4.1 20230605 (Red Hat 11.4.1-2)] (64-bit runtime)\nPython platform: Linux-5.14.0-362.24.1.el9_3.x86_64-x86_64-with-glibc2.34\nIs CUDA available: True\nCUDA runtime version: Could not collect\nCUDA_MODULE_LOADING set to: LAZY\nGPU models and configuration: GPU 0: NVIDIA GeForce RTX 4060 Ti\nNvidia driver version: 550.54.15\ncuDNN version: Could not collect\nHIP runtime version: N/A\nMIOpen runtime version: N/A\nIs XNNPACK available: True\n\nCPU:\nArchitecture:                       x86_64\nCPU op-mode(s):                     32-bit, 64-bit\nAddress sizes:                      46 bits physical, 48 bits virtual\nByte Order:                         Little Endian\nCPU(s):                             16\nOn-line CPU(s) list:                0-15\nVendor ID:                          GenuineIntel\nModel name:                         Intel(R) Xeon(R) CPU E5-2640 v3 @ 2.60GHz\nCPU family:                         6\nModel:                              63\nThread(s) per core:                 2\nCore(s) per socket:                 8\nSocket(s):                          1\nStepping:                           2\nCPU max MHz:                        3400.0000\nCPU min MHz:                        1200.0000\nBogoMIPS:                           5188.11\nFlags:                              fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm cpuid_fault epb invpcid_single pti intel_ppin ssbd ibrs ibpb stibp tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid cqm xsaveopt cqm_llc cqm_occup_llc dtherm ida arat pln pts vnmi md_clear flush_l1d\nVirtualization:                     VT-x\nL1d cache:                          256 KiB (8 instances)\nL1i cache:                          256 KiB (8 instances)\nL2 cache:                           2 MiB (8 instances)\nL3 cache:                           20 MiB (1 instance)\nNUMA node(s):                       1\nNUMA node0 CPU(s):                  0-15\nVulnerability Gather data sampling: Not affected\nVulnerability Itlb multihit:        KVM: Mitigation: VMX disabled\nVulnerability L1tf:                 Mitigation; PTE Inversion; VMX conditional cache flushes, SMT vulnerable\nVulnerability Mds:                  Mitigation; Clear CPU buffers; SMT vulnerable\nVulnerability Meltdown:             Mitigation; PTI\nVulnerability Mmio stale data:      Mitigation; Clear CPU buffers; SMT vulnerable\nVulnerability Retbleed:             Not affected\nVulnerability Spec rstack overflow: Not affected\nVulnerability Spec store bypass:    Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:           Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:           Mitigation; Retpolines, IBPB conditional, IBRS_FW, STIBP conditional, RSB filling, PBRSB-eIBRS Not affected\nVulnerability Srbds:                Not affected\nVulnerability Tsx async abort:      Not affected\n\nVersions of relevant libraries:\n[pip3] numpy==1.26.1\n[pip3] torch==2.2.1\n[pip3] torchvision==0.17.1\n[pip3] triton==2.2.0\n[conda] Could not collect",
+  "git_hash": "1d0de66",
+  "date": 1711679393.4076104,
+  "pretty_env_info": "PyTorch version: 2.2.1+cu121\nIs debug build: False\nCUDA used to build PyTorch: 12.1\nROCM used to build PyTorch: N/A\n\nOS: Ubuntu 22.04.1 LTS (x86_64)\nGCC version: (Ubuntu 11.3.0-1ubuntu1~22.04) 11.3.0\nClang version: Could not collect\nCMake version: version 3.22.1\nLibc version: glibc-2.35\n\nPython version: 3.10.8 (main, Nov 24 2022, 14:13:03) [GCC 11.2.0] (64-bit runtime)\nPython platform: Linux-5.4.0-90-generic-x86_64-with-glibc2.35\nIs CUDA available: True\nCUDA runtime version: 11.8.89\nCUDA_MODULE_LOADING set to: LAZY\nGPU models and configuration: GPU 0: NVIDIA A40\nNvidia driver version: 535.54.03\ncuDNN version: Probably one of the following:\n/usr/lib/x86_64-linux-gnu/libcudnn.so.8.6.0\n/usr/lib/x86_64-linux-gnu/libcudnn_adv_infer.so.8.6.0\n/usr/lib/x86_64-linux-gnu/libcudnn_adv_train.so.8.6.0\n/usr/lib/x86_64-linux-gnu/libcudnn_cnn_infer.so.8.6.0\n/usr/lib/x86_64-linux-gnu/libcudnn_cnn_train.so.8.6.0\n/usr/lib/x86_64-linux-gnu/libcudnn_ops_infer.so.8.6.0\n/usr/lib/x86_64-linux-gnu/libcudnn_ops_train.so.8.6.0\nHIP runtime version: N/A\nMIOpen runtime version: N/A\nIs XNNPACK available: True\n\nCPU:\nArchitecture:                    x86_64\nCPU op-mode(s):                  32-bit, 64-bit\nAddress sizes:                   46 bits physical, 57 bits virtual\nByte Order:                      Little Endian\nCPU(s):                          128\nOn-line CPU(s) list:             0-127\nVendor ID:                       GenuineIntel\nModel name:                      Intel(R) Xeon(R) Platinum 8358P CPU @ 2.60GHz\nCPU family:                      6\nModel:                           106\nThread(s) per core:              2\nCore(s) per socket:              32\nSocket(s):                       2\nStepping:                        6\nFrequency boost:                 enabled\nCPU max MHz:                     2601.0000\nCPU min MHz:                     800.0000\nBogoMIPS:                        5200.00\nFlags:                           fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb cat_l3 invpcid_single ssbd mba ibrs ibpb stibp ibrs_enhanced tpr_shadow vnmi flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid cqm rdt_a avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb intel_pt avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves cqm_llc cqm_occup_llc cqm_mbm_total cqm_mbm_local wbnoinvd dtherm ida arat pln pts avx512vbmi umip pku ospke avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg tme avx512_vpopcntdq rdpid md_clear pconfig flush_l1d arch_capabilities\nVirtualization:                  VT-x\nL1d cache:                       3 MiB (64 instances)\nL1i cache:                       2 MiB (64 instances)\nL2 cache:                        80 MiB (64 instances)\nL3 cache:                        96 MiB (2 instances)\nNUMA node(s):                    2\nNUMA node0 CPU(s):               0-31,64-95\nNUMA node1 CPU(s):               32-63,96-127\nVulnerability Itlb multihit:     Not affected\nVulnerability L1tf:              Not affected\nVulnerability Mds:               Not affected\nVulnerability Meltdown:          Not affected\nVulnerability Spec store bypass: Mitigation; Speculative Store Bypass disabled via prctl and seccomp\nVulnerability Spectre v1:        Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:        Mitigation; Enhanced IBRS, IBPB conditional, RSB filling\nVulnerability Srbds:             Not affected\nVulnerability Tsx async abort:   Not affected\n\nVersions of relevant libraries:\n[pip3] numpy==1.26.1\n[pip3] torch==2.2.1\n[pip3] triton==2.2.0\n[conda] numpy                     1.24.1                   pypi_0    pypi",
   "transformers_version": "4.39.1",
-  "upper_git_hash": "485510d7c4c6bf50c0e48419acbfdf26cc50e825"
+  "upper_git_hash": "1d0de66161fdf2a4149afb386598ad608b2d1352"
 }
