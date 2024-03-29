@@ -4,12 +4,14 @@ models=()
 model_name=opt1.3b_unlearned_harmful_batch_unlearning_512
 model_save_dir="$HOME/autodl-tmp/snlp-unlearned-models/models/$model_name"
 
-readarray -t models < <(find \
-    $model_save_dir \
-    -type d \
-    -name 'idx_*')
+readarray -t models < <(
+    find \
+        ~/autodl-tmp/snlp-unlearned-models/models/ \
+        -type d \
+        -wholename "*seq512*/idx_20"
+)
 
-JSON_DIR=./relearn_jsons/
+JSON_DIR=./relearn_json/
 [ -d $JSON_DIR ] || mkdir -p $JSON_DIR
 echo output JSON directory: $JSON_DIR
 
