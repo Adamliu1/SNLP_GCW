@@ -1,0 +1,2 @@
+,arc_challenge_acc_norm,gsm8k_exact_match_flexible,hellaswag_acc_norm,mmlu_acc,toxigen_acc_norm,truthfulqa_mc2_acc,winogrande_acc
+20,0.27986348122866894,0.011372251705837756,0.429097789285003,0.2410625267055975,0.4319148936170213,0.427913759574974,0.5824782951854776
