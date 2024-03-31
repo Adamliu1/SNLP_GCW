@@ -133,20 +133,14 @@ def main(args):
     )
     # If use LoRA.
     if args.use_lora:
-        target_modules = []
-        for i in lora_modules.keys():
-            if i.lower() in args.unlearned_model.lower():
-                target_modules = lora_modules[i]
-                break
-        if target_modules:
-            peft_config = AdaLoraConfig(
-                task_type=TaskType.CAUSAL_LM,
-                inference_mode=False,
-                r=32,
-                lora_alpha=16,
-                target_modules=target_modules,
-            )
-            original_model = get_peft_model(original_model, peft_config)
+        peft_config = AdaLoraConfig(
+            task_type=TaskType.CAUSAL_LM,
+            inference_mode=False,
+            r=32,
+            lora_alpha=16,
+            target_modules=["q_proj", "v_proj"],
+        )
+        original_model = get_peft_model(original_model, peft_config)
     original_model.to(device)
 
     tokenizer = AutoTokenizer.from_pretrained(
@@ -169,7 +163,9 @@ def main(args):
         eval_dataloader = create_pku_dataloader_from_dataset(
             tokenizer, eval_dataset, batch_size=args.batch_size
         )
-        retrain_dataset = load_dataset("PKU-Alignment/PKU-SafeRLHF", split="train")
+        retrain_dataset = load_dataset(
+            "PKU-Alignment/PKU-SafeRLHF", split="train[:2048]"
+        )
         retrain_dataloader = create_pku_dataloader_from_dataset(
             tokenizer, retrain_dataset, batch_size=args.batch_size
         )
@@ -206,39 +202,49 @@ def main(args):
 
     print(f"Loading unlearned model {args.unlearned_model}...")
     # Load unlearned model for timed relearning
-    unlearned_model = AutoModelForCausalLM.from_pretrained(
-        args.unlearned_model, cache_dir=args.cache_dir, trust_remote_code=True
-    )
+    if os.path.isdir(args.unlearned_model) or args.unlearned_model.count("/") == 1:
+        unlearned_model = AutoModelForCausalLM.from_pretrained(
+            args.unlearned_model, cache_dir=args.cache_dir, trust_remote_code=True
+        )
+        tokenizer = AutoTokenizer.from_pretrained(
+            args.unlearned_model, cache_dir=args.cache_dir
+        )
+    else:
+        path_items = args.unlearned_model.split("/")
+        unlearned_model = AutoModelForCausalLM.from_pretrained(
+            "/".join(path_items[:2]),
+            cache_dir=args.cache_dir,
+            trust_remote_code=True,
+            subfolder="/".join(path_items[2:]),
+        )
+        tokenizer = AutoTokenizer.from_pretrained(
+            "/".join(path_items[:2]),
+            cache_dir=args.cache_dir,
+            trust_remote_code=True,
+            subfolder="/".join(path_items[2:]),
+        )
     json_info["unlearned_model"], json_info["checkpoint"] = str(
         Path(args.unlearned_model)
     ).split("/")[-2:]
 
     # If use LoRA.
     if args.use_lora:
-        target_modules = []
-        for i in lora_modules.keys():
-            if i.lower() in args.unlearned_model.lower():
-                target_modules = lora_modules[i]
-                break
-        if target_modules:
-            peft_config = AdaLoraConfig(
-                task_type=TaskType.CAUSAL_LM,
-                inference_mode=False,
-                r=32,
-                lora_alpha=16,
-                target_modules=target_modules,
-            )
-            unlearned_model = get_peft_model(unlearned_model, peft_config)
+        peft_config = AdaLoraConfig(
+            task_type=TaskType.CAUSAL_LM,
+            inference_mode=False,
+            r=32,
+            lora_alpha=16,
+            target_modules=["q_proj", "v_proj"],
+        )
+        unlearned_model = get_peft_model(unlearned_model, peft_config)
     unlearned_model.to(device)
 
-    tokenizer = AutoTokenizer.from_pretrained(
-        args.unlearned_model, cache_dir=args.cache_dir
-    )
     optimizer = AdamW(unlearned_model.parameters(), lr=args.lr)
     lr_scheduler = get_scheduler(
-        "constant",
+        "linear",
         optimizer=optimizer,
         num_warmup_steps=0,
+        num_training_steps=args.max_relearn_epochs * len(retrain_dataloader),
     )
     unlearned_model, lr_scheduler = accelerator.prepare(unlearned_model, lr_scheduler)
     optimizer = AcceleratedOptimizer(optimizer, True)
@@ -260,7 +266,10 @@ def main(args):
     logging.info(f"relearned_loss: {relearned_loss}")
     print(f"num_samples: {num_samples}")
     if args.use_lora:
-        unlearned_model = unlearned_model.merge_and_unload()
+        try:
+            unlearned_model = unlearned_model.merge_and_unload()
+        except AttributeError:
+            pass
 
     if args.model_save_dir:
         print(f"Saving model to {args.model_save_dir}")
