@@ -1,4 +1,10 @@
-# Copyright 2023 PKU-Alignment Team. All Rights Reserved.
+# Copyright (C) 2024 UCL CS SNLP Naturalnego 语言 Töötlus group
+#    - Szymon Duchniewicz
+#    - Yadong Liu
+#    - Andrzej Szablewski
+#    - Zhe Yu
+#
+# Adapted from https://github.com/PKU-Alignment/beavertails
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -52,7 +58,6 @@ def plot_metrics(metrics: list[dict], output_dir: str) -> None:
     )
 
     plt.grid(axis="y", color="k", alpha=0.2, zorder=1)
-    # ax.set_xticks(index + bar_width)
     ax.set_xticks(index)
     ax.set_xticklabels(model_names)
     ax.set_xlabel("Model")
