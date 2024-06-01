@@ -32,20 +32,20 @@ def create_symbolic_dataloader_from_dataset(
 
     def preprocess(examples):
         results = {"input_ids": [], "attention_mask": [], "start_locs": []}
-        for i in range(len(examples["Problem"])):
+        for i in range(len(examples["input"])):
             # Randomly subsample if too large
             if random.random() > fraction:
                 continue
 
             prompt = examples["input"][i]
             output = examples["output"][i]
-            text = f"input: {prompt} output: {output}"
+            text = f"### Question: {prompt} ### Answer: {output}"
 
             tokenized = tokenizer(text, truncation=True, padding="max_length")
             results["input_ids"].append(tokenized["input_ids"])
             results["attention_mask"].append(tokenized["attention_mask"])
             # Calculate start idx for answer
-            test_text = f"input: {prompt} output: {output}"
+            test_text = f"### Question: {prompt} ### Answer: {output}"
             test_tokenized = tokenizer(test_text, truncation=True, padding="max_length")
             results["start_locs"].append(len(test_tokenized["input_ids"]) - 1)
 

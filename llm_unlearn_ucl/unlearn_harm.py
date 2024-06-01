@@ -28,7 +28,6 @@ from typing import List
 # Added
 import numpy as np
 import torch
-import wandb
 from accelerate import Accelerator
 from datasets import load_dataset
 from parse_args import parse_args
@@ -46,6 +45,8 @@ from utils import (
     get_rand_ans_loss,
     get_truthfulQA_answers_plaintext,
 )
+
+import wandb
 
 
 def set_seed(seed_num: int) -> None:
