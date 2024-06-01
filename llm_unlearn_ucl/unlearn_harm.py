@@ -227,8 +227,8 @@ def main(args) -> None:
         args.samples_count % args.sequential == 0
     ), "samples_count should be divisible by number of splits for sequential learning (--sequential)."
     assert (
-        (args.samples_count // args.sequential) % args.batch_size == 0
-    ), "samples in each 'sequence' (--samples_count / --sequential) should be a multiple of batch_size."
+        args.samples_count // args.sequential
+    ) % args.batch_size == 0, "samples in each 'sequence' (--samples_count / --sequential) should be a multiple of batch_size."
     accelerator = Accelerator()  # accelerator precision can be specified if required.
     device = accelerator.device
 
@@ -359,7 +359,9 @@ def main(args) -> None:
         question_prefix_str = "### Question:"
         answer_prefix_str = "### Answer:"
     elif args.unlearning_dataset == "math_qa":
-        assert False, "Mathqa temporarirly disabled - requries implementing returning a List of Datasets for sequential unlearning with equal sizes!"
+        assert (
+            False
+        ), "Mathqa temporarirly disabled - requries implementing returning a List of Datasets for sequential unlearning with equal sizes!"
         train_dataset = load_dataset("math_qa", split="train")
         train_bad_loader = create_mathqa_dataloader_from_dataset(
             tokenizer, train_dataset, batch_size=args.batch_size
@@ -468,7 +470,9 @@ def main(args) -> None:
     idx = 0  # Number of "unlearning steps" that has occurred (e.g. processed batches)
     samples_count = 0  # Total number of samples that "passed through" the model (for 1 pass of batch 32: 32 samples)
     start_time = time.time()  # Start time of unlearning process
-    running_loss = deque()  # averaging running value of "bad loss", used in ByteDance paper unlearning method
+    running_loss = (
+        deque()
+    )  # averaging running value of "bad loss", used in ByteDance paper unlearning method
     final_model_tag = 0
     # Here for caching what samples are used so far
 
