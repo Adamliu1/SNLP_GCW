@@ -28,7 +28,6 @@ from typing import List
 # Added
 import numpy as np
 import torch
-import wandb
 from accelerate import Accelerator
 from datasets import load_dataset
 from parse_args import parse_args
@@ -45,6 +44,8 @@ from utils import (
     get_rand_ans_loss,
     get_truthfulQA_answers_plaintext,
 )
+
+import wandb
 
 
 def set_seed(seed_num: int) -> None:
@@ -349,8 +350,8 @@ def main(args) -> None:
         )
 
         # TODO: Decide the appropriate prefix for the dataset
-        question_prefix_str = "### Question:"
-        answer_prefix_str = "### Answer:"
+        question_prefix_str = "Problem:"
+        answer_prefix_str = "rationale:"
     else:
         print(f"Unlearning dataset not known! dataset: {args.unlearning_dataset}")
         return
