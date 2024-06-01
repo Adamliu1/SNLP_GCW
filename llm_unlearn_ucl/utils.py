@@ -20,7 +20,7 @@ from transformers import DataCollatorForLanguageModeling
 
 
 def create_mathqa_dataloader_from_dataset(
-    tokenizer, dataset, fraction=1.0, batch_size=4
+    tokenizer, dataset, fraction: float = 1.0, batch_size: int = 4, splits: int = 1
 ):
     # MathQA structure:
     """
@@ -81,11 +81,16 @@ def create_mathqa_dataloader_from_dataset(
     # Add labels and make it data loader.
     data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
 
-    dataloader = torch.utils.data.DataLoader(
-        dataset, batch_size=batch_size, collate_fn=data_collator
-    )
+    dataloaders = [
+        torch.utils.data.DataLoader(
+            train_split_dataset, batch_size=batch_size, collate_fn=data_collator
+        )
+        for train_split_dataset in torch.utils.data.random_split(
+            dataset, tuple(len(dataset) // splits for i in range(splits))
+        )
+    ]
 
-    return dataloader
+    return dataloaders
 
 
 def create_pku_dataloader_from_dataset(
