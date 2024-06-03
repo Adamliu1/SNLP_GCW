@@ -4,9 +4,15 @@
 
 [UCL CS cluster](https://hpc.cs.ucl.ac.uk) uses a Sun Grid Engine (SGE) job scheduler. There is a decent introduction to SGE available on the [tsg website](https://hpc.cs.ucl.ac.uk/wp-content/uploads/sites/21/2022/01/SGE-Guide_12_2021.pdf) as well as additional information about [job submission](https://hpc.cs.ucl.ac.uk/job-submission/) but here is a couple of my thoughts and tricks, that you may find useful.
 
+## Clustering...
+
+![](https://miro.medium.com/max/561/0*ff7kw5DRQbs_uixR.jpg)
+
+...It's not even it.
+
 ## TL;DR
 
-**Skip to _[Example submission script](#example-submission-script-for-dip-207-2)_**.
+Skip to _[Example submission script](#example-submission-script-for-dip-207-2)_.
 
 ## Basic and very quick facts
 
@@ -19,7 +25,7 @@ _In general_, most of the computation should be performed on the compute nodes, 
 
 In many HPC clusters compute nodes usually do not have access to Internet, but this is not the case with UCL CS! Hence, it is possible to schedule a job, which requires some pre-fetching of data from Internet and it will be successfully executed (yay!). Nevertheless, performing regular network operations is a bad practice, given it can cause significant i/o slowdowns.
 
-**BEWARE -- `wandb` and similar logging services should run in the _offline_ mode only!**
+**BEWARE:** `wandb` and similar logging services should run in the _offline_ mode only!
 
 ## Basic scheduler stuff
 
@@ -30,7 +36,7 @@ Here are the basic SGE commands you'll use:
 - `qdel` -- deletes queued or running jobs with given job IDs.
 - `qrsh` -- requests an interactive session with a node. You must provide at least the requested time and memory `qrsh -l tmem=2G,h_rt=00:05:00`.
 
-_**PROTIP 1:**_ There is a bunch of "test nodes" available at any time, which are automatically allocated if you make a small request (e.g. <16GB RAM total, <1h). This may be useful when you want to run a relatively small job immediately.
+_**PROTIP:**_ There is a bunch of "test nodes" available at any time, which are automatically allocated if you make a small request (e.g. <16GB RAM total, <1h). This may be useful when you want to run a relatively small job immediately.
 
 ## Job submission hello world
 
