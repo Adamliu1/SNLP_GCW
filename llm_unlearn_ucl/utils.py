@@ -41,7 +41,7 @@ def create_symbolic_dataloader_from_dataset(
         results["input_ids"].append(tokenized["input_ids"])
         results["attention_mask"].append(tokenized["attention_mask"])
         # Calculate start idx for answer
-        test_text = f"### Question: {prompt} ### Answer: {output}"
+        test_text = f"### Question: {prompt} ### Answer: "
         test_tokenized = tokenizer(test_text, truncation=True, padding="max_length")
         results["start_locs"].append(len(test_tokenized["input_ids"]) - 1)
 
