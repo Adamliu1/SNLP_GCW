@@ -37,6 +37,13 @@ def parse_args() -> argparse.Namespace:
     )
 
     parser.add_argument(
+        "--retaining_dataset",
+        type=str,
+        default="truthful_qa",
+        help="Name of the dataset to retain (NOTE: it needs to have"
+        " a custom dataloader creation script in utils.py)",
+    )
+    parser.add_argument(
         "--unlearning_dataset",
         type=str,
         default="PKU-Alignment/PKU-SafeRLHF",
