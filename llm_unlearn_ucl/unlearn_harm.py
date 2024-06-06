@@ -312,6 +312,51 @@ def main(args) -> None:
         # ADDITONALLY: create_truthfulqa_dataloader() is also using this pattern!!!
         question_prefix_str = "### Question:"
         answer_prefix_str = "### Answer:"
+    if args.unlearning_dataset == "AgentPublic/piaf":
+        # filter entries with harmful responses and draw random samples from the remaining dataset.
+        full_bad_dataset = load_dataset("AgentPublic/piaf", split="train").filter(
+            lambda entry: len(entry["answer"]["text"]) != 0
+        )
+        if args.shuffle_seed:
+            # shuffle the dataset with a given seed for reproducibility
+            full_bad_dataset = full_bad_dataset.shuffle(seed=args.shuffle_seed)
+        if args.sequential > 0:
+            # NOTE: sequential/batch unlearning using sliced dataset.
+            train_bad_dataset = full_bad_dataset.select(range(args.samples_count))
+        else:
+            # NOTE: full dataset like bytedance.
+            train_bad_dataset = full_bad_dataset
+
+        Path(args.samples_save_dir).mkdir(exist_ok=True)
+        bad_sample_path = f"{args.samples_save_dir}/piaf_{args.samples_count if args.sequential > 0 else 'full'}_samples.json"
+        with open(bad_sample_path, "w") as fin:
+            print(f"Writing bad samples to {bad_sample_path}")
+            json.dump(
+                [
+                    train_bad_dataset[i]
+                    for i in range(
+                        args.samples_count
+                        if args.sequential > 0
+                        else len(train_bad_dataset)
+                    )
+                ],
+                fin,
+            )
+
+        train_bad_loaders = create_pku_dataloader_from_dataset(
+            tokenizer,
+            train_bad_dataset,
+            batch_size=args.batch_size,
+            splits=max(args.sequential, 1),
+        )
+
+        # XXX: for now this is the prefix that is added before each q and answer,
+        # it is used by get_rand_ans_loss() to extract just the question part and
+        # add a random answer to it.
+        # !!!! Has additional sideffect of model unlearning this pattern!!!!
+        # ADDITONALLY: create_truthfulqa_dataloader() is also using this pattern!!!
+        question_prefix_str = "### Question:"
+        answer_prefix_str = "### Répondre:"
 
     elif args.unlearning_dataset == "math_qa":
         assert (
