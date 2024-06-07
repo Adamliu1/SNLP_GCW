@@ -37,8 +37,11 @@ def parse_args() -> argparse.Namespace:
     )
 
     parser.add_argument(
-        "--max_new_tokens", type=int, default=256, help="Number of tokens to generate per each question, on which the model is evaluated."
-        )
+        "--max_new_tokens",
+        type=int,
+        default=256,
+        help="Number of tokens to generate per each question, on which the model is evaluated.",
+    )
 
     parser.add_argument(
         "--device",
