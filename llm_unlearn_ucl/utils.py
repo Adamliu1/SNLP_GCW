@@ -115,19 +115,19 @@ def create_piaf_dataloader_from_dataset(
             "attention_mask": [],
             "start_locs": [],
         }
+        for i in range(len(examples["answers"])):
+            prompt = examples["context"][i] + " " + examples["question"][i]
+            response = examples["answers"][i]["text"][0]
 
-        prompt = examples["context"] + " " + examples["question"]
-        response = examples["answers"]["text"][0]
+            text = f"### Question: {prompt}\n ### Répondre: {response}"
+            tokenized = tokenizer(text, truncation=True, padding="max_length")
 
-        text = f"### Question: {prompt}\n ### Répondre: {response}"
-        tokenized = tokenizer(text, truncation=True, padding="max_length")
-
-        results["input_ids"].append(tokenized["input_ids"])
-        results["attention_mask"].append(tokenized["attention_mask"])
-        # Calculate start idx for answer
-        test_text = f"### Question: {prompt}\n ### Répondre: "
-        test_tokenized = tokenizer(test_text, truncation=True, padding="max_length")
-        results["start_locs"].append(len(test_tokenized["input_ids"]) - 1)
+            results["input_ids"].append(tokenized["input_ids"])
+            results["attention_mask"].append(tokenized["attention_mask"])
+            # Calculate start idx for answer
+            test_text = f"### Question: {prompt}\n ### Répondre: "
+            test_tokenized = tokenizer(test_text, truncation=True, padding="max_length")
+            results["start_locs"].append(len(test_tokenized["input_ids"]) - 1)
 
         return results
 

@@ -39,6 +39,7 @@ from transformers.tokenization_utils_base import BatchEncoding
 from utils import (
     compute_kl,
     create_mathqa_dataloader_from_dataset,
+    create_piaf_dataloader_from_dataset,
     create_pku_dataloader_from_dataset,
     create_truthfulqa_dataloader,
     get_answer_loss,
@@ -315,7 +316,7 @@ def main(args) -> None:
     if args.unlearning_dataset == "AgentPublic/piaf":
         # filter entries with harmful responses and draw random samples from the remaining dataset.
         full_bad_dataset = load_dataset("AgentPublic/piaf", split="train").filter(
-            lambda entry: len(entry["answer"]["text"]) != 0
+            lambda entry: len(entry["answers"]["text"]) != 0
         )
         if args.shuffle_seed:
             # shuffle the dataset with a given seed for reproducibility
@@ -343,7 +344,7 @@ def main(args) -> None:
                 fin,
             )
 
-        train_bad_loaders = create_pku_dataloader_from_dataset(
+        train_bad_loaders = create_piaf_dataloader_from_dataset(
             tokenizer,
             train_bad_dataset,
             batch_size=args.batch_size,
