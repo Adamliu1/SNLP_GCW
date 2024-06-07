@@ -1,17 +1,20 @@
-#!/bin/bash
+#!/usr/bin/zsh
+source /home/yadonliu/.zshrc
+conda activate /home/yadonliu/conda_env/snlp
 
 # Experiment config
 MODEL_NAME=llama3
 
 # Paths and directories
 MODELS_PATH="meta-llama/Meta-Llama-3-8B"
-BASE_PATH=/cs/student/ug/2020/yadonliu/my_fyp_space/SNLP_GCW/eval_harmfulness
+BASE_PATH=/home/yadonliu/SNLP_GCW/eval_harmfulness
 
 # Environment config
 DEVICE="cuda:0"
 MODEL="llama3"
 
-seeds=(42 123 456 114514 8888)
+# seeds=(42 123 456 114514 8888)
+seeds=(42)
 
 hostname
 
