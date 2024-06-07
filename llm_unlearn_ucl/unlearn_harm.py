@@ -313,7 +313,7 @@ def main(args) -> None:
         # ADDITONALLY: create_truthfulqa_dataloader() is also using this pattern!!!
         question_prefix_str = "### Question:"
         answer_prefix_str = "### Answer:"
-    if args.unlearning_dataset == "AgentPublic/piaf":
+    elif args.unlearning_dataset == "AgentPublic/piaf":
         # filter entries with harmful responses and draw random samples from the remaining dataset.
         full_bad_dataset = load_dataset("AgentPublic/piaf", split="train").filter(
             lambda entry: len(entry["answers"]["text"]) != 0
