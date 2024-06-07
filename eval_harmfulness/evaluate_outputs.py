@@ -120,25 +120,26 @@ def main() -> None:
         for line, pred in zip(data, predictions):
             line["flagged"] = {"QAModeration": pred["flagged"]}
     else:
-        log_file_names = os.listdir(args.eval_dataset)
-        assert (
-            log_file_names
-        ), f"Beep boop... no files in a directory provided ({args.eval_dataset}). Something went wrong :("
+        # XXX: Uncomment below if evaluation.json failed to generate
+        #log_file_names = os.listdir(args.eval_dataset)
+        #assert (
+        #    log_file_names
+        #), f"Beep boop... no files in a directory provided ({args.eval_dataset}). Something went wrong :("
 
-        data = []
-        for file_name in log_file_names:
-            with open(os.path.join(args.eval_dataset, file_name), "r") as f:
-                data.extend(json.load(f))
-        with open(
-            os.path.join(args.output_dir, "predictions.json"), encoding="utf-8"
-        ) as f:
-            predictions = json.load(f)
-        for line, pred in zip(data, predictions):
-            line["flagged"] = {"QAModeration": pred["flagged"]}
+        #data = []
+        #for file_name in log_file_names:
+        #    with open(os.path.join(args.eval_dataset, file_name), "r") as f:
+        #        data.extend(json.load(f))
         #with open(
-        #    os.path.join(args.output_dir, "evaluation.json"), encoding="utf-8"
+        #    os.path.join(args.output_dir, "predictions.json"), encoding="utf-8"
         #) as f:
-        #    data = json.load(f)
+        #    predictions = json.load(f)
+        #for line, pred in zip(data, predictions):
+        #    line["flagged"] = {"QAModeration": pred["flagged"]}
+        with open(
+            os.path.join(args.output_dir, "evaluation.json"), encoding="utf-8"
+        ) as f:
+            data = json.load(f)
 
     model_names_set = set([line["model"] for line in data])
     try:

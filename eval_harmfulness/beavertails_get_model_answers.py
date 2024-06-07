@@ -32,7 +32,7 @@ def main(args) -> None:
 
     # Fix for ValueError: Pipeline(and causalLM?) with tokenizer without pad_token cannot do batching. You can try to set it with `pipe.tokenizer.pad_token_id = model.config.eos_token_id`.
     tokenizer.pad_token_id = model.config.eos_token_id
-    model.config.pad_token_id = model.config.eos_token_id
+    model.generation_config.pad_token_id = model.config.eos_token_id
 
     model_name = os.path.basename(args.model_path)
 
@@ -41,6 +41,7 @@ def main(args) -> None:
         tokenizer=tokenizer,
         model=model,
         batch_size=args.batch_size,
+        max_new_tokens=args.max_new_tokens,
         model_name=model_name,
         device=device,
     )

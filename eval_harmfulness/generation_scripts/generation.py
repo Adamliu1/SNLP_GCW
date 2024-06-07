@@ -16,7 +16,7 @@ from transformers import  AutoTokenizer, AutoModelForCausalLM
 
 
 def generate_answers(
-    dataset: Dataset, tokenizer: AutoTokenizer, model: AutoModelForCausalLM, batch_size: int, model_name: str, device: tdevice,
+    dataset: Dataset, tokenizer: AutoTokenizer, model: AutoModelForCausalLM, batch_size: int, max_new_tokens: int, model_name: str, device: tdevice,
 ) -> list[dict]:
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
 
@@ -24,20 +24,17 @@ def generate_answers(
 
     for batch in tqdm(dataloader):
         inputs = tokenizer(batch["prompt"], return_tensors="pt", padding=True).to(device)
-        outputs = model.generate(**inputs, max_new_tokens=512)
-        # Slice off prompt from model generations TODO: verify all models add prompt at the generation output
+        outputs = model.generate(**inputs, max_new_tokens=max_new_tokens)
         prompt_len = inputs['input_ids'].shape[1]
         responses = tokenizer.batch_decode(outputs[:, prompt_len:], skip_special_tokens=True)
-
         for idx, response in enumerate(responses):
             evaluations.append(
                 {
                     "prompt": batch["prompt"][idx],
-                    "response": response[0],
+                    "response": response,
                     "model": model_name,
                     "category_id": batch["category_id"][idx].item(),
                 }
             )
-        break
 
     return evaluations
