@@ -88,20 +88,20 @@ def create_mathqa_dataloader_from_dataset(
     return dataloader
 
 
-def create_nq_open_dataloader_from_dataset(
+def create_squad_dataloader_from_dataset(
     tokenizer, dataset, fraction=1.0, batch_size=4, splits: int = 1
 ):
     """
-    Given the PKU dataset, create the dataloader on the unlearned harmful Q&A pairs.
+    Given the squad dataset, create the dataloader on the squad Q&A pairs.
 
     Args:
         tokenizer: Tokenizer.
-        dataset: Loaded PKU dataset.
+        dataset: Loaded squad dataset.
         fraction: <1 will do downsampling.
         batch_size: Batch size used for each step.
         splits: The number of splits that the dataset will be sliced into.
     Returns:
-        A List of DataLoader of PKU harmful Q&A pairs.
+        A List of DataLoader of squad Q&A pairs.
     """
 
     # Preproccess function.
@@ -116,9 +116,9 @@ def create_nq_open_dataloader_from_dataset(
             "start_locs": [],
         }
 
-        for i in range(len(examples["answer"])):
-            prompt = examples["question"]
-            answers = examples["answer"]
+        for i in range(len(examples["context"])):
+            prompt = examples["context"][i] + " " + examples["question"][i]
+            answers = examples["answers"][i]["text"][0]
 
             # Add all responses to results or skip if none.
             for answer in answers:
@@ -140,7 +140,7 @@ def create_nq_open_dataloader_from_dataset(
     dataset = dataset.map(
         preproccess,
         batched=True,
-        remove_columns=["question", "answer"],
+        remove_columns=["question", "answers", "context", "id", "title"],
     )
     dataset.set_format(
         type="torch",
@@ -256,10 +256,10 @@ def create_pku_dataloader_from_dataset(
     return dataloaders
 
 
-def get_nq_open_answers(dataset):
+def get_squad_answers(dataset):
     answers = []
     for i in dataset:
-        answers.extend(i["answer"])
+        answers.extend(i["answers"]["text"])
     return answers
 
 

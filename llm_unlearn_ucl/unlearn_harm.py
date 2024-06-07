@@ -39,12 +39,12 @@ from transformers.tokenization_utils_base import BatchEncoding
 from utils import (
     compute_kl,
     create_mathqa_dataloader_from_dataset,
-    create_nq_open_dataloader_from_dataset,
     create_pku_dataloader_from_dataset,
+    create_squad_dataloader_from_dataset,
     create_truthfulqa_dataloader,
     get_answer_loss,
-    get_nq_open_answers,
     get_rand_ans_loss,
+    get_squad_answers,
     get_truthfulQA_answers_plaintext,
 )
 
@@ -360,18 +360,16 @@ def main(args) -> None:
 
         # Load normal answer used for random mismatch.
         normal_ans = get_truthfulQA_answers_plaintext()
-    if args.retaining_dataset == "google-research-datasets/nq_open":
-        train_normal_dataset = load_dataset(
-            "google-research-datasets/nq_open", split="train"
-        )
-        normal_dataset_copy = train_normal_dataset.copy()
-        train_normal_loaders = create_nq_open_dataloader_from_dataset(
+    elif args.retaining_dataset == "rajpurkar/squad":
+        train_normal_dataset = load_dataset("rajpurkar/squad", split="train")
+        normal_dataset_copy = train_normal_dataset
+        train_normal_loaders = create_squad_dataloader_from_dataset(
             tokenizer,
             train_normal_dataset,
             batch_size=args.batch_size,
             splits=max(args.sequential, 1),
         )
-        normal_sample_path = f"{args.samples_save_dir}/nq_open_{args.samples_count if args.sequential > 0 else 'full'}_samples.json"
+        normal_sample_path = f"{args.samples_save_dir}/squad_{args.samples_count if args.sequential > 0 else 'full'}_samples.json"
         with open(normal_sample_path, "w") as fin:
             print(f"Writing normal samples to {normal_sample_path}")
             json.dump(
@@ -387,7 +385,10 @@ def main(args) -> None:
             )
 
         # Load normal answer used for random mismatch.
-        normal_ans = get_nq_open_answers(normal_dataset_copy)
+        normal_ans = get_squad_answers(normal_dataset_copy)
+    else:
+        print(f"Retaining dataset not known! dataset: {args.retaining_dataset}")
+        return
 
     data_sample_artifacts = wandb.Artifact(
         name="training_batch_raw_data", type="batch_data"
