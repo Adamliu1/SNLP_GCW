@@ -57,6 +57,13 @@ def parse_args() -> argparse.Namespace:
         help="Directory to which the output JSON is saved.",
     )
 
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="Seed for random number generators",
+    )
+
     args = parser.parse_args()
 
     return args
