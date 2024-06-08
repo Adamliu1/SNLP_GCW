@@ -16,9 +16,13 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 
 from generation_scripts.parse_args import parse_args
 from generation_scripts.generation import generate_answers
+from utils import reproducibility
 
 
 def main(args) -> None:
+    # seeding
+    seed = reproducibility(args.seed)
+
     # load dataset
     dataset = load_dataset(args.dataset_path)["test"]
 
