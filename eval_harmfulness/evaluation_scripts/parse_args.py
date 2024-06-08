@@ -46,4 +46,14 @@ def parse_arguments() -> argparse.Namespace:
         action="store_true",
         help="Uses already existing evaluation file at output_dir to just print and plot its contents!",
     )
+
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="Seed for random number generators",
+    )
+
+
     return parser.parse_args()
+
