@@ -28,6 +28,7 @@ from typing import List
 # Added
 import numpy as np
 import torch
+import wandb
 from accelerate import Accelerator
 from datasets import load_dataset
 from parse_args import parse_args
@@ -39,15 +40,14 @@ from utils import (
     compute_kl,
     create_mathqa_dataloader_from_dataset,
     create_pku_dataloader_from_dataset,
-    create_squad_dataloader_from_dataset,`
+    create_squad_dataloader_from_dataset,
+    create_symbolic_dataloader_from_dataset,
     create_truthfulqa_dataloader,
     get_answer_loss,
     get_rand_ans_loss,
     get_squad_answers,
     get_truthfulQA_answers_plaintext,
 )
-
-import wandb
 
 
 def set_seed(seed_num: int) -> None:
