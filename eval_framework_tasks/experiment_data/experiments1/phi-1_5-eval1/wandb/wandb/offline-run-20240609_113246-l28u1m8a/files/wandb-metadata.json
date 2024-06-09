@@ -1,0 +1,97 @@
+{
+    "os": "Linux-3.10.0-1160.114.2.el7.x86_64-x86_64-with-glibc2.17",
+    "python": "3.9.5",
+    "heartbeatAt": "2024-06-09T10:32:46.223194",
+    "startedAt": "2024-06-09T10:32:46.111003",
+    "docker": null,
+    "cuda": null,
+    "args": [
+        "--model",
+        "hf",
+        "--model_args",
+        "pretrained=microsoft/phi-1_5,cache_dir=/scratch0/aszablew/raw_models_cache",
+        "--tasks",
+        "arc_challenge,hellaswag,truthfulqa,mmlu,winogrande,gsm8k,french_bench,logiqa,piqa",
+        "--device",
+        "cuda",
+        "--batch_size",
+        "auto",
+        "--trust_remote_code",
+        "--output_path",
+        "/scratch0/aszablew/phi-1_5-eval1/results/phi-1_5/phi-1_5.json",
+        "--wandb_args",
+        "project=snlp,name=phi-1_5-eval1-phi-1_5,group=phi-1_5-eval1,mode=offline,dir=/scratch0/aszablew/phi-1_5-eval1/wandb",
+        "--use_cache",
+        "/scratch0/aszablew/phi-1_5-eval1/.cache/phi-1_5/cache"
+    ],
+    "state": "running",
+    "program": "-m lm_eval.__main__",
+    "codePathLocal": null,
+    "git": {
+        "remote": "git@github.com:Adamliu1/SNLP_GCW.git",
+        "commit": "1fd62c7d9d3476223429528c3c7393e2c03d1122"
+    },
+    "email": "zcabasz@ucl.ac.uk",
+    "root": "/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW",
+    "host": "pryor.cs.ucl.ac.uk",
+    "username": "aszablew",
+    "executable": "/home/aszablew/tmp/venv/bin/python3",
+    "cpu_count": 8,
+    "cpu_count_logical": 8,
+    "cpu_freq": {
+        "current": 2397.222,
+        "min": 0.0,
+        "max": 0.0
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 2397.222,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2397.222,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2397.222,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2397.222,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2397.222,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2397.222,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2397.222,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2397.222,
+            "min": 0.0,
+            "max": 0.0
+        }
+    ],
+    "disk": {
+        "/": {
+            "total": 38.323509216308594,
+            "used": 6.625995635986328
+        }
+    },
+    "memory": {
+        "total": 7.62872314453125
+    }
+}
