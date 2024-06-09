@@ -173,21 +173,18 @@ def create_squad_dataloader_from_dataset(
 
         for i in range(len(examples["context"])):
             prompt = examples["context"][i] + " " + examples["question"][i]
-            answers = examples["answers"][i]["text"][0]
+            answer = examples["answers"][i]["text"][0]
 
             # Add all responses to results or skip if none.
-            for answer in answers:
-                text = f"### Question: {prompt}\n ### Answer: {answer}"
-                tokenized = tokenizer(text, truncation=True, padding="max_length")
+            text = f"### Question: {prompt}\n ### Answer: {answer}"
+            tokenized = tokenizer(text, truncation=True, padding="max_length")
 
-                results["input_ids"].append(tokenized["input_ids"])
-                results["attention_mask"].append(tokenized["attention_mask"])
-                # Calculate start idx for answer
-                test_text = f"### Question: {prompt}\n ### Answer: "
-                test_tokenized = tokenizer(
-                    test_text, truncation=True, padding="max_length"
-                )
-                results["start_locs"].append(len(test_tokenized["input_ids"]) - 1)
+            results["input_ids"].append(tokenized["input_ids"])
+            results["attention_mask"].append(tokenized["attention_mask"])
+            # Calculate start idx for answer
+            test_text = f"### Question: {prompt}\n ### Answer: "
+            test_tokenized = tokenizer(test_text, truncation=True, padding="max_length")
+            results["start_locs"].append(len(test_tokenized["input_ids"]) - 1)
 
         return results
 
