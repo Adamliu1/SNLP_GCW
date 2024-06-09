@@ -1,7 +1,6 @@
-# Copyright (C) 2024 UCL CS SNLP Naturalnego 语言 Töötlus group
+# Copyright (C) 2024 UCL CS NLP
 #    - Szymon Duchniewicz
 #    - Yadong Liu
-#    - Carmen Meinson
 #    - Andrzej Szablewski
 #    - Zhe Yu
 #
@@ -35,6 +34,13 @@ def parse_args() -> argparse.Namespace:
 
     parser.add_argument(
         "--batch_size", type=int, default=32, help="Evaluation batch size"
+    )
+
+    parser.add_argument(
+        "--max_new_tokens",
+        type=int,
+        default=256,
+        help="Number of tokens to generate per each question, on which the model is evaluated.",
     )
 
     parser.add_argument(

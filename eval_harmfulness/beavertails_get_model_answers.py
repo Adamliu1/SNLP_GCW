@@ -1,7 +1,6 @@
-# Copyright (C) 2024 UCL CS SNLP Naturalnego 语言 Töötlus group
+# Copyright (C) 2024 UCL CS NLP
 #    - Szymon Duchniewicz
 #    - Yadong Liu
-#    - Carmen Meinson
 #    - Andrzej Szablewski
 #    - Zhe Yu
 #
@@ -13,7 +12,7 @@ import os
 
 import torch
 from datasets import load_dataset
-from transformers import AutoTokenizer, pipeline
+from transformers import AutoTokenizer, AutoModelForCausalLM
 
 from generation_scripts.parse_args import parse_args
 from generation_scripts.generation import generate_answers
@@ -29,21 +28,22 @@ def main(args) -> None:
     else:
         device = torch.device(args.device)
     tokenizer = AutoTokenizer.from_pretrained(args.model_path, padding_side="left")
-    generator = pipeline(
-        "text-generation",
-        model=args.model_path,
-        tokenizer=tokenizer,
-        device=device,
-        batch_size=args.batch_size,
-    )
+    model = AutoModelForCausalLM.from_pretrained(args.model_path, device_map=device)
+
+    # Fix for ValueError: Pipeline(and causalLM?) with tokenizer without pad_token cannot do batching. You can try to set it with `pipe.tokenizer.pad_token_id = model.config.eos_token_id`.
+    tokenizer.pad_token_id = model.config.eos_token_id
+    model.generation_config.pad_token_id = model.config.eos_token_id
 
     model_name = os.path.basename(args.model_path)
 
     evaluations = generate_answers(
         dataset=dataset,
-        generator=generator,
+        tokenizer=tokenizer,
+        model=model,
         batch_size=args.batch_size,
+        max_new_tokens=args.max_new_tokens,
         model_name=model_name,
+        device=device,
     )
 
     # Save evaluations to JSON file
