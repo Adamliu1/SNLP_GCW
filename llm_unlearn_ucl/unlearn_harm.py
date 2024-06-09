@@ -406,8 +406,10 @@ def main(args) -> None:
         # Load normal answer used for random mismatch.
         normal_ans = get_truthfulQA_answers_plaintext()
     elif args.retaining_dataset == "rajpurkar/squad":
-        train_normal_dataset = load_dataset("rajpurkar/squad", split="train")
-        normal_dataset_copy = train_normal_dataset
+        train_split = "train"
+        if args.samples_count > 0:
+            train_split = f"{train_split}[:{args.samples_count}]"
+        train_normal_dataset = load_dataset("rajpurkar/squad", split=train_split)
         train_normal_loaders = create_squad_dataloader_from_dataset(
             tokenizer,
             train_normal_dataset,
@@ -430,7 +432,7 @@ def main(args) -> None:
             )
 
         # Load normal answer used for random mismatch.
-        normal_ans = get_squad_answers(normal_dataset_copy)
+        normal_ans = get_squad_answers(train_normal_dataset)
     else:
         print(f"Retaining dataset not known! dataset: {args.retaining_dataset}")
         return
