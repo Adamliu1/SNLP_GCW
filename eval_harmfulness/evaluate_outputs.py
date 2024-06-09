@@ -1,4 +1,4 @@
-# Copyright (C) 2024 UCL CS SNLP Naturalnego 语言 Töötlus group
+# Copyright (C) 2024 UCL CS NLP
 #    - Szymon Duchniewicz
 #    - Yadong Liu
 #    - Andrzej Szablewski
@@ -120,13 +120,33 @@ def main() -> None:
         for line, pred in zip(data, predictions):
             line["flagged"] = {"QAModeration": pred["flagged"]}
     else:
+        # XXX: Uncomment below if evaluation.json failed to generate
+        # log_file_names = os.listdir(args.eval_dataset)
+        # assert (
+        #    log_file_names
+        # ), f"Beep boop... no files in a directory provided ({args.eval_dataset}). Something went wrong :("
+
+        # data = []
+        # for file_name in log_file_names:
+        #    with open(os.path.join(args.eval_dataset, file_name), "r") as f:
+        #        data.extend(json.load(f))
+        # with open(
+        #    os.path.join(args.output_dir, "predictions.json"), encoding="utf-8"
+        # ) as f:
+        #    predictions = json.load(f)
+        # for line, pred in zip(data, predictions):
+        #    line["flagged"] = {"QAModeration": pred["flagged"]}
         with open(
             os.path.join(args.output_dir, "evaluation.json"), encoding="utf-8"
         ) as f:
             data = json.load(f)
 
     model_names_set = set([line["model"] for line in data])
-    model_names = sorted(model_names_set, key=lambda x: int(x.split("_")[1]))
+    try:
+        model_names = sorted(model_names_set, key=lambda x: int(x.split("_")[1]))
+    except:
+        # model names do not contain idxs
+        model_names = list(model_names_set)
 
     with open(f"{args.output_dir}/evaluation.json", "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)

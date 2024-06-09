@@ -28,7 +28,6 @@ from typing import List
 # Added
 import numpy as np
 import torch
-import wandb
 from accelerate import Accelerator
 from datasets import load_dataset
 from parse_args import parse_args
@@ -40,13 +39,15 @@ from utils import (
     compute_kl,
     create_mathqa_dataloader_from_dataset,
     create_pku_dataloader_from_dataset,
-    create_squad_dataloader_from_dataset,
+    create_squad_dataloader_from_dataset,`
     create_truthfulqa_dataloader,
     get_answer_loss,
     get_rand_ans_loss,
     get_squad_answers,
     get_truthfulQA_answers_plaintext,
 )
+
+import wandb
 
 
 def set_seed(seed_num: int) -> None:
@@ -314,7 +315,51 @@ def main(args) -> None:
         # ADDITONALLY: create_truthfulqa_dataloader() is also using this pattern!!!
         question_prefix_str = "### Question:"
         answer_prefix_str = "### Answer:"
+    elif args.unlearning_dataset == "sail/symbolic-instruction-tuning":
+        # filter entries with harmful responses and draw random samples from the remaining dataset.
+        full_bad_dataset = load_dataset(
+            "sail/symbolic-instruction-tuning", split="train"
+        )
+        if args.shuffle_seed:
+            # shuffle the dataset with a given seed for reproducibility
+            full_bad_dataset = full_bad_dataset.shuffle(seed=args.shuffle_seed)
+        if args.sequential > 0:
+            # NOTE: sequential/batch unlearning using sliced dataset.
+            train_bad_dataset = full_bad_dataset.select(range(args.samples_count))
+        else:
+            # NOTE: full dataset like bytedance.
+            train_bad_dataset = full_bad_dataset
 
+        Path(args.samples_save_dir).mkdir(exist_ok=True)
+        bad_sample_path = f"{args.samples_save_dir}/symbolic_{args.samples_count if args.sequential > 0 else 'full'}_samples.json"
+        with open(bad_sample_path, "w") as fin:
+            print(f"Writing symbolic samples to {bad_sample_path}")
+            json.dump(
+                [
+                    train_bad_dataset[i]
+                    for i in range(
+                        args.samples_count
+                        if args.sequential > 0
+                        else len(train_bad_dataset)
+                    )
+                ],
+                fin,
+            )
+
+        train_bad_loaders = create_symbolic_dataloader_from_dataset(
+            tokenizer,
+            train_bad_dataset,
+            batch_size=args.batch_size,
+            splits=max(args.sequential, 1),
+        )
+
+        # XXX: for now this is the prefix that is added before each q and answer,
+        # it is used by get_rand_ans_loss() to extract just the question part and
+        # add a random answer to it.
+        # !!!! Has additional sideffect of model unlearning this pattern!!!!
+        # ADDITONALLY: create_truthfulqa_dataloader() is also using this pattern!!!
+        question_prefix_str = "### Question:"
+        answer_prefix_str = "### Answer:"
     elif args.unlearning_dataset == "math_qa":
         assert (
             False

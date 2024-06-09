@@ -19,6 +19,61 @@ from datasets import Dataset
 from transformers import DataCollatorForLanguageModeling
 
 
+def create_symbolic_dataloader_from_dataset(
+    tokenizer, dataset, fraction=1.0, batch_size=4, splits: int = 1
+):
+    # sail/symbolic-instruction-tuning structure:
+    """
+    input; output
+    Example:
+        input: Title: A must read, regardless of your age. PICK IT UP!! Review: I love these books, and I can't wait for more!! Harry Potter is charming, endearing, and loveable. J.K. Rowling spins such a wonderful tale of suspense, humor, and imagination. I wish I could go to Hogwarts to meet all these characters with wonderful names, to fly around on brooms, to play Quidditch, and to wander around the castle. I'm 32 and these are two of the best books I've read all year. Join the adventure. Let your imagination run wild. Does this product review convey a negative or positive sentiment?
+        output: Positive
+    """
+
+    def preprocess(examples):
+        results = {"input_ids": [], "attention_mask": [], "start_locs": []}
+
+        for i in range(len(examples["input"])):
+            prompt = examples["input"][i]
+            output = examples["output"][i]
+            text = f"### Question: {prompt} ### Answer: {output}"
+
+            tokenized = tokenizer(text, truncation=True, padding="max_length")
+            results["input_ids"].append(tokenized["input_ids"])
+            results["attention_mask"].append(tokenized["attention_mask"])
+            # Calculate start idx for answer
+            test_text = f"### Question: {prompt} ### Answer: "
+            test_tokenized = tokenizer(test_text, truncation=True, padding="max_length")
+            results["start_locs"].append(len(test_tokenized["input_ids"]) - 1)
+
+        return results
+
+    # Need to drop all original columns to emit more than one row for each original row https://huggingface.co/docs/datasets/about_map_batch#input-size-output-size.
+    dataset = dataset.map(
+        preprocess,
+        batched=True,
+        remove_columns=["input", "output"],
+    )
+    dataset.set_format(
+        type="torch", columns=["input_ids", "attention_mask", "start_locs"]
+    )
+
+    # Add labels and make it data loader.
+    data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
+
+    # TODO: data_collator introduces extra/less processed samples.
+    dataloaders = [
+        torch.utils.data.DataLoader(
+            train_split_dataset, batch_size=batch_size, collate_fn=data_collator
+        )
+        for train_split_dataset in torch.utils.data.random_split(
+            dataset, tuple(len(dataset) // splits for i in range(splits))
+        )
+    ]
+
+    return dataloaders
+
+
 def create_mathqa_dataloader_from_dataset(
     tokenizer, dataset, fraction=1.0, batch_size=4
 ):

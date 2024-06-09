@@ -1,4 +1,4 @@
-# Copyright (C) 2024 UCL CS SNLP Naturalnego 语言 Töötlus group
+# Copyright (C) 2024 UCL CS NLP
 #    - Szymon Duchniewicz
 #    - Yadong Liu
 #    - Andrzej Szablewski
