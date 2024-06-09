@@ -16,5 +16,3 @@ hostname
 source ./run_experiment_raw_model.sh "opt-1.3b" "facebook/opt-1.3b" "cuda:0"
 
 date
-
-/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks/experiment_data/opt-1.3b-test1-nocache-eval1/results/opt-1.3b-test1-nocache
