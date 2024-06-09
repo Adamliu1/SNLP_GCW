@@ -237,9 +237,13 @@ def main(args) -> None:
         args.samples_count // args.sequential
     ) % args.batch_size == 0, "samples in each 'sequence' (--samples_count / --sequential) should be a multiple of batch_size."
     if args.use_quantized:
-        accelerator = Accelerator(mixed_precision="bf16")  # accelerator precision can be specified if required.
+        accelerator = Accelerator(
+            mixed_precision="bf16"
+        )  # accelerator precision can be specified if required.
     else:
-        accelerator = Accelerator()  # accelerator precision can be specified if required.
+        accelerator = (
+            Accelerator()
+        )  # accelerator precision can be specified if required.
     device = accelerator.device
 
     print(f"Loading model {args.model_name} for training...")
@@ -250,13 +254,14 @@ def main(args) -> None:
             args.model_name,
             cache_dir=args.cache_dir,
             torch_dtype=torch.bfloat16,
-            #load_in_8bit=True,
-            #torch_dtype=torch.float32,
+            # load_in_8bit=True,
+            # torch_dtype=torch.float32,
         )
         model.to(device)
     else:
         model = AutoModelForCausalLM.from_pretrained(
-            args.model_name, cache_dir=args.cache_dir,
+            args.model_name,
+            cache_dir=args.cache_dir,
         )
 
     print("Model loaded.")
@@ -557,13 +562,14 @@ def main(args) -> None:
             args.model_name,
             cache_dir=args.cache_dir,
             torch_dtype=torch.bfloat16,
-            #load_in_8bit=True,
-            #torch_dtype=torch.float32,
+            # load_in_8bit=True,
+            # torch_dtype=torch.float32,
         )
         pretrained_model.to(device)
     else:
         pretrained_model = AutoModelForCausalLM.from_pretrained(
-            args.model_name, cache_dir=args.cache_dir,
+            args.model_name,
+            cache_dir=args.cache_dir,
         )
         pretrained_model.to(device)
 
