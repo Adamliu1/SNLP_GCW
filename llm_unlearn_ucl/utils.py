@@ -143,6 +143,78 @@ def create_mathqa_dataloader_from_dataset(
     return dataloader
 
 
+def create_squad_dataloader_from_dataset(
+    tokenizer, dataset, fraction=1.0, batch_size=4, splits: int = 1
+):
+    """
+    Given the squad dataset, create the dataloader on the squad Q&A pairs.
+
+    Args:
+        tokenizer: Tokenizer.
+        dataset: Loaded squad dataset.
+        fraction: <1 will do downsampling.
+        batch_size: Batch size used for each step.
+        splits: The number of splits that the dataset will be sliced into.
+    Returns:
+        A List of DataLoader of squad Q&A pairs.
+    """
+
+    # Preproccess function.
+    def preproccess(examples):
+        """
+        Input: Dict[List]
+        Output: Dict[List]
+        """
+        results = {
+            "input_ids": [],
+            "attention_mask": [],
+            "start_locs": [],
+        }
+
+        for i in range(len(examples["context"])):
+            prompt = examples["context"][i] + " " + examples["question"][i]
+            answer = examples["answers"][i]["text"][0]
+
+            # Add all responses to results or skip if none.
+            text = f"### Question: {prompt}\n ### Answer: {answer}"
+            tokenized = tokenizer(text, truncation=True, padding="max_length")
+
+            results["input_ids"].append(tokenized["input_ids"])
+            results["attention_mask"].append(tokenized["attention_mask"])
+            # Calculate start idx for answer
+            test_text = f"### Question: {prompt}\n ### Answer: "
+            test_tokenized = tokenizer(test_text, truncation=True, padding="max_length")
+            results["start_locs"].append(len(test_tokenized["input_ids"]) - 1)
+
+        return results
+
+    # Need to drop all original columns to emit more than one row for each original row https://huggingface.co/docs/datasets/about_map_batch#input-size-output-size.
+    dataset = dataset.map(
+        preproccess,
+        batched=True,
+        remove_columns=["question", "answers", "context", "id", "title"],
+    )
+    dataset.set_format(
+        type="torch",
+        columns=["input_ids", "attention_mask", "start_locs"],
+    )
+
+    # Add labels and make it data loader.
+    data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
+
+    # TODO: data_collator introduces extra/less processed samples.
+    dataloaders = [
+        torch.utils.data.DataLoader(
+            train_split_dataset, batch_size=batch_size, collate_fn=data_collator
+        )
+        for train_split_dataset in torch.utils.data.random_split(
+            dataset, tuple(len(dataset) // splits for i in range(splits))
+        )
+    ]
+
+    return dataloaders
+
+
 def create_pku_dataloader_from_dataset(
     tokenizer, dataset, fraction=1.0, batch_size=4, splits: int = 1
 ):
@@ -234,6 +306,13 @@ def create_pku_dataloader_from_dataset(
     ]
 
     return dataloaders
+
+
+def get_squad_answers(dataset):
+    answers = []
+    for i in dataset:
+        answers.extend(i["answers"]["text"])
+    return answers
 
 
 def create_truthfulqa_dataloader(
