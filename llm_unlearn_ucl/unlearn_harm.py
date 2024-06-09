@@ -32,7 +32,8 @@ import wandb
 from accelerate import Accelerator
 from datasets import load_dataset
 from parse_args import parse_args
-#from peft import AdaLoraConfig, TaskType, get_peft_model
+
+# from peft import AdaLoraConfig, TaskType, get_peft_model
 from torch.optim import AdamW
 from transformers import AutoModelForCausalLM, AutoTokenizer, get_scheduler, Adafactor
 from transformers.tokenization_utils_base import BatchEncoding
@@ -203,12 +204,12 @@ def run_training_batch(
                 "bad_loss": -bad_loss,
                 "normal_loss": normal_loss,
                 "final_loss": loss,
-                #"ratio (bad) mink unlearning/reference": np.mean(mink_probs_after_step)
-                #/ np.mean(mink_probs_base),
-                #"ratio (normal) mink unlearning/reference": np.mean(
+                # "ratio (bad) mink unlearning/reference": np.mean(mink_probs_after_step)
+                # / np.mean(mink_probs_base),
+                # "ratio (normal) mink unlearning/reference": np.mean(
                 #    mink_probs_after_step_normal
-                #)
-                #/ np.mean(mink_probs_base_normal),
+                # )
+                # / np.mean(mink_probs_base_normal),
             }
         )
 
@@ -218,8 +219,8 @@ def run_training_batch(
         f"bad_loss: {-bad_loss:.2f}, "
         f"bad_loss: {-bad_loss}, "
         f"current_div_loss: {normal_loss:.2f}, "
-        #f"ratio (bad) mink unlearning/reference: {np.mean(mink_probs_after_step)/np.mean(mink_probs_base):.3f}, "
-        #f"ratio (normal) mink unlearning/reference: {np.mean(mink_probs_after_step_normal)/np.mean(mink_probs_base_normal):.3f}"
+        # f"ratio (bad) mink unlearning/reference: {np.mean(mink_probs_after_step)/np.mean(mink_probs_base):.3f}, "
+        # f"ratio (normal) mink unlearning/reference: {np.mean(mink_probs_after_step_normal)/np.mean(mink_probs_base_normal):.3f}"
     )
     logging.info(stats)
     print(stats)
@@ -277,12 +278,15 @@ def main(args) -> None:
             tokenizer.pad_token_id = model.config.eos_token_id
             model.generation_config.pad_token_id = model.config.eos_token_id
         elif tokenizer.eos_token is not None:
-            tokenizer.pad_token =tokenizer.eos_token
+            tokenizer.pad_token = tokenizer.eos_token
             model.generation_config.pad_token = tokenizer.eos_token
         else:
-            assert(False, "Error: Pad token for the model's tokenizer not defined and could not be automatically set! check model configs in HF")
+            assert (
+                False,
+                "Error: Pad token for the model's tokenizer not defined and could not be automatically set! check model configs in HF",
+            )
     # TODO: should this habe a sep check? or same as tokenizer
-    #if model.generation_config.pad_token_id is None:
+    # if model.generation_config.pad_token_id is None:
     #    model.generation_config.pad_token_id = model.config.eos_token_id
     print(tokenizer.pad_token_id)
 
@@ -504,9 +508,8 @@ def main(args) -> None:
     )
     wandb.log_artifact(data_sample_artifacts)
 
-    #optimizer = AdamW(model.parameters(), lr=args.lr)
+    # optimizer = AdamW(model.parameters(), lr=args.lr)
     optimizer = Adafactor(model.parameters(), lr=args.lr, relative_step=False)
-
 
     # Prepare.
     # num_training_steps = args.max_unlearn_steps
@@ -555,10 +558,12 @@ def main(args) -> None:
             args.model_name, cache_dir=args.cache_dir
         )
         pretrained_model.to(device)
-    
+
     if pretrained_model.generation_config.pad_token_id is None:
         # If model does not havea pad token, use EOS token
-        pretrained_model.generation_config.pad_token_id = pretrained_model.config.eos_token_id
+        pretrained_model.generation_config.pad_token_id = (
+            pretrained_model.config.eos_token_id
+        )
     print("Model loaded.")
 
     print("#################### START UNLEARNING ####################")
