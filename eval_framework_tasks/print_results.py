@@ -72,7 +72,7 @@ def main(file_paths: str):
 
     df = pd.DataFrame.from_dict(filtered_logs).transpose()
 
-    print(df.to_markdown())
+    print(df.T.to_markdown())
     # create_plot(df, file_paths)
     # df.to_csv(os.path.join(file_paths, "..", "results.csv"))
 
