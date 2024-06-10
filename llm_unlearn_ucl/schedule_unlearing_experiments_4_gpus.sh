@@ -1,10 +1,18 @@
 #!/bin/bash
+# Working with this script: Assumes access to 4 GPUS on scheduling node, uses CUDA_VISIBLE_DEVICES to schedule jobs.
+# Need to set up: UNLEARNED_MODELS_PATH, MODEL_PATH, UNLEARN_DATASET_PATH and name. Make sure parameters for unlearning are correct.
+# IMPORTANT: when modifying BATCH_SIZE, make sure MAX_UNLEARN_STEPS are the expected value
 
 LR=2e-6
 SAVE_EVERY_STEPS=128
 BATCH_SIZE=2
 SEED=2137
 MAX_UNLEARN_STEPS=10240
+# TODO: ENSURE UNLEARNED_MODELS_PATH IS CORRECT WHEN SCHEDULING
+UNLEARNED_MODELS_PATH="/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/snlp-unlearned-models"
+#UNLEARNED_MODELS_PATH="/SAN/intelsys/llm/sduchnie/snlp/SNLP_GCW/snlp-unlearned-models"
+mkdir -p $UNLEARNED_MODELS_PATH/models
+mkdir -p $UNLEARNED_MODELS_PATH/logs
 
 # Model params
 MODEL_NAME=gemma-2b
@@ -28,8 +36,8 @@ for sample_count in "${sample_counts[@]}"; do
     echo "Starting $RUN_NAME on GPU $GPU_NUM.."
     CUDA_VISIBLE_DEVICES=$GPU_NUM nohup python3 unlearn_harm.py \
                         --model_name $MODEL_PATH \
-                        --model_save_dir "/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/snlp-unlearned-models/models/$RUN_NAME" \
-                        --log_file "/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/snlp-unlearned-models/logs/$RUN_NAME.log" \
+                        --model_save_dir "$UNLEARNED_MODELS_PATH/models/$RUN_NAME" \
+                        --log_file "$UNLEARNED_MODELS_PATH/logs/$RUN_NAME.log" \
                         --cache_dir ".cache" \
                         --seed $SEED \
                         --retaining_dataset $RETAIN_DATASET_PATH \
@@ -41,7 +49,7 @@ for sample_count in "${sample_counts[@]}"; do
                         --batch_size $BATCH_SIZE \
                         --save_every $SAVE_EVERY_STEPS \
                         --lr $LR \
-                        --no_scheduler &> /SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/snlp-unlearned-models/logs/stdout_$RUN_NAME.log &
+                        --no_scheduler &> $UNLEARNED_MODELS_PATH/logs/stdout_$RUN_NAME.log &
     PROCARR+=($!)
 
     # Sequential Splits 16; CUDA:1
@@ -50,8 +58,8 @@ for sample_count in "${sample_counts[@]}"; do
     echo "Starting $RUN_NAME on GPU $GPU_NUM.."
     CUDA_VISIBLE_DEVICES=$GPU_NUM nohup python3 unlearn_harm.py \
                         --model_name $MODEL_PATH \
-                        --model_save_dir "/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/snlp-unlearned-models/models/$RUN_NAME" \
-                        --log_file "/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/snlp-unlearned-models/logs/$RUN_NAME.log" \
+                        --model_save_dir "$UNLEARNED_MODELS_PATH/models/$RUN_NAME" \
+                        --log_file "$UNLEARNED_MODELS_PATH/logs/$RUN_NAME.log" \
                         --cache_dir ".cache" \
                         --seed $SEED \
                         --retaining_dataset $RETAIN_DATASET_PATH \
@@ -63,7 +71,7 @@ for sample_count in "${sample_counts[@]}"; do
                         --batch_size $BATCH_SIZE \
                         --save_every $SAVE_EVERY_STEPS \
                         --lr $LR \
-                        --no_scheduler &> /SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/snlp-unlearned-models/logs/stdout_$RUN_NAME.log &
+                        --no_scheduler &> $UNLEARNED_MODELS_PATH/logs/stdout_$RUN_NAME.log &
     PROCARR+=($!)
 
     # Sequential Splits 64; CUDA:2
@@ -72,8 +80,8 @@ for sample_count in "${sample_counts[@]}"; do
     echo "Starting $RUN_NAME on GPU $GPU_NUM.."
     CUDA_VISIBLE_DEVICES=$GPU_NUM nohup python3 unlearn_harm.py \
                         --model_name $MODEL_PATH \
-                        --model_save_dir "/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/snlp-unlearned-models/models/$RUN_NAME" \
-                        --log_file "/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/snlp-unlearned-models/logs/$RUN_NAME.log" \
+                        --model_save_dir "$UNLEARNED_MODELS_PATH/models/$RUN_NAME" \
+                        --log_file "$UNLEARNED_MODELS_PATH/logs/$RUN_NAME.log" \
                         --cache_dir ".cache" \
                         --seed $SEED \
                         --retaining_dataset $RETAIN_DATASET_PATH \
@@ -85,7 +93,7 @@ for sample_count in "${sample_counts[@]}"; do
                         --batch_size $BATCH_SIZE \
                         --save_every $SAVE_EVERY_STEPS \
                         --lr $LR \
-                        --no_scheduler &> /SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/snlp-unlearned-models/logs/stdout_$RUN_NAME.log &
+                        --no_scheduler &> $UNLEARNED_MODELS_PATH/logs/stdout_$RUN_NAME.log &
     PROCARR+=($!)
            
     # Batch; CUDA:3
@@ -94,8 +102,8 @@ for sample_count in "${sample_counts[@]}"; do
     echo "Starting $RUN_NAME on GPU $GPU_NUM.."
     CUDA_VISIBLE_DEVICES=$GPU_NUM nohup python3 unlearn_harm.py \
                         --model_name $MODEL_PATH \
-                        --model_save_dir "/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/snlp-unlearned-models/models/$RUN_NAME" \
-                        --log_file "/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/snlp-unlearned-models/logs/$RUN_NAME.log" \
+                        --model_save_dir "$UNLEARNED_MODELS_PATH/models/$RUN_NAME" \
+                        --log_file "$UNLEARNED_MODELS_PATH/logs/$RUN_NAME.log" \
                         --cache_dir ".cache" \
                         --seed $SEED \
                         --retaining_dataset $RETAIN_DATASET_PATH \
@@ -107,10 +115,10 @@ for sample_count in "${sample_counts[@]}"; do
                         --batch_size $BATCH_SIZE \
                         --save_every $SAVE_EVERY_STEPS \
                         --lr $LR \
-                        --no_scheduler &> /SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/snlp-unlearned-models/logs/stdout_$RUN_NAME.log &
+                        --no_scheduler &> $UNLEARNED_MODELS_PATH/logs/stdout_$RUN_NAME.log &
     PROCARR+=($!)
     
-    echo "Waiting for processes: $PROCARR..."
+    echo "Waiting for processes: ${PROCARR[@]}..."
     wait ${PROCARR[@]}
     echo "Done waiting."
 done
@@ -121,8 +129,8 @@ GPU_NUM=0
 echo "Starting Continuous unlearning for $MAX_UNLEARN_STEPS steps"
 CUDA_VISIBLE_DEVICES=$GPU_NUM nohup python3 unlearn_harm.py \
                     --model_name $MODEL_PATH \
-                    --model_save_dir "/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/snlp-unlearned-models/models/$RUN_NAME" \
-                    --log_file "/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/snlp-unlearned-models/logs/$RUN_NAME.log" \
+                    --model_save_dir "$UNLEARNED_MODELS_PATH/models/$RUN_NAME" \
+                    --log_file "$UNLEARNED_MODELS_PATH/logs/$RUN_NAME.log" \
                     --max_unlearn_steps $MAX_UNLEARN_STEPS \
                     --cache_dir ".cache" \
                     --seed $SEED \
@@ -133,8 +141,8 @@ CUDA_VISIBLE_DEVICES=$GPU_NUM nohup python3 unlearn_harm.py \
                     --batch_size $BATCH_SIZE \
                     --save_every $SAVE_EVERY_STEPS \
                     --lr $LR \
-                    --no_scheduler &> /SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/snlp-unlearned-models/logs/stdout_$RUN_NAME.log &
+                    --no_scheduler &> $UNLEARNED_MODELS_PATH/logs/stdout_$RUN_NAME.log &
 PROCARR=($!)
-echo "Waiting for processes: $PROCARR..."
+echo "Waiting for processes: ${PROCARR[@]}.."
 wait ${PROCARR[@]}
 echo "Done waiting."
