@@ -49,8 +49,10 @@ def save_results_to_csv(results, model_ratios, output_dir):
     df_ratios.to_csv(os.path.join(output_dir, 'model_flagged_ratios.csv'), index=False)
 
 def main():
-    base_dir = './eval_results/llama3_eval'  # Adjust this path to your dataset directory
-    output_dir = './eval_results/llama3_eval'  # Adjust this path to where you want to save the output
+    # base_dir = './eval_results/gemma-2b_eval'  # Adjust this path to your dataset directory
+    # output_dir = './eval_results/gemma-2b_eval'  # Adjust this path to where you want to save the output
+    base_dir = './eval_results/phi-1_5_eval'  # Adjust this path to your dataset directory
+    output_dir = './eval_results/phi-1_5_eval'  # Adjust this path to where you want to save the output
 
     model_data = read_and_aggregate_data(base_dir)
     final_results, model_ratios = apply_majority_voting_and_calculate_ratios(model_data)
