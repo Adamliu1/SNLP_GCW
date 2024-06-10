@@ -7,7 +7,7 @@
 #$ -pe gpu 1
 #$ -j y
 # Use the seed in the job name for easy identification
-#$ -N beavertails_llama3_run_seed
+#$ -N beavertails_eval
 #$ -l hostname=dip-207-2
 
 # Define a list of seeds
@@ -17,26 +17,29 @@ seeds=(42 123 456)
 index=$(($SGE_TASK_ID))
 seed=${seeds[$index]}
 
+# seed=42
+
 source /home/yadonliu/.zshrc
 conda activate /home/yadonliu/conda_env/snlp
 
 # Experiment config
-MODEL_NAME=llama3
+MODEL_NAME=phi-1_5
+# MODEL_NAME=gemma-2b
 
 # Paths and directories
-MODELS_PATH="meta-llama/Meta-Llama-3-8B"
+MODELS_PATH="microsoft/phi-1_5"
+# MODELS_PATH="google/gemma-2b"
 BASE_PATH=/home/yadonliu/SNLP_GCW/eval_harmfulness
 cd $BASE_PATH
 
 # Environment config
 DEVICE="cuda"
-MODEL="llama3"
 
 hostname
 
 EXPERIMENT_NAME="${MODEL_NAME}_eval/seed_${seed}"
 date
-echo "Generating model answers for $MODEL, seed $seed..."
+echo "Generating model answers for $MODEL_NAME, seed $seed..."
 python3 beavertails_get_model_answers.py \
     --model_path $MODELS_PATH \
     --device $DEVICE \
