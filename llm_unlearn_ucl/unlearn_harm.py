@@ -28,7 +28,7 @@ from typing import List
 # Added
 import numpy as np
 import torch
-import wandb
+# import wandb
 from accelerate import Accelerator
 from datasets import load_dataset
 from parse_args import parse_args
@@ -49,7 +49,6 @@ from utils import (
     get_squad_answers,
     get_truthfulQA_answers_plaintext,
 )
-
 
 def set_seed(seed_num: int) -> None:
     torch.manual_seed(seed_num)
@@ -192,23 +191,23 @@ def run_training_batch(
 
     # NOTE: backwardnd optimisation is done outside of this function in the
     # training loop for gradient accumulation compatibility.
-    if bool(args.wandb_log) and (idx % args.wandb_log_freq == 0):
-        wandb.log(
-            {
-                "batch": idx,
-                "epoch": epoch,
-                "samples_count": samples_count,
-                "bad_loss": -bad_loss,
-                "normal_loss": normal_loss,
-                "final_loss": loss,
-                "ratio (bad) mink unlearning/reference": np.mean(mink_probs_after_step)
-                / np.mean(mink_probs_base),
-                "ratio (normal) mink unlearning/reference": np.mean(
-                    mink_probs_after_step_normal
-                )
-                / np.mean(mink_probs_base_normal),
-            }
-        )
+    # if bool(args.wandb_log) and (idx % args.wandb_log_freq == 0):
+    #     wandb.log(
+    #         {
+    #             "batch": idx,
+    #             "epoch": epoch,
+    #             "samples_count": samples_count,
+    #             "bad_loss": -bad_loss,
+    #             "normal_loss": normal_loss,
+    #             "final_loss": loss,
+    #             "ratio (bad) mink unlearning/reference": np.mean(mink_probs_after_step)
+    #             / np.mean(mink_probs_base),
+    #             "ratio (normal) mink unlearning/reference": np.mean(
+    #                 mink_probs_after_step_normal
+    #             )
+    #             / np.mean(mink_probs_base_normal),
+    #         }
+    #     )
 
     stats = (
         f"epoch: {epoch}, batch: {idx}, "
@@ -512,7 +511,9 @@ def main(args) -> None:
             model,
             optimizer,
             lr_scheduler,
-        ) = accelerator.prepare(model, optimizer, lr_scheduler)
+            train_bad_loaders[0],
+            train_normal_loaders[0]
+        ) = accelerator.prepare(model, optimizer, lr_scheduler, train_bad_loaders[0], train_normal_loaders[0])
 
     for i in range(args.sequential):
         train_bad_loaders[i], train_normal_loaders[i] = accelerator.prepare(
@@ -696,8 +697,8 @@ def main(args) -> None:
     print("Saved final model.")
 
     logging.info("Unlearning finished")
-    if bool(args.wandb_log):
-        wandb.finish()
+    # if bool(args.wandb_log):
+    #     wandb.finish()
     return
 
 
@@ -705,10 +706,11 @@ if __name__ == "__main__":
     args = parse_args()
 
     # Initialize logging
-    if bool(args.wandb_log):
-        wandb.init(
-            project=args.wandb_project_name, name=args.wandb_run_name, config=vars(args)
-        )
+    # if bool(args.wandb_log):
+    #     # import wandb
+    #     wandb.init(
+    #         project=args.wandb_project_name, name=args.wandb_run_name, config=vars(args)
+    #     )
 
     logging.basicConfig(
         filename=args.log_file,
