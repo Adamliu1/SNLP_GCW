@@ -49,7 +49,7 @@ hostname
 echo $(date)
 
 # $LAUNCHER -m lm_eval --model hf \
-#     --model_args pretrained=$MODELS_PATH,cache_dir=$MODELS_CACHE_PATH \
+#     --model_args pretrained=$MODELS_PATH,cache_dir=$MODELS_CACHE_PATH,dtype='bfloat16' \
 #     --tasks $TASKS \
 #     --device $3 \
 #     --batch_size auto \
@@ -59,7 +59,7 @@ echo $(date)
 #     --use_cache $EXPERIMENT_SCRATCH_PATH/.cache/$MODEL_NAME/cache &> $LOGS_PATH/$MODEL_NAME.log 
 
 $LAUNCHER -m lm_eval --model hf \
-    --model_args pretrained=$MODELS_PATH,cache_dir=$MODELS_CACHE_PATH \
+    --model_args pretrained=$MODELS_PATH,cache_dir=$MODELS_CACHE_PATH,dtype='bfloat16' \
     --tasks $TASKS \
     --device $3 \
     --batch_size auto \

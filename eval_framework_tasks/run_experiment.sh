@@ -49,7 +49,7 @@ do
     echo "Evaluating $model..."
 
     nohup $LAUNCHER -m lm_eval --model hf \
-    --model_args pretrained=$MODELS_PATH/$model \
+    --model_args pretrained=$MODELS_PATH/$model,dtype='bfloat16' \
     --tasks $TASKS \
     --device $CUDA_DEVICE \
     --batch_size auto \
