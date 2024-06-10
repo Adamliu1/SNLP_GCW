@@ -23,12 +23,12 @@ source /home/yadonliu/.zshrc
 conda activate /home/yadonliu/conda_env/snlp
 
 # Experiment config
-MODEL_NAME=phi-1_5
-# MODEL_NAME=gemma-2b
+# MODEL_NAME=phi-1_5
+MODEL_NAME=gemma-2b
 
 # Paths and directories
-MODELS_PATH="microsoft/phi-1_5"
-# MODELS_PATH="google/gemma-2b"
+# MODELS_PATH="microsoft/phi-1_5"
+MODELS_PATH="google/gemma-2b"
 BASE_PATH=/home/yadonliu/SNLP_GCW/eval_harmfulness
 cd $BASE_PATH
 
@@ -54,5 +54,6 @@ python evaluate_outputs.py \
     --eval_dataset "$BASE_PATH/model_generations/$EXPERIMENT_NAME/" \
     --model_path "PKU-Alignment/beaver-dam-7b" \
     --max_length 512 \
+    --seed $seed \
     --output_dir "$BASE_PATH/eval_results/$EXPERIMENT_NAME" \
     --device $DEVICE

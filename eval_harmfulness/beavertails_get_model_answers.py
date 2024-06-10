@@ -21,6 +21,7 @@ from utils import reproducibility
 
 def main(args) -> None:
     # seeding
+    print(f"seeding - {args.seed}")
     seed = reproducibility(args.seed)
 
     # load dataset
