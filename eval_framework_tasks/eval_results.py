@@ -60,13 +60,16 @@ def filter_json_logs(log_data: dict[int, dict]) -> dict[int, dict]:
         results[model_iter_num] = {
             "winogrande_acc": log["results"]["winogrande"]["acc,none"],
             "truthfulqa_mc2_acc": log["results"]["truthfulqa_mc2"]["acc,none"],
-            "hellaswag_acc_norm": log["results"]["hellaswag"]["acc_norm,none"],
+            "hellaswag_acc": log["results"]["hellaswag"]["acc,none"],
             "gsm8k_exact_match_flexible": log["results"]["gsm8k"][
                 "exact_match,flexible-extract"
             ],
-            "arc_challenge_acc_norm": log["results"]["arc_challenge"]["acc_norm,none"],
+            "arc_challenge_acc": log["results"]["arc_challenge"]["acc,none"],
             "mmlu_acc": log["results"]["mmlu"]["acc,none"],
-            "toxigen_acc_norm": log["results"]["toxigen"]["acc_norm,none"],
+            "logiqa_acc": log["results"]["logiqa"]["acc,none"],
+            "french_bench_acc": log["results"]["french_bench"]["acc,none"],
+            "piqa_acc": log["results"]["piqa"]["acc,none"],
+            "squadv2": log["results"]["squadv2"]["f1,none"],
         }
 
     return results

@@ -34,7 +34,7 @@ def fetch_log_data(file_paths: str) -> dict[int, dict]:
     log_files_contents = {}
     for file_name in log_file_names:
         with open(os.path.join(file_name), "r") as f:
-            log_files_contents[file_name.split("/")[-2].split(".")[0]] = json.load(f)
+            log_files_contents[file_name.split(".")[0].split("/")[-1]] = json.load(f)
 
     return log_files_contents
 
@@ -60,12 +60,6 @@ def filter_json_logs(log_data: dict[int, dict]) -> dict[int, dict]:
     return results
 
 
-def create_plot(df: pd.DataFrame, file_paths: str) -> None:
-    ax = df.plot(style=["o-"] * 7)
-    fig = ax.get_figure()
-    fig.savefig(os.path.join(file_paths, "..", "figure.png"))
-
-
 def main(file_paths: str):
     log_data = fetch_log_data(file_paths)
     filtered_logs = filter_json_logs(log_data)
@@ -73,8 +67,6 @@ def main(file_paths: str):
     df = pd.DataFrame.from_dict(filtered_logs).transpose()
 
     print(df.T.to_markdown())
-    # create_plot(df, file_paths)
-    # df.to_csv(os.path.join(file_paths, "..", "results.csv"))
 
 
 if __name__ == "__main__":
