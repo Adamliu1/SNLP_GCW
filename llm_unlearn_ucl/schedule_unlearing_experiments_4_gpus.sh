@@ -5,6 +5,7 @@
 
 LR=2e-6
 SAVE_EVERY_STEPS=128
+SAVE_EVERY_STEPS_BATCH=1 # Save every epoch for batch (would be a multiple of 128 samples seen: e.g. 128 epoch 3 = 384 samples, 512 epoch 20 = 10240 samples)
 BATCH_SIZE=2
 SEED=2137
 MAX_UNLEARN_STEPS=10240
@@ -17,6 +18,7 @@ mkdir -p $UNLEARNED_MODELS_PATH/logs
 # Model params
 MODEL_NAME=gemma-2b
 MODEL_PATH=google/gemma-2b
+#MODEL_PATH=facebook/opt-1.3b
 # Task params
 UNLEARN_DATASET_NAME="harmful"
 UNLEARN_DATASET_PATH="PKU-Alignment/PKU-SafeRLHF"
@@ -99,7 +101,7 @@ for sample_count in "${sample_counts[@]}"; do
     # Batch; CUDA:3
     RUN_NAME="batch-$sample_count-$MODEL_NAME-$UNLEARN_DATASET_NAME-$RETAIN_DATASET_NAME"
     GPU_NUM=3
-    echo "Starting $RUN_NAME on GPU $GPU_NUM.."
+    echo "Starting $RUN_NAME on GPU $GPU_NUM, saving every $SAVE_EVERY_STEPS_BATCH epoch."
     CUDA_VISIBLE_DEVICES=$GPU_NUM nohup python3 unlearn_harm.py \
                         --model_name $MODEL_PATH \
                         --model_save_dir "$UNLEARNED_MODELS_PATH/models/$RUN_NAME" \
@@ -113,7 +115,7 @@ for sample_count in "${sample_counts[@]}"; do
                         --sequential 1 \
                         --num_epochs 20 \
                         --batch_size $BATCH_SIZE \
-                        --save_every $SAVE_EVERY_STEPS \
+                        --save_every $SAVE_EVERY_STEPS_BATCH \
                         --lr $LR \
                         --no_scheduler &> $UNLEARNED_MODELS_PATH/logs/stdout_$RUN_NAME.log &
     PROCARR+=($!)
