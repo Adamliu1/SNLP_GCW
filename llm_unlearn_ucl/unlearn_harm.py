@@ -232,7 +232,9 @@ def main(args) -> None:
     assert (
         args.samples_count // args.sequential
     ) % args.batch_size == 0, "samples in each 'sequence' (--samples_count / --sequential) should be a multiple of batch_size."
-    accelerator = Accelerator()  # accelerator precision can be specified if required.
+    accelerator = Accelerator(
+        mixed_precision="bf16"
+    )  # accelerator precision can be specified if required.
     device = accelerator.device
 
     print(f"Loading model {args.model_name} for training...")
@@ -246,7 +248,7 @@ def main(args) -> None:
         )
     else:
         model = AutoModelForCausalLM.from_pretrained(
-            args.model_name, cache_dir=args.cache_dir
+            args.model_name, cache_dir=args.cache_dir, torch_dtype=torch.bfloat16
         )
 
     print("Model loaded.")
@@ -265,6 +267,8 @@ def main(args) -> None:
         model.to(device)
 
     tokenizer = AutoTokenizer.from_pretrained(args.model_name, cache_dir=args.cache_dir)
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
 
     # Load data to unlearn.
     if args.unlearning_dataset == "PKU-Alignment/PKU-SafeRLHF":
@@ -443,7 +447,7 @@ def main(args) -> None:
         normal_ans = get_truthfulQA_answers_plaintext()
     elif args.retaining_dataset == "rajpurkar/squad":
         train_split = "train"
-        if args.samples_count > 0:
+        if args.samples_count > 0 and args.sequential != -1:
             train_split = f"{train_split}[:{args.samples_count}]"
         train_normal_dataset = load_dataset("rajpurkar/squad", split=train_split)
         train_normal_loaders = create_squad_dataloader_from_dataset(
@@ -530,7 +534,7 @@ def main(args) -> None:
         )
     else:
         pretrained_model = AutoModelForCausalLM.from_pretrained(
-            args.model_name, cache_dir=args.cache_dir
+            args.model_name, cache_dir=args.cache_dir, torch_dtype=torch.bfloat16
         )
         pretrained_model.to(device)
     print("Model loaded.")
