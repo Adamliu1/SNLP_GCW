@@ -18,10 +18,13 @@ mkdir -p $UNLEARNED_MODELS_PATH/logs
 # Model params
 MODEL_NAME=gemma-2b
 MODEL_PATH=google/gemma-2b
+#MODEL_NAME=opt-1.3b
 #MODEL_PATH=facebook/opt-1.3b
 # Task params
 UNLEARN_DATASET_NAME="harmful"
 UNLEARN_DATASET_PATH="PKU-Alignment/PKU-SafeRLHF"
+#UNLEARN_DATASET_NAME="french"
+#UNLEARN_DATASET_PATH="AgentPublic/piaf"
 RETAIN_DATASET_NAME="squad"
 RETAIN_DATASET_PATH="rajpurkar/squad"
 
@@ -29,8 +32,9 @@ RETAIN_DATASET_PATH="rajpurkar/squad"
 # Sizes: 128, 512, 1024
 # Splits: 4, 16, 64
 sample_counts=(128 512 1024)
-
+date
 for sample_count in "${sample_counts[@]}"; do
+    date
     PROCARR=()
     # Sequential Splits 4; CUDA:0
     RUN_NAME="seq-4-$sample_count-$MODEL_NAME-$UNLEARN_DATASET_NAME-$RETAIN_DATASET_NAME"
@@ -123,6 +127,7 @@ for sample_count in "${sample_counts[@]}"; do
     echo "Waiting for processes: ${PROCARR[@]}..."
     wait ${PROCARR[@]}
     echo "Done waiting."
+
 done
 
 ### Continuous unlearning; CUDA:0
@@ -148,3 +153,4 @@ PROCARR=($!)
 echo "Waiting for processes: ${PROCARR[@]}.."
 wait ${PROCARR[@]}
 echo "Done waiting."
+date
