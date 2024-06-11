@@ -28,6 +28,7 @@ from typing import List
 # Added
 import numpy as np
 import torch
+
 # import wandb
 from accelerate import Accelerator
 from datasets import load_dataset
@@ -49,6 +50,7 @@ from utils import (
     get_squad_answers,
     get_truthfulQA_answers_plaintext,
 )
+
 
 def set_seed(seed_num: int) -> None:
     torch.manual_seed(seed_num)
@@ -512,8 +514,14 @@ def main(args) -> None:
             optimizer,
             lr_scheduler,
             train_bad_loaders[0],
-            train_normal_loaders[0]
-        ) = accelerator.prepare(model, optimizer, lr_scheduler, train_bad_loaders[0], train_normal_loaders[0])
+            train_normal_loaders[0],
+        ) = accelerator.prepare(
+            model,
+            optimizer,
+            lr_scheduler,
+            train_bad_loaders[0],
+            train_normal_loaders[0],
+        )
 
     for i in range(args.sequential):
         train_bad_loaders[i], train_normal_loaders[i] = accelerator.prepare(
