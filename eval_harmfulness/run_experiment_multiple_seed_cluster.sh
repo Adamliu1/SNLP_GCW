@@ -1,5 +1,3 @@
-#!/usr/bin/env zsh
-
 #$ -S /usr/bin/zsh
 #$ -l tmem=40G
 #$ -l h_rt=12:00:00 # hh:mm:ss
