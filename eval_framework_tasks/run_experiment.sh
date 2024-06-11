@@ -3,8 +3,8 @@
 # TODO: Add instructions how to use.
 
 # Accelerate used in a multi-gpu setting. Python for single-gpu.
-# LAUNCHER="accelerate launch"
-LAUNCHER="python3"
+LAUNCHER="accelerate launch"
+# LAUNCHER="python3"
 
 # Experiment config
 # MODEL_NAME=batch-2048-lr4.53e-05
@@ -19,8 +19,6 @@ BASE_PATH=/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks
 MODELS_PATH=$2/$1
 EXPERIMENT_SCRATCH_PATH=/scratch0/aszablew/$EXPERIMENT_NAME
 
-CUDA_DEVICE=$3
-
 RESULTS_PATH=$EXPERIMENT_SCRATCH_PATH/results
 LOGS_PATH=$EXPERIMENT_SCRATCH_PATH/logs
 WANDB_PATH=$EXPERIMENT_SCRATCH_PATH/wandb
@@ -32,7 +30,8 @@ mkdir $RESULTS_PATH
 mkdir $LOGS_PATH
 
 # Tasks selection
-HF_LLM_LEADERBOARD_TASKS="arc_challenge,hellaswag,truthfulqa,mmlu,winogrande,gsm8k,french_bench,logiqa,piqa,squadv2"
+HF_LLM_LEADERBOARD_TASKS="arc_challenge,hellaswag,truthfulqa,mmlu,winogrande,french_bench,mnli,piqa,squadv2"
+# HF_LLM_LEADERBOARD_TASKS="arc_challenge,hellaswag,truthfulqa"
 # TASKS_ADDITIONAL="toxigen"
 # TASKS=$HF_LLM_LEADERBOARD_TASKS,$TASKS_ADDITIONAL
 TASKS=$HF_LLM_LEADERBOARD_TASKS
@@ -48,15 +47,13 @@ do
     echo $(date)
     echo "Evaluating $model..."
 
-    nohup $LAUNCHER -m lm_eval --model hf \
-    --model_args pretrained=$MODELS_PATH/$model,dtype='bfloat16' \
+    HF_HOME=/scratch0/aszablew/.huggingface CUDA_VISIBLE_DEVICES=0 nohup $LAUNCHER --num_processes=1 -m lm_eval --model hf \
+    --model_args pretrained=$MODELS_PATH/$model \
     --tasks $TASKS \
-    --device $CUDA_DEVICE \
-    --batch_size auto \
+    --device "cuda" \
+    --batch_size auto:8 \
     --trust_remote_code \
-    --output_path $RESULTS_PATH/$model/$model.json \
-    --wandb_args project=snlp,name=$EXPERIMENT_NAME-$model,group=$EXPERIMENT_NAME,mode=offline,dir=$WANDB_PATH \
-    --use_cache $EXPERIMENT_SCRATCH_PATH/.cache/$model/cache &> $LOGS_PATH/$model.log 
+    --output_path $RESULTS_PATH/$model/$model.json &> $LOGS_PATH/$model.log 
 
 done
 
