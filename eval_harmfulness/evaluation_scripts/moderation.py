@@ -141,6 +141,8 @@ class Moderation(nn.Module):
             model_kwargs["problem_type"] = problem_type
         if device_map is not None:
             model_kwargs["device_map"] = device_map
+        # temp modification on running at half precision
+        model_kwargs["torch_dtype"] = torch.bfloat16
 
         model = AutoModelForSequenceClassification.from_pretrained(
             model_name_or_path,

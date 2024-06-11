@@ -5,7 +5,6 @@ MODEL_NAME=test-seq
 EXPERIMENT_NAME=$MODEL_NAME-eval2
 
 
-
 # Paths and directories
 MODELS_PATH=/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/snlp-unlearned-models/models/$MODEL_NAME
 BASE_PATH=/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_harmfulness

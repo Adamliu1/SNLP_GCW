@@ -16,9 +16,14 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 
 from generation_scripts.parse_args import parse_args
 from generation_scripts.generation import generate_answers
+from utils import reproducibility
 
 
 def main(args) -> None:
+    # seeding
+    print(f"seeding - {args.seed}")
+    seed = reproducibility(args.seed)
+
     # load dataset
     dataset = load_dataset(args.dataset_path)["test"]
 
@@ -28,11 +33,10 @@ def main(args) -> None:
     else:
         device = torch.device(args.device)
     tokenizer = AutoTokenizer.from_pretrained(args.model_path, padding_side="left")
+    # Ensure the tokenizer has a pad token. Use EOS token as padding token.
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
     model = AutoModelForCausalLM.from_pretrained(args.model_path, device_map=device)
-
-    # Fix for ValueError: Pipeline(and causalLM?) with tokenizer without pad_token cannot do batching. You can try to set it with `pipe.tokenizer.pad_token_id = model.config.eos_token_id`.
-    tokenizer.pad_token_id = model.config.eos_token_id
-    model.generation_config.pad_token_id = model.config.eos_token_id
 
     model_name = os.path.basename(args.model_path)
 

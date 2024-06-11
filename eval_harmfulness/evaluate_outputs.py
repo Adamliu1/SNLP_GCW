@@ -28,6 +28,8 @@ import numpy as np
 import pandas as pd
 from evaluation_scripts.moderation import QAModeration
 from evaluation_scripts.parse_args import parse_arguments
+from utils import reproducibility
+import torch
 
 
 def calculate_flagged_proportion_and_agreement(data: dict) -> dict:
@@ -77,6 +79,9 @@ def plot_metrics(metrics: list[dict], output_dir: str) -> None:
 def main() -> None:
     args = parse_arguments()
 
+    # seeding
+    seed = reproducibility(args.seed)
+
     if not args.use_existing_evaluation:
         assert (
             args.eval_dataset is not None
@@ -106,6 +111,7 @@ def main() -> None:
             model_max_length=args.max_length,
             device_map=args.device,
         )
+
         predictions = model.predict(
             question=prompts,
             answer=responses,
