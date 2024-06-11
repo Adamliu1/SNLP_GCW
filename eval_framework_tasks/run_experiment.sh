@@ -47,11 +47,11 @@ do
     echo $(date)
     echo "Evaluating $model..."
 
-    HF_HOME=/scratch0/aszablew/.huggingface CUDA_VISIBLE_DEVICES=0 nohup $LAUNCHER --num_processes=1 -m lm_eval --model hf \
+    HF_HOME=/scratch0/aszablew/.huggingface CUDA_VISIBLE_DEVICES=2 nohup $LAUNCHER --num_processes=1 -m lm_eval --model hf \
     --model_args pretrained=$MODELS_PATH/$model \
     --tasks $TASKS \
     --device "cuda" \
-    --batch_size auto:8 \
+    --batch_size 16 \
     --trust_remote_code \
     --output_path $RESULTS_PATH/$model/$model.json &> $LOGS_PATH/$model.log 
 
