@@ -82,7 +82,6 @@ def main() -> None:
     # seeding
     seed = reproducibility(args.seed)
 
-
     if not args.use_existing_evaluation:
         assert (
             args.eval_dataset is not None
