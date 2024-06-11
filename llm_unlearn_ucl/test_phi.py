@@ -16,7 +16,9 @@ A script to show an example of how to unlearn harmfulness.
 The dataset used in is `PKU-SafeRLHF` and TruthfulQA. Model supports OPT-1.3B.
 """
 
+import gc
 import json
+from accelerate.logging import get_logger
 import logging
 import os
 import random
@@ -24,11 +26,10 @@ import time
 from collections import deque
 from pathlib import Path
 from typing import List
-
+from transformers import DataCollatorForLanguageModeling
 # Added
 import numpy as np
 import torch
-
 # import wandb
 from accelerate import Accelerator
 from datasets import load_dataset
@@ -51,72 +52,10 @@ from utils import (
     get_truthfulQA_answers_plaintext,
 )
 
-
 def set_seed(seed_num: int) -> None:
     torch.manual_seed(seed_num)
     np.random.seed(seed_num)
     random.seed(seed_num)
-
-
-# def compute_mink_prob(
-#     model: AutoModelForCausalLM,
-#     batch: BatchEncoding,
-#     K: float,
-#     # Compute_for_answer only, or question only? (Normal vs Bad loss)
-#     device: torch.device,
-#     compute_for_answer_only: bool = True,
-# ) -> List[float]:
-#     # Compute the average of min-K% Prob values for the entire batch
-#     # TODO: should we do this on just 2 element batch or entire dataset?
-#     #
-#     # NOTE: Need to properly unpack the batch, compute logits for each batch and
-#     # properly mask the output! only compute min K on the part we are checking if is
-#     # Unlearned/member in pretraining: output
-#     with torch.no_grad():
-#         # TODO: verify: in run.py for mink, calculatePerplexity func (49), they also pass labels=input_ids. WHy?
-#         # TODO: should we: feeed full sentance (question + answer), and then mask out to compute probabilities,
-#         # Or Mask out input, only get logits for the answer and compute probabilities on those
-#         # NOTE: For now, we feed full question, as we are unlearning B given A, so we want individual token
-#         # probabilities of B, given A (but we don't care about token probabilities of A - the question)
-#         outputs = model(
-#             batch["input_ids"].to(device),
-#             attention_mask=batch["attention_mask"].to(device),
-#         )
-#         # OR, something along thelines of
-#         # outputs = model(batch["input_ids"][batch["start_locs"]:], attention_mask=batch["attention_mask"])
-
-#     logits = outputs.logits
-#     probabilities = torch.nn.functional.log_softmax(logits, dim=-1)
-#     no_of_sentences = batch["input_ids"].shape[0]
-#     # If computing for both question and answer, need to set start_locs to 0s!
-#     if compute_for_answer_only:
-#         assert batch.get("start_locs") != None, (
-#             "Compute Min-k % prob: Requested computation only for answer, "
-#             "but the batch does not contain start_locs inside tokenised question+answer pairs!"
-#         )
-#     else:
-#         # start locs by default just after <s> starting token!
-#         batch["start_locs"] = [torch.IntTensor([1]) for _ in range(no_of_sentences)]
-
-#     # Compute for each sentence in the batch
-#     pred_mink = []
-#     for s_idx in range(no_of_sentences):
-#         # extract prob for each token in the unlearned answer given all previous tokens
-#         input_ids_sentence = batch["input_ids"][s_idx]  # [1:]
-#         all_prob = []
-#         for i in range(batch["start_locs"][s_idx].item(), len(input_ids_sentence)):
-#             token_id = input_ids_sentence[i]
-#             # i is 1 ahead of the actual token, as we want the probability of that token given all previous tokens
-#             probability = probabilities[s_idx, i - 1, token_id].item()
-#             all_prob.append(probability)
-#         # Get top-K % probs and compute their mean (it was log_softmax, so top k% is actually mink% prob)
-#         k_length = int(len(all_prob) * K)
-#         topk_prob = np.sort(all_prob)[:k_length]
-#         pred_mink.append(-np.mean(topk_prob).item())
-
-#     # All mean MIN-K% prob in: pred_mink. For now, return all
-#     return pred_mink
-
 
 def run_training_batch(
     model,
@@ -134,45 +73,12 @@ def run_training_batch(
     question_prefix_str: str = "",
     answer_prefix_str: str = "",
 ):
-    # # Calculate min-k% prob score on bad_batch using the unmodified pre-trained model
-    # mink_probs_base = compute_mink_prob(
-    #     model=pretrained_model,
-    #     batch=bad_batch,
-    #     K=args.mink_prob_k,
-    #     device=device,
-    #     compute_for_answer_only=True,
-    # )
-    # # Calculate min-k% prob score on normal_batch using the unmodified pre-trained model
-    # mink_probs_base_normal = compute_mink_prob(
-    #     model=pretrained_model,
-    #     batch=normal_batch,
-    #     K=args.mink_prob_k,
-    #     device=device,
-    #     compute_for_answer_only=False,
-    # )
-    # # TODO: THIS NEED TO BE CALCULATED AFTER GRADIENT STEP!!! (otherwise we are comparing against previous gradient update!)
-    # # Calculate min-k% prob score on bad_batch using the model under unlearning
-    # mink_probs_after_step = compute_mink_prob(
-    #     model=model,
-    #     batch=bad_batch,
-    #     K=args.mink_prob_k,
-    #     device=device,
-    #     compute_for_answer_only=True,
-    # )
-    # # Calculate min-k% prob score on normal_batch using the model under unlearning
-    # mink_probs_after_step_normal = compute_mink_prob(
-    #     model=model,
-    #     batch=normal_batch,
-    #     K=args.mink_prob_k,
-    #     device=device,
-    #     compute_for_answer_only=False,
-    # )
     ############ GA on answer only. ############
-    bad_loss = get_answer_loss("ga", bad_batch, model, device=device)
-    # bad_loss = get_answer_loss("ga", bad_batch, model, tokenizer, device=device)
+    bad_loss = get_answer_loss_tmp("ga", bad_batch, model, tokenizer, device=device)
+    # bad_loss = get_answer_loss("ga", bad_batch, model,device=device)
 
     ############ Random mismatch. ############
-    random_loss = get_rand_ans_loss(
+    random_loss = get_rand_ans_loss_tmp(
         bad_batch,
         tokenizer,
         normal_ans,
@@ -217,8 +123,6 @@ def run_training_batch(
         f"samples seen: {samples_count}, "
         f"bad_loss: {-bad_loss:.2f}, "
         f"current_div_loss: {normal_loss:.2f}, "
-        # f"ratio (bad) mink unlearning/reference: {np.mean(mink_probs_after_step)/np.mean(mink_probs_base):.3f}, "
-        # f"ratio (normal) mink unlearning/reference: {np.mean(mink_probs_after_step_normal)/np.mean(mink_probs_base_normal):.3f}"
     )
     logging.info(stats)
     print(stats)
@@ -234,45 +138,19 @@ def main(args) -> None:
     assert (
         args.samples_count // args.sequential
     ) % args.batch_size == 0, "samples in each 'sequence' (--samples_count / --sequential) should be a multiple of batch_size."
-    accelerator = Accelerator(
-        mixed_precision="bf16"
-    )  # accelerator precision can be specified if required.
+    accelerator = Accelerator()  # accelerator precision can be specified if required.
     device = accelerator.device
 
     print(f"Loading model {args.model_name} for training...")
-    if args.use_quantized:
-        # Uncomment for quantized
-        model = AutoModelForCausalLM.from_pretrained(
-            args.model_name,
-            cache_dir=args.cache_dir,
-            load_in_8bit=True,
-            torch_dtype=torch.float32,
-        )
-    else:
-        model = AutoModelForCausalLM.from_pretrained(
-            args.model_name,
-            cache_dir=args.cache_dir,
-            torch_dtype=torch.bfloat16,
-            trust_remote_code=True,
-        )
+
+    model = AutoModelForCausalLM.from_pretrained(
+        args.model_name, cache_dir=args.cache_dir, trust_remote_code=True, use_flash_attention_2=False
+    )
 
     print("Model loaded.")
 
-    # If use LoRA.
-    if args.use_lora:
-        peft_config = AdaLoraConfig(
-            task_type=TaskType.CAUSAL_LM,
-            inference_mode=False,
-            r=32,
-            lora_alpha=16,
-            target_modules=["q_proj", "v_proj"],
-        )
-        model = get_peft_model(model, peft_config)
-    if not args.use_quantized:
-        # model.to(device)
-        pass
-
-    tokenizer = AutoTokenizer.from_pretrained(args.model_name, cache_dir=args.cache_dir)
+    tokenizer = AutoTokenizer.from_pretrained(args.model_name, cache_dir=args.cache_dir, trust_remote_code=True, use_fast=False)
+    # Ensure the tokenizer has a pad token. Use EOS token as padding token.
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
@@ -453,7 +331,7 @@ def main(args) -> None:
         normal_ans = get_truthfulQA_answers_plaintext()
     elif args.retaining_dataset == "rajpurkar/squad":
         train_split = "train"
-        if args.samples_count > 0 and args.sequential != -1:
+        if args.samples_count > 0:
             train_split = f"{train_split}[:{args.samples_count}]"
         train_normal_dataset = load_dataset("rajpurkar/squad", split=train_split)
         train_normal_loaders = create_squad_dataloader_from_dataset(
@@ -483,53 +361,19 @@ def main(args) -> None:
         print(f"Retaining dataset not known! dataset: {args.retaining_dataset}")
         return
 
-    # TODO: FIX THIS
-    # data_sample_artifacts = wandb.Artifact(
-    #     name="training_batch_raw_data", type="batch_data"
-    # )
-    # data_sample_artifacts.add_file(
-    #     normal_sample_path, name=f"normal_{args.samples_count}_samples.json"
-    # )
-    # data_sample_artifacts.add_file(
-    #     bad_sample_path, name=f"bad_{args.samples_count}_samples.json"
-    # )
-    # wandb.log_artifact(data_sample_artifacts)
-
     optimizer = AdamW(model.parameters(), lr=args.lr)
 
     # Prepare.
     # num_training_steps = args.max_unlearn_steps
-    if args.no_scheduler:
-        # TODO: TEST THIS BIT
-        (model, optimizer, train_bad_loaders[0], train_normal_loaders[0]) = (
-            accelerator.prepare(
-                model, optimizer, train_bad_loaders[0], train_normal_loaders[0]
-            )
-        )
-    else:
-        lr_scheduler = get_scheduler(
-            name="linear",
-            optimizer=optimizer,
-            num_warmup_steps=0,
-            num_training_steps=(
-                (args.num_epochs * args.samples_count)
-                if args.sequential > 0
-                else args.max_unlearn_steps
-            ),
-        )
-        (
-            model,
-            optimizer,
-            lr_scheduler,
-            train_bad_loaders[0],
-            train_normal_loaders[0],
-        ) = accelerator.prepare(
-            model,
-            optimizer,
-            lr_scheduler,
-            train_bad_loaders[0],
-            train_normal_loaders[0],
-        )
+    # if args.no_scheduler:
+    # TODO: TEST THIS BIT
+    # NOTE: I REMOVED THE LR SCHEDULER
+    (
+        model,
+        optimizer,
+        train_bad_loaders[0],
+        train_normal_loaders[0]
+    ) = accelerator.prepare(model, optimizer, train_bad_loaders[0], train_normal_loaders[0])
 
     for i in range(args.sequential):
         train_bad_loaders[i], train_normal_loaders[i] = accelerator.prepare(
@@ -548,14 +392,13 @@ def main(args) -> None:
             cache_dir=args.cache_dir,
             load_in_8bit=True,
             torch_dtype=torch.float32,
-            trust_remote_code=True,
+            trust_remote_code=True
         )
     else:
         pretrained_model = AutoModelForCausalLM.from_pretrained(
-            args.model_name,
-            cache_dir=args.cache_dir,
-            torch_dtype=torch.bfloat16,
+            args.model_name, cache_dir=args.cache_dir, 
             trust_remote_code=True,
+
         )
         pretrained_model.to(device)
     print("Model loaded.")
@@ -572,138 +415,60 @@ def main(args) -> None:
     final_model_tag = 0
     # Here for caching what samples are used so far
 
-    if args.sequential > 0:
-        # NOTE: sequential/batch unlearning
-        num_batches_per_epoch = args.samples_count // args.sequential // args.batch_size
-
-        for seq, (train_normal_loader, train_bad_loader) in enumerate(
-            zip(train_normal_loaders, train_bad_loaders)
+    # NOTE: Original ByteDance Unlearning.
+    bad_loader_len = len(train_bad_loaders[0])
+    normal_loader_len = len(train_normal_loaders[0])
+    epoch_num = 0
+    while idx < args.max_unlearn_steps:
+        for bad_batch, normal_batch in zip(
+            train_bad_loaders[0], train_normal_loaders[0]
         ):
-            epoch_num = 0
-            accu_bad_loss = 0
-            while epoch_num < args.num_epochs:
-                accu_bad_loss = 0
-                for normal_batch, bad_batch in zip(
-                    train_normal_loader, train_bad_loader
-                ):
-                    samples_count += len(bad_batch["input_ids"])
-                    loss, bad_loss = run_training_batch(
-                        model=model,
-                        pretrained_model=pretrained_model,
-                        tokenizer=tokenizer,
-                        device=device,
-                        normal_ans=normal_ans,
-                        bad_batch=bad_batch,
-                        normal_batch=normal_batch,
-                        idx=idx,
-                        samples_count=samples_count,
-                        epoch=epoch_num,
-                        question_prefix_str=question_prefix_str,
-                        answer_prefix_str=answer_prefix_str,
-                    )
-                    idx += 1
-                    # NOTE: the whole dataset is considered to be one single batch.
-                    # Back-prop after the whole dataset has been finished.
-                    accelerator.backward(loss / num_batches_per_epoch)
-                    bad_loss /= num_batches_per_epoch
-                    accu_bad_loss += bad_loss.item()
-                # If args.batch_size < args.samples_count//args.sequential, always perform gradient accumulation.
-                epoch_num += 1
-                final_model_tag = epoch_num
-                optimizer.step()
-                if not args.no_scheduler:
-                    lr_scheduler.step()
-                optimizer.zero_grad()
+            samples_count += len(bad_batch["input_ids"])
+            loss, bad_loss = run_training_batch(
+                model=model,
+                pretrained_model=pretrained_model,
+                tokenizer=tokenizer,
+                device=device,
+                normal_ans=normal_ans,
+                bad_batch=bad_batch,
+                normal_batch=normal_batch,
+                idx=idx,
+                samples_count=samples_count,
+                epoch=epoch_num,
+                bad_loader_size=bad_loader_len,
+                normal_loader_size=normal_loader_len,
+                question_prefix_str=question_prefix_str,
+                answer_prefix_str=answer_prefix_str,
+            )
+            accelerator.backward(loss)
+            optimizer.step()
+            optimizer.zero_grad()
+            idx += 1
+            final_model_tag = idx
 
-                if args.sequential == 1 and epoch_num % args.save_every == 0:
-                    # NOTE: Batch unlearning, save for every epoch
-                    model_tokenizer_save_dir = Path(
-                        os.path.join(args.model_save_dir, f"idx_{epoch_num}")
-                    )
-                    model_tokenizer_save_dir.mkdir(parents=True, exist_ok=True)
+            running_loss.append(bad_loss.item())
+            while len(running_loss) > args.num_running_loss:
+                running_loss.popleft()
 
-                    model.save_pretrained(model_tokenizer_save_dir, from_pt=True)
-                    tokenizer.save_pretrained(model_tokenizer_save_dir)
-                    print(f"Saved model at step {epoch_num}.")
-
-                if abs(accu_bad_loss) > args.max_bad_loss:
-                    # Only printing warning at the outer loop to avoid repeated warnings.
-                    break
-
-            if abs(accu_bad_loss) > args.max_bad_loss:
-                print(
-                    f"bad_loss {abs(accu_bad_loss)} exceeding args.max_bad_loss {args.max_bad_loss}. Unlearning stopped."
-                )
-                break
-
-    else:
-        # NOTE: Original ByteDance Unlearning.
-        bad_loader_len = len(train_bad_loaders[0])
-        normal_loader_len = len(train_normal_loaders[0])
-        epoch_num = 0
-        while idx < args.max_unlearn_steps:
-            for bad_batch, normal_batch in zip(
-                train_bad_loaders[0], train_normal_loaders[0]
+            if (
+                abs(np.mean(running_loss)) > args.max_bad_loss
+                or idx >= args.max_unlearn_steps
             ):
-                samples_count += len(bad_batch["input_ids"])
-                loss, bad_loss = run_training_batch(
-                    model=model,
-                    pretrained_model=pretrained_model,
-                    tokenizer=tokenizer,
-                    device=device,
-                    normal_ans=normal_ans,
-                    bad_batch=bad_batch,
-                    normal_batch=normal_batch,
-                    idx=idx,
-                    samples_count=samples_count,
-                    epoch=epoch_num,
-                    bad_loader_size=bad_loader_len,
-                    normal_loader_size=normal_loader_len,
-                    question_prefix_str=question_prefix_str,
-                    answer_prefix_str=answer_prefix_str,
-                )
-                accelerator.backward(loss)
-                optimizer.step()
-                if not args.no_scheduler:
-                    lr_scheduler.step()
-                optimizer.zero_grad()
-                idx += 1
-                final_model_tag = idx
-                # TODO: fix this
-                # if idx % args.save_every == 0:
-                #     # Save model and tokenizer.
-                #     model_tokenizer_save_dir = Path(
-                #         os.path.join(args.model_save_dir, f"idx_{idx}")
-                #     )
-                #     model_tokenizer_save_dir.mkdir(parents=True, exist_ok=True)
-
-                #     model.save_pretrained(model_tokenizer_save_dir, from_pt=True)
-                #     tokenizer.save_pretrained(model_tokenizer_save_dir)
-                #     print(f"Saved model at step {idx}.")
-
-                running_loss.append(bad_loss.item())
-                while len(running_loss) > args.num_running_loss:
-                    running_loss.popleft()
-
-                if (
-                    abs(np.mean(running_loss)) > args.max_bad_loss
-                    or idx >= args.max_unlearn_steps
-                ):
-                    break
-
-            epoch_num += 1
-
-            if idx >= args.max_unlearn_steps:
-                print("max_unlearn_steps reached. Unlearning stopped.")
                 break
-            if avg_loss := abs(np.mean(running_loss)) > args.max_bad_loss:
-                print(
-                    f"bad_loss {avg_loss} exceeding args.max_bad_loss {args.max_bad_loss}. Unlearning stopped."
-                )
-                break
+
+        epoch_num += 1
+
+        if idx >= args.max_unlearn_steps:
+            print("max_unlearn_steps reached. Unlearning stopped.")
+            break
+        if avg_loss := abs(np.mean(running_loss)) > args.max_bad_loss:
+            print(
+                f"bad_loss {avg_loss} exceeding args.max_bad_loss {args.max_bad_loss}. Unlearning stopped."
+            )
+            break
 
     end_time = time.time()
-    logging.info("Total time: %d sec" % (end_time - start_time))
+    # logging.info("Total time: %d sec" % (end_time - start_time))
 
     if args.use_lora:
         model = model.merge_and_unload()
@@ -722,6 +487,172 @@ def main(args) -> None:
     #     wandb.finish()
     return
 
+def get_answer_loss_tmp(operation, batch, model, tokenizer, device="cuda:0"):
+    assert operation in ["ga", "gd"], "Operation must be either GA or GD."
+    input_ids, attention_mask, start_locs, labels = (
+        batch["input_ids"].to(device),
+        batch["attention_mask"].to(device),
+        batch["start_locs"],
+        batch["labels"].to(device),
+    )
+
+    # print("CHECK INPUTS")
+    # for input_id in input_ids:
+    #     ori_text = tokenizer.decode(input_id)
+    #     print(ori_text)
+    # print("ENDDDDDDD")
+
+    # print(input_ids, attention_mask, start_locs, labels)
+    # model.eval()
+    outputs = model(input_ids, attention_mask=attention_mask)
+    # model.train()
+    # print(outputs)
+    # print(type(outputs))
+
+    # Get logits
+    logits = outputs.logits
+    # print(f"this is logits: {logits}")
+
+    # Applying softmax to convert logits to probabilities
+    probs = torch.nn.functional.softmax(logits, dim=-1)
+    predicted_prob, predicted_index = torch.max(probs, dim=-1)
+    # print("Max Probability per Position:", predicted_prob)
+    # print("Corresponding Indices:", predicted_index)
+
+    # Decoding from probabilities
+    # predicted_text_prob = tokenizer.decode(predicted_index[0], skip_special_tokens=True)
+    # # predicted_text_prob = tokenizer.decode(predicted_index[0])
+    # logging.info(f"Decoded Text from Probabilities:\n\n {predicted_text_prob}")
+
+    loss_fct = torch.nn.CrossEntropyLoss(reduction="none")
+    # Shift one to predict next token.
+    shift_logits = outputs.logits[:, :-1, :]
+    shift_labels = labels[:, 1:]
+    # logging.info(f"Shifted logits shape: {shift_logits.shape}")
+    # logging.info(f"Shifted labels shape: {shift_labels.shape}")
+
+    losses = []
+    for bid in range(input_ids.shape[0]):
+        
+        # logging.info(f"Batch ID: {bid}")
+        one_inp, one_st = input_ids[bid], start_locs[bid]
+
+        # GA or GD.
+        position_loss = loss_fct(shift_logits[bid], shift_labels[bid])
+        # logging.info(f"Initial Position Loss: {position_loss}")
+        if operation == "ga":  # Negative the direction for GA.
+            position_loss = -position_loss
+
+        # logging.info(f"Start location (one_st): {one_st}")
+        # logging.info(f"Input tokens around start location: {one_inp[max(0, one_st - 5):one_st + 5]}")
+        # logging.info(f"Is padding at start location? {one_inp[one_st] == tokenizer.pad_token_id}")
+
+        real_start = (one_inp != tokenizer.pad_token_id).nonzero().min()
+        # logging.info(f"Computed real start of non-padding content: {real_start}")
+        # logging.info(f"decoded: {tokenizer.decode(one_inp)}")
+
+
+        # Simply put equal weights on all answers.
+        position_weight = torch.zeros_like(one_inp)
+        assert len(position_weight) == len(position_loss) + 1
+        position_weight[one_st:] = 1  # only focus on answer part
+        # logging.info(f"Position Weight, before ignoring padding: {position_weight}")
+
+        # Ignore the padding part.
+        # position_weight[one_inp == 1] = 0
+        position_weight[one_inp == tokenizer.pad_token_id] = 0
+        
+        if position_weight.sum() > 0:
+            position_weight = position_weight / position_weight.sum()
+        # logging.info(f"Position Weight: {position_weight}")
+        one_loss = (position_weight[:-1] * position_loss).sum()
+        # logging.info(f"Loss for One Input: {one_loss}")
+        losses.append(one_loss)
+    final_loss = torch.stack(losses).mean()
+
+    return final_loss
+
+def get_rand_ans_loss_tmp(
+    bad_batch,
+    tokenizer,
+    normal_ans,
+    model,
+    K=5,
+    device="cuda:0",
+    question_prefix_str="### Question:",
+    answer_prefix_str="### Answer:",
+):
+    """
+    Compute the loss of the random mismatch.
+
+    Args:
+        bad_batch: A batch of forgetting data.
+        tokenizer: The tokenizer.
+        normal_ans: A list of random answers.
+        model: unlearned model.
+        K: How many random answers sampled for each forgetting sample.
+        device: GPU device.
+        question_prefix_str: The default question prefix that is added in create_XXX_dataloader_from_dataset
+        answer_prefix_str: The default answer prefix that is added in create_XXX_dataloader_from_dataset
+
+    Returns:
+       The random mismatch loss.
+    """
+    bad_input_ids = bad_batch["input_ids"].to(device)
+    rand_ans_list = random.sample(normal_ans, k=K)
+    batch_random_features = []
+    for batch_idx in range(bad_input_ids.shape[0]):
+        single_input_id = bad_input_ids[batch_idx, :]
+        ori_text = tokenizer.decode(single_input_id)
+        # print(ori_text)
+
+        # Get question. For custom question prefix
+        question = (
+            ori_text.split(question_prefix_str)[1].split(answer_prefix_str)[0].strip()
+        )
+        question_prefix = f"{question_prefix_str} {question} {answer_prefix_str}"
+
+        tokenized_question_prefix = tokenizer(
+            question_prefix, truncation=True, padding="max_length"
+        )
+        # Doesn't need to minus 1 because there's a starting token in the beginning.
+        start_loc = len(tokenized_question_prefix)
+
+        # Get random answer.
+        for rand_ans in rand_ans_list:
+            random_sample = f"{question_prefix}{rand_ans}"
+
+            # Tokenize.
+            tokenized_rs = tokenizer(
+                random_sample, truncation=True, padding="max_length"
+            )
+            batch_random_features.append(
+                {
+                    "input_ids": tokenized_rs["input_ids"],
+                    "attention_mask": tokenized_rs["attention_mask"],
+                    "start_locs": start_loc,
+                }
+            )
+
+    # Batchify.
+    data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
+    batch_random = data_collator(batch_random_features)
+
+    # GD on answer.
+    # print("IM COMPUTING RANDOM LOSS")
+    # random_loss = get_answer_loss_tmp("gd", batch_random, model, tokenizer, device=device)
+    random_loss = get_answer_loss("gd", batch_random, model, device=device)
+    # print(f"randon_loss {random_loss}")
+
+    del data_collator
+    del batch_random
+    del bad_input_ids
+    del rand_ans_list
+    del batch_random_features
+    torch.cuda.empty_cache()
+    gc.collect()
+
+    return random_loss
 
 if __name__ == "__main__":
     args = parse_args()

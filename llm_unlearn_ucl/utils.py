@@ -12,7 +12,8 @@
 
 import random
 from typing import Optional
-
+import numpy as np
+import gc
 import pandas as pd
 import torch
 from datasets import Dataset
@@ -44,7 +45,10 @@ def create_symbolic_dataloader_from_dataset(
             # Calculate start idx for answer
             test_text = f"### Question: {prompt} ### Answer: "
             test_tokenized = tokenizer(test_text, truncation=True, padding="max_length")
-            results["start_locs"].append(len(test_tokenized["input_ids"]) - 1)
+            # results["start_locs"].append(len(test_tokenized["input_ids"]) - 1)
+            loc_start = np.sum(np.array(test_tokenized['attention_mask']) == 1) -1
+            results["start_locs"].append(loc_start)
+
 
         return results
 
@@ -112,7 +116,9 @@ def create_piaf_dataloader_from_dataset(
             # Calculate start idx for answer
             test_text = f"### Question: {prompt}\n ### Réponse: "
             test_tokenized = tokenizer(test_text, truncation=True, padding="max_length")
-            results["start_locs"].append(len(test_tokenized["input_ids"]) - 1)
+            # results["start_locs"].append(len(test_tokenized["input_ids"]) - 1)
+            loc_start = np.sum(np.array(test_tokenized['attention_mask']) == 1) -1
+            results["start_locs"].append(loc_start)
 
         return results
 
@@ -185,7 +191,9 @@ def create_mathqa_dataloader_from_dataset(
             # XXX: @Andrzej said apparently it might work better without space below??? (check?)
             test_text = f"Problem: {prompt} options: {options} rationale: "
             test_tokenized = tokenizer(test_text, truncation=True, padding="max_length")
-            results["start_locs"].append(len(test_tokenized["input_ids"]) - 1)
+            # results["start_locs"].append(len(test_tokenized["input_ids"]) - 1)
+            loc_start = np.sum(np.array(test_tokenized['attention_mask']) == 1) -1
+            results["start_locs"].append(loc_start)
 
         return results
 
@@ -258,7 +266,9 @@ def create_squad_dataloader_from_dataset(
             # Calculate start idx for answer
             test_text = f"### Question: {prompt}\n ### Answer: "
             test_tokenized = tokenizer(test_text, truncation=True, padding="max_length")
-            results["start_locs"].append(len(test_tokenized["input_ids"]) - 1)
+            # results["start_locs"].append(len(test_tokenized["input_ids"]) - 1)
+            loc_start = np.sum(np.array(test_tokenized['attention_mask']) == 1) -1
+            results["start_locs"].append(loc_start)
 
         return results
 
@@ -343,7 +353,9 @@ def create_pku_dataloader_from_dataset(
                 test_tokenized = tokenizer(
                     test_text, truncation=True, padding="max_length"
                 )
-                results["start_locs"].append(len(test_tokenized["input_ids"]) - 1)
+                # results["start_locs"].append(len(test_tokenized["input_ids"]) - 1)
+                loc_start = np.sum(np.array(test_tokenized['attention_mask']) == 1) -1
+                results["start_locs"].append(loc_start)
 
         return results
 
@@ -416,7 +428,7 @@ def create_truthfulqa_dataloader(
     data = {"input_ids": [], "attention_mask": []}
     raw_train_data = []
     for question, good_answer in zip(questions, good_answers):
-        raw_train_data.append({"Question": question, "Best Answer": good_answer})
+        raw_train_data.append({"Question": question,"Best Answer":good_answer})
         text = f"### Question: {question}\n ### Answer: {good_answer}"
         tokenized = tokenizer(text, truncation=True, padding="max_length")
         data["input_ids"].append(tokenized["input_ids"])
@@ -502,9 +514,9 @@ def compute_kl(pretrained_model, current_model, batch, device):
        The KL loss.
     """
     normal_outputs = current_model(
-        batch["input_ids"].to(device),
-        attention_mask=batch["attention_mask"].to(device),
-        labels=batch["labels"].to(device),
+        batch["input_ids"],
+        attention_mask=batch["attention_mask"],
+        labels=batch["labels"],
     )
 
     with torch.no_grad():
@@ -543,8 +555,10 @@ def get_answer_loss(operation, batch, model, device="cuda:0"):
         batch["start_locs"],
         batch["labels"].to(device),
     )
+    # print(input_ids, attention_mask, start_locs, labels)
     outputs = model(input_ids, attention_mask=attention_mask)
     loss_fct = torch.nn.CrossEntropyLoss(reduction="none")
+
     # Shift one to predict next token.
     shift_logits = outputs.logits[:, :-1, :]
     shift_labels = labels[:, 1:]
@@ -606,6 +620,7 @@ def get_rand_ans_loss(
     for batch_idx in range(bad_input_ids.shape[0]):
         single_input_id = bad_input_ids[batch_idx, :]
         ori_text = tokenizer.decode(single_input_id)
+        # print(ori_text)
 
         # Get question. For custom question prefix
         question = (
@@ -617,7 +632,8 @@ def get_rand_ans_loss(
             question_prefix, truncation=True, padding="max_length"
         )
         # Doesn't need to minus 1 because there's a starting token in the beginning.
-        start_loc = len(tokenized_question_prefix)
+        # start_loc = len(tokenized_question_prefix)
+        start_loc = np.sum(np.array(tokenized_question_prefix['attention_mask']) == 1) -1
 
         # Get random answer.
         for rand_ans in rand_ans_list:
@@ -640,7 +656,17 @@ def get_rand_ans_loss(
     batch_random = data_collator(batch_random_features)
 
     # GD on answer.
+    print("IM COMPUTING RANDOM LOSS")
     random_loss = get_answer_loss("gd", batch_random, model, device=device)
+    print(f"randon_loss {random_loss}")
+
+    del data_collator
+    del batch_random
+    del bad_input_ids
+    del rand_ans_list
+    del batch_random_features
+    torch.cuda.empty_cache()
+    gc.collect()
 
     return random_loss
 
