@@ -156,7 +156,7 @@ for model in ${MODELS[@]}
 do
     # TODO: if it's a100, use 16, a40 probabaly need 8
     echo "Scheduling on GPU $GPU_NUM"
-    CUDA_VISIBLE_DEVICES=$GPU_NUM HF_HOME=/scratch0/sduchnie/.huggingface nohup python3 --num_processes=1 -m lm_eval --model hf \
+    CUDA_VISIBLE_DEVICES=$GPU_NUM HF_HOME=/scratch0/sduchnie/.huggingface nohup python3 -m lm_eval --model hf \
         --model_args pretrained=$UNLEARNED_MODELS_PATH/models/$model/idx_20 \
         --tasks $HF_LLM_LEADERBOARD_TASKS \
         --device "cuda" \
@@ -230,7 +230,7 @@ cp -r $EXPERIMENT_SCRATCH_PATH  $UNLEARNED_MODELS_PATH/experiment_data
 
 echo "oof, thats a long one, if nothing went wrong, ur set"
 # Bonus: cont unlearning
-### Continuous unlearning; CUDA:0
+# Continuous unlearning; CUDA:0
 BATCH_SIZE=2
 SEED=2137
 MAX_UNLEARN_STEPS=10240
