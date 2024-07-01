@@ -22,6 +22,7 @@ import os
 import random
 import time
 from collections import deque
+from contextlib import nullcontext
 from pathlib import Path
 from typing import List
 
@@ -232,8 +233,17 @@ def main(args) -> None:
     assert (
         args.samples_count // args.sequential
     ) % args.batch_size == 0, "samples in each 'sequence' (--samples_count / --sequential) should be a multiple of batch_size."
+
+    accelerator_configs = {"mixed_precision": "bf16"}
+    if (
+        args.sequential > 0
+        and (args.samples_count // args.sequential) > args.batch_size
+    ):
+        accelerator_configs["gradient_accumulation_steps"] = (
+            args.samples_count // args.sequential
+        ) // args.batch_size
     accelerator = Accelerator(
-        mixed_precision="bf16"
+        **accelerator_configs
     )  # accelerator precision can be specified if required.
     device = accelerator.device
 
@@ -565,34 +575,39 @@ def main(args) -> None:
                 for normal_batch, bad_batch in zip(
                     train_normal_loader, train_bad_loader
                 ):
-                    samples_count += len(bad_batch["input_ids"])
-                    loss, bad_loss = run_training_batch(
-                        model=model,
-                        pretrained_model=pretrained_model,
-                        tokenizer=tokenizer,
-                        device=device,
-                        normal_ans=normal_ans,
-                        bad_batch=bad_batch,
-                        normal_batch=normal_batch,
-                        idx=idx,
-                        samples_count=samples_count,
-                        epoch=epoch_num,
-                        question_prefix_str=question_prefix_str,
-                        answer_prefix_str=answer_prefix_str,
-                    )
-                    idx += 1
-                    # NOTE: the whole dataset is considered to be one single batch.
-                    # Back-prop after the whole dataset has been finished.
-                    accelerator.backward(loss / num_batches_per_epoch)
-                    bad_loss /= num_batches_per_epoch
-                    accu_bad_loss += bad_loss.item()
-                # If args.batch_size < args.samples_count//args.sequential, always perform gradient accumulation.
+                    with (
+                        accelerator.accumulate(model)
+                        if accelerator_configs.get("gradient_accumulation_steps")
+                        is not None
+                        else nullcontext()
+                    ):
+                        samples_count += len(bad_batch["input_ids"])
+                        loss, bad_loss = run_training_batch(
+                            model=model,
+                            pretrained_model=pretrained_model,
+                            tokenizer=tokenizer,
+                            device=device,
+                            normal_ans=normal_ans,
+                            bad_batch=bad_batch,
+                            normal_batch=normal_batch,
+                            idx=idx,
+                            samples_count=samples_count,
+                            epoch=epoch_num,
+                            question_prefix_str=question_prefix_str,
+                            answer_prefix_str=answer_prefix_str,
+                        )
+                        idx += 1
+                        # NOTE: the whole dataset is considered to be one single batch.
+                        # Back-prop after the whole dataset has been finished.
+                        accelerator.backward(loss)
+                        bad_loss /= num_batches_per_epoch
+                        accu_bad_loss += bad_loss.item()
+                        optimizer.step()
+                        if not args.no_scheduler:
+                            lr_scheduler.step()
+                        optimizer.zero_grad()
                 epoch_num += 1
                 final_model_tag = epoch_num
-                optimizer.step()
-                if not args.no_scheduler:
-                    lr_scheduler.step()
-                optimizer.zero_grad()
 
                 if args.sequential == 1 and epoch_num % args.save_every == 0:
                     # NOTE: Batch unlearning, save for every epoch
