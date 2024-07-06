@@ -54,6 +54,4 @@ def parse_arguments() -> argparse.Namespace:
         help="Seed for random number generators",
     )
 
-
     return parser.parse_args()
-

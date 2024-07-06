@@ -501,10 +501,13 @@ def main(args) -> None:
     # num_training_steps = args.max_unlearn_steps
     if args.no_scheduler:
         # TODO: TEST THIS BIT
-        (model, optimizer, train_bad_loaders[0], train_normal_loaders[0]) = (
-            accelerator.prepare(
-                model, optimizer, train_bad_loaders[0], train_normal_loaders[0]
-            )
+        (
+            model,
+            optimizer,
+            train_bad_loaders[0],
+            train_normal_loaders[0],
+        ) = accelerator.prepare(
+            model, optimizer, train_bad_loaders[0], train_normal_loaders[0]
         )
     else:
         lr_scheduler = get_scheduler(
