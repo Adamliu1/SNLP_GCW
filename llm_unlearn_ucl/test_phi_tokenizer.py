@@ -27,7 +27,10 @@ def main():
     test_tokenized_gemma = gemma_tokenizer(
         test_text, truncation=True, padding="max_length"
     )   
-    # print(f"tokenized_phi:{test_tokenized_phi}")
+    print(f"tokenized_phi:{test_tokenized_phi}")
+    # print(f"phi, token 50256: {np.sum(np.array(test_tokenized_phi['input_ids']) == 50206)}")
+    print(phi_tokenizer.decode([50256]))
+    exit()
     loc_start = np.sum(np.array(test_tokenized_phi['attention_mask']) == 1) -1
     print(f"len of input_ids, phi: {len(test_tokenized_phi['input_ids'])}")
     print(f"len of attentino mask, phi: {len(test_tokenized_phi['attention_mask'])}")

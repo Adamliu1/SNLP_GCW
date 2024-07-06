@@ -656,9 +656,9 @@ def get_rand_ans_loss(
     batch_random = data_collator(batch_random_features)
 
     # GD on answer.
-    print("IM COMPUTING RANDOM LOSS")
+    # print("IM COMPUTING RANDOM LOSS")
     random_loss = get_answer_loss("gd", batch_random, model, device=device)
-    print(f"randon_loss {random_loss}")
+    # print(f"randon_loss {random_loss}")
 
     del data_collator
     del batch_random
