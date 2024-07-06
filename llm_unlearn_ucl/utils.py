@@ -46,9 +46,8 @@ def create_symbolic_dataloader_from_dataset(
             test_text = f"### Question: {prompt} ### Answer: "
             test_tokenized = tokenizer(test_text, truncation=True, padding="max_length")
             # results["start_locs"].append(len(test_tokenized["input_ids"]) - 1)
-            loc_start = np.sum(np.array(test_tokenized['attention_mask']) == 1) -1
+            loc_start = np.sum(np.array(test_tokenized["attention_mask"]) == 1) - 1
             results["start_locs"].append(loc_start)
-
 
         return results
 
@@ -117,7 +116,7 @@ def create_piaf_dataloader_from_dataset(
             test_text = f"### Question: {prompt}\n ### Réponse: "
             test_tokenized = tokenizer(test_text, truncation=True, padding="max_length")
             # results["start_locs"].append(len(test_tokenized["input_ids"]) - 1)
-            loc_start = np.sum(np.array(test_tokenized['attention_mask']) == 1) -1
+            loc_start = np.sum(np.array(test_tokenized["attention_mask"]) == 1) - 1
             results["start_locs"].append(loc_start)
 
         return results
@@ -192,7 +191,7 @@ def create_mathqa_dataloader_from_dataset(
             test_text = f"Problem: {prompt} options: {options} rationale: "
             test_tokenized = tokenizer(test_text, truncation=True, padding="max_length")
             # results["start_locs"].append(len(test_tokenized["input_ids"]) - 1)
-            loc_start = np.sum(np.array(test_tokenized['attention_mask']) == 1) -1
+            loc_start = np.sum(np.array(test_tokenized["attention_mask"]) == 1) - 1
             results["start_locs"].append(loc_start)
 
         return results
@@ -267,7 +266,7 @@ def create_squad_dataloader_from_dataset(
             test_text = f"### Question: {prompt}\n ### Answer: "
             test_tokenized = tokenizer(test_text, truncation=True, padding="max_length")
             # results["start_locs"].append(len(test_tokenized["input_ids"]) - 1)
-            loc_start = np.sum(np.array(test_tokenized['attention_mask']) == 1) -1
+            loc_start = np.sum(np.array(test_tokenized["attention_mask"]) == 1) - 1
             results["start_locs"].append(loc_start)
 
         return results
@@ -354,7 +353,7 @@ def create_pku_dataloader_from_dataset(
                     test_text, truncation=True, padding="max_length"
                 )
                 # results["start_locs"].append(len(test_tokenized["input_ids"]) - 1)
-                loc_start = np.sum(np.array(test_tokenized['attention_mask']) == 1) -1
+                loc_start = np.sum(np.array(test_tokenized["attention_mask"]) == 1) - 1
                 results["start_locs"].append(loc_start)
 
         return results
@@ -428,7 +427,7 @@ def create_truthfulqa_dataloader(
     data = {"input_ids": [], "attention_mask": []}
     raw_train_data = []
     for question, good_answer in zip(questions, good_answers):
-        raw_train_data.append({"Question": question,"Best Answer":good_answer})
+        raw_train_data.append({"Question": question, "Best Answer": good_answer})
         text = f"### Question: {question}\n ### Answer: {good_answer}"
         tokenized = tokenizer(text, truncation=True, padding="max_length")
         data["input_ids"].append(tokenized["input_ids"])
@@ -633,7 +632,9 @@ def get_rand_ans_loss(
         )
         # Doesn't need to minus 1 because there's a starting token in the beginning.
         # start_loc = len(tokenized_question_prefix)
-        start_loc = np.sum(np.array(tokenized_question_prefix['attention_mask']) == 1) -1
+        start_loc = (
+            np.sum(np.array(tokenized_question_prefix["attention_mask"]) == 1) - 1
+        )
 
         # Get random answer.
         for rand_ans in rand_ans_list:

@@ -133,7 +133,7 @@ def run_training_batch(
     normal_loader_size: int = 0,
     question_prefix_str: str = "",
     answer_prefix_str: str = "",
-    accelerator=None, # TODO: maybe reorder here
+    accelerator=None,  # TODO: maybe reorder here
 ):
     # # Calculate min-k% prob score on bad_batch using the unmodified pre-trained model
     # mink_probs_base = compute_mink_prob(
@@ -504,10 +504,13 @@ def main(args) -> None:
     # num_training_steps = args.max_unlearn_steps
     if args.no_scheduler:
         # TODO: TEST THIS BIT
-        (model, optimizer, train_bad_loaders[0], train_normal_loaders[0]) = (
-            accelerator.prepare(
-                model, optimizer, train_bad_loaders[0], train_normal_loaders[0]
-            )
+        (
+            model,
+            optimizer,
+            train_bad_loaders[0],
+            train_normal_loaders[0],
+        ) = accelerator.prepare(
+            model, optimizer, train_bad_loaders[0], train_normal_loaders[0]
         )
     else:
         lr_scheduler = get_scheduler(
@@ -630,7 +633,7 @@ def main(args) -> None:
                 # TODO: This only handles deepspeed zero and zero2, zero3 will require change
                 if accelerator.is_local_main_process:
                     if args.sequential == 1 and epoch_num % args.save_every == 0:
-                        accelerator.wait_for_everyone() # for model saving
+                        accelerator.wait_for_everyone()  # for model saving
                         # NOTE: Batch unlearning, save for every epoch
                         model_tokenizer_save_dir = Path(
                             os.path.join(args.model_save_dir, f"idx_{epoch_num}")
@@ -687,7 +690,7 @@ def main(args) -> None:
                 # TODO: NOTE for model saving
                 if accelerator.is_local_main_process:
                     if idx % args.save_every == 0:
-                        accelerator.wait_for_everyone() # for model saving
+                        accelerator.wait_for_everyone()  # for model saving
                         # Save model and tokenizer.
                         model_tokenizer_save_dir = Path(
                             os.path.join(args.model_save_dir, f"idx_{idx}")
@@ -720,12 +723,12 @@ def main(args) -> None:
                     f"bad_loss {avg_loss} exceeding args.max_bad_loss {args.max_bad_loss}. Unlearning stopped."
                 )
                 break
-    
+
     # TODO: fix this
     # end_time = time.time()
     # logging.info("Total time: %d sec" % (end_time - start_time))
 
-    accelerator.wait_for_everyone() # for model saving
+    accelerator.wait_for_everyone()  # for model saving
     if args.use_lora:
         model = model.merge_and_unload()
 
@@ -746,6 +749,7 @@ def main(args) -> None:
         #     wandb.finish()
 
     return
+
 
 if __name__ == "__main__":
     args = parse_args()

@@ -11,6 +11,7 @@ from random import seed as pyseed
 from numpy.random import seed as npseed
 import torch
 
+
 def reproducibility(seed: int) -> int:
     """
     Seeds python, torch and numpy random number generators.

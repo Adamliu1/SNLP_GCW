@@ -27,9 +27,11 @@ from collections import deque
 from pathlib import Path
 from typing import List
 from transformers import DataCollatorForLanguageModeling
+
 # Added
 import numpy as np
 import torch
+
 # import wandb
 from accelerate import Accelerator
 from datasets import load_dataset
@@ -52,10 +54,12 @@ from utils import (
     get_truthfulQA_answers_plaintext,
 )
 
+
 def set_seed(seed_num: int) -> None:
     torch.manual_seed(seed_num)
     np.random.seed(seed_num)
     random.seed(seed_num)
+
 
 def run_training_batch(
     model,
@@ -144,12 +148,20 @@ def main(args) -> None:
     print(f"Loading model {args.model_name} for training...")
 
     model = AutoModelForCausalLM.from_pretrained(
-        args.model_name, cache_dir=args.cache_dir, trust_remote_code=True, use_flash_attention_2=False
+        args.model_name,
+        cache_dir=args.cache_dir,
+        trust_remote_code=True,
+        use_flash_attention_2=False,
     )
 
     print("Model loaded.")
 
-    tokenizer = AutoTokenizer.from_pretrained(args.model_name, cache_dir=args.cache_dir, trust_remote_code=True, use_fast=False)
+    tokenizer = AutoTokenizer.from_pretrained(
+        args.model_name,
+        cache_dir=args.cache_dir,
+        trust_remote_code=True,
+        use_fast=False,
+    )
     # Ensure the tokenizer has a pad token. Use EOS token as padding token.
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
@@ -372,8 +384,10 @@ def main(args) -> None:
         model,
         optimizer,
         train_bad_loaders[0],
-        train_normal_loaders[0]
-    ) = accelerator.prepare(model, optimizer, train_bad_loaders[0], train_normal_loaders[0])
+        train_normal_loaders[0],
+    ) = accelerator.prepare(
+        model, optimizer, train_bad_loaders[0], train_normal_loaders[0]
+    )
 
     for i in range(args.sequential):
         train_bad_loaders[i], train_normal_loaders[i] = accelerator.prepare(
@@ -392,13 +406,13 @@ def main(args) -> None:
             cache_dir=args.cache_dir,
             load_in_8bit=True,
             torch_dtype=torch.float32,
-            trust_remote_code=True
+            trust_remote_code=True,
         )
     else:
         pretrained_model = AutoModelForCausalLM.from_pretrained(
-            args.model_name, cache_dir=args.cache_dir, 
+            args.model_name,
+            cache_dir=args.cache_dir,
             trust_remote_code=True,
-
         )
         pretrained_model.to(device)
     print("Model loaded.")
@@ -487,6 +501,7 @@ def main(args) -> None:
     #     wandb.finish()
     return
 
+
 def get_answer_loss_tmp(operation, batch, model, tokenizer, device="cuda:0"):
     assert operation in ["ga", "gd"], "Operation must be either GA or GD."
     input_ids, attention_mask, start_locs, labels = (
@@ -533,7 +548,6 @@ def get_answer_loss_tmp(operation, batch, model, tokenizer, device="cuda:0"):
 
     losses = []
     for bid in range(input_ids.shape[0]):
-        
         # logging.info(f"Batch ID: {bid}")
         one_inp, one_st = input_ids[bid], start_locs[bid]
 
@@ -551,7 +565,6 @@ def get_answer_loss_tmp(operation, batch, model, tokenizer, device="cuda:0"):
         # logging.info(f"Computed real start of non-padding content: {real_start}")
         # logging.info(f"decoded: {tokenizer.decode(one_inp)}")
 
-
         # Simply put equal weights on all answers.
         position_weight = torch.zeros_like(one_inp)
         assert len(position_weight) == len(position_loss) + 1
@@ -561,7 +574,7 @@ def get_answer_loss_tmp(operation, batch, model, tokenizer, device="cuda:0"):
         # Ignore the padding part.
         # position_weight[one_inp == 1] = 0
         position_weight[one_inp == tokenizer.pad_token_id] = 0
-        
+
         if position_weight.sum() > 0:
             position_weight = position_weight / position_weight.sum()
         # logging.info(f"Position Weight: {position_weight}")
@@ -571,6 +584,7 @@ def get_answer_loss_tmp(operation, batch, model, tokenizer, device="cuda:0"):
     final_loss = torch.stack(losses).mean()
 
     return final_loss
+
 
 def get_rand_ans_loss_tmp(
     bad_batch,
@@ -653,6 +667,7 @@ def get_rand_ans_loss_tmp(
     gc.collect()
 
     return random_loss
+
 
 if __name__ == "__main__":
     args = parse_args()
