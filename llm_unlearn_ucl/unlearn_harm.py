@@ -234,17 +234,28 @@ def main(args) -> None:
         args.samples_count // args.sequential
     ) % args.batch_size == 0, "samples in each 'sequence' (--samples_count / --sequential) should be a multiple of batch_size."
 
-    accelerator_configs = {"mixed_precision": "bf16"}
+    # accelerator_configs = {"mixed_precision": "bf16"}
+    # if (
+    #     args.sequential > 0
+    #     and (args.samples_count // args.sequential) > args.batch_size
+    # ):
+    #     accelerator_configs["gradient_accumulation_steps"] = (
+    #         args.samples_count // args.sequential
+    #     ) // args.batch_size
+    # accelerator = Accelerator(
+    #     **accelerator_configs
+    # )  # accelerator precision can be specified if required.
+
+    accelerator = Accelerator(mixed_precision="bf16")
     if (
         args.sequential > 0
         and (args.samples_count // args.sequential) > args.batch_size
     ):
-        accelerator_configs["gradient_accumulation_steps"] = (
-            args.samples_count // args.sequential
-        ) // args.batch_size
-    accelerator = Accelerator(
-        **accelerator_configs
-    )  # accelerator precision can be specified if required.
+        del accelerator
+        accelerator = Accelerator(
+            mixed_precision="bf16",
+            gradient_accumulation_steps=args.samples_count // args.sequential,
+        )
     device = accelerator.device
 
     print(f"Loading model {args.model_name} for training...")
