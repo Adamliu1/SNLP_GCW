@@ -17,7 +17,9 @@ The dataset used in is `PKU-SafeRLHF` and TruthfulQA. Model supports OPT-1.3B.
 """
 
 import json
-import logging
+
+# import logging
+from accelerate.logging import get_logger
 import os
 import random
 import time
@@ -29,7 +31,7 @@ from typing import List
 import numpy as np
 import torch
 
-# import wandb
+import wandb
 from accelerate import Accelerator
 from datasets import load_dataset
 from parse_args import parse_args
@@ -134,6 +136,7 @@ def run_training_batch(
     question_prefix_str: str = "",
     answer_prefix_str: str = "",
     accelerator=None,  # TODO: maybe reorder here
+    logger=None,
 ):
     # # Calculate min-k% prob score on bad_batch using the unmodified pre-trained model
     # mink_probs_base = compute_mink_prob(
@@ -168,6 +171,7 @@ def run_training_batch(
     #     device=device,
     #     compute_for_answer_only=False,
     # )
+
     ############ GA on answer only. ############
     bad_loss = get_answer_loss("ga", bad_batch, model, device=device)
     # bad_loss = get_answer_loss("ga", bad_batch, model, tokenizer, device=device)
@@ -186,6 +190,7 @@ def run_training_batch(
     ############ KL on normal samples. ############
     normal_loss = compute_kl(pretrained_model, model, normal_batch, device)
 
+    # TODO: check this, currently `args` not passed as an argument
     # Final loss = bad loss + random smoothing + normal loss.
     loss = (
         args.bad_weight * bad_loss
@@ -195,23 +200,23 @@ def run_training_batch(
 
     # NOTE: backwardnd optimisation is done outside of this function in the
     # training loop for gradient accumulation compatibility.
-    # if bool(args.wandb_log) and (idx % args.wandb_log_freq == 0):
-    #     wandb.log(
-    #         {
-    #             "batch": idx,
-    #             "epoch": epoch,
-    #             "samples_count": samples_count,
-    #             "bad_loss": -bad_loss,
-    #             "normal_loss": normal_loss,
-    #             "final_loss": loss,
-    #             "ratio (bad) mink unlearning/reference": np.mean(mink_probs_after_step)
-    #             / np.mean(mink_probs_base),
-    #             "ratio (normal) mink unlearning/reference": np.mean(
-    #                 mink_probs_after_step_normal
-    #             )
-    #             / np.mean(mink_probs_base_normal),
-    #         }
-    #     )
+    if bool(args.wandb_log) and (idx % args.wandb_log_freq == 0):
+        accelerator.log(
+            {
+                "batch": idx,
+                "epoch": epoch,
+                "samples_count": samples_count,
+                "bad_loss": -bad_loss,
+                "normal_loss": normal_loss,
+                "final_loss": loss,
+                # "ratio (bad) mink unlearning/reference": np.mean(mink_probs_after_step)
+                # / np.mean(mink_probs_base),
+                # "ratio (normal) mink unlearning/reference": np.mean(
+                #     mink_probs_after_step_normal
+                # )
+                # / np.mean(mink_probs_base_normal),
+            }
+        )
 
     stats = (
         f"epoch: {epoch}, batch: {idx}, "
@@ -221,8 +226,9 @@ def run_training_batch(
         # f"ratio (bad) mink unlearning/reference: {np.mean(mink_probs_after_step)/np.mean(mink_probs_base):.3f}, "
         # f"ratio (normal) mink unlearning/reference: {np.mean(mink_probs_after_step_normal)/np.mean(mink_probs_base_normal):.3f}"
     )
-    # TODO: fix logging, use accelerator wrapper
-    # logging.info(stats)
+    # TODO: see if this is correct, or we should just log on main process
+    logger.info(stats, in_order=True)
+    # TODO: should I just do main process? if not, there will be interleaving I'm sure.
     if accelerator.is_local_main_process:
         print(stats)
 
@@ -230,6 +236,12 @@ def run_training_batch(
 
 
 def main(args) -> None:
+    # setup logging
+    # TODO: verify if this is ok, maybe format is slightly different from the one before
+    logger = get_logger(args.log_file, log_level="INFO")
+    for arg in vars(args):
+        logger.info(f"{arg}: {getattr(args, arg)}", main_process_only=True)
+
     set_seed(args.seed)
     assert (
         args.samples_count % args.sequential == 0
@@ -240,7 +252,15 @@ def main(args) -> None:
     # accelerator = Accelerator(
     #     mixed_precision="bf16"
     # )  # accelerator precision can be specified if required.
-    accelerator = Accelerator()
+    if args.wandb_log:
+        accelerator = Accelerator(log_with="wandb")
+        accelerator.init_trackers(
+            project_name=args.wandb_project_name,
+            config=vars(args),
+            init_kwargs={"wandb": {"name": args.wandb_run_name}},
+        )
+    else:
+        accelerator = Accelerator()
     device = accelerator.device
 
     print(f"Loading model {args.model_name} for training...")
@@ -487,16 +507,18 @@ def main(args) -> None:
         return
 
     # TODO: FIX THIS
-    # data_sample_artifacts = wandb.Artifact(
-    #     name="training_batch_raw_data", type="batch_data"
-    # )
-    # data_sample_artifacts.add_file(
-    #     normal_sample_path, name=f"normal_{args.samples_count}_samples.json"
-    # )
-    # data_sample_artifacts.add_file(
-    #     bad_sample_path, name=f"bad_{args.samples_count}_samples.json"
-    # )
-    # wandb.log_artifact(data_sample_artifacts)
+    if bool(args.wandb_log):
+        data_sample_artifacts = wandb.Artifact(
+            name="training_batch_raw_data", type="batch_data"
+        )
+        data_sample_artifacts.add_file(
+            normal_sample_path, name=f"normal_{args.samples_count}_samples.json"
+        )
+        data_sample_artifacts.add_file(
+            bad_sample_path, name=f"bad_{args.samples_count}_samples.json"
+        )
+        wandb_tracker = accelerator.get_tracker("wandb")
+        wandb_tracker.log_artifact(data_sample_artifacts)
 
     optimizer = AdamW(model.parameters(), lr=args.lr)
 
@@ -614,6 +636,7 @@ def main(args) -> None:
                         question_prefix_str=question_prefix_str,
                         answer_prefix_str=answer_prefix_str,
                         accelerator=accelerator,
+                        logger=logger,
                     )
                     idx += 1
                     # NOTE: the whole dataset is considered to be one single batch.
@@ -629,7 +652,6 @@ def main(args) -> None:
                     lr_scheduler.step()
                 optimizer.zero_grad()
 
-                # TODO: fix model saving
                 # TODO: This only handles deepspeed zero and zero2, zero3 will require change
                 if accelerator.is_local_main_process:
                     if args.sequential == 1 and epoch_num % args.save_every == 0:
@@ -679,6 +701,7 @@ def main(args) -> None:
                     question_prefix_str=question_prefix_str,
                     answer_prefix_str=answer_prefix_str,
                     accelerator=accelerator,
+                    logger=logger,
                 )
                 accelerator.backward(loss)
                 optimizer.step()
@@ -729,6 +752,10 @@ def main(args) -> None:
     # logging.info("Total time: %d sec" % (end_time - start_time))
 
     accelerator.wait_for_everyone()  # for model saving
+    if accelerator.is_local_main_process:
+        end_time = time.time()
+        logger.info("Total time: %d sec" % (end_time - start_time))
+
     if args.use_lora:
         model = model.merge_and_unload()
 
@@ -743,31 +770,13 @@ def main(args) -> None:
         print("Saved final model.")
         print("Unlearning finished")
 
-        # TODO: FIX LOGGING
-        # logging.info("Unlearning finished")
-        # if bool(args.wandb_log):
-        #     wandb.finish()
+        logger.info("Unlearning finished")
+        if bool(args.wandb_log):
+            accelerator.end_training()
 
     return
 
 
 if __name__ == "__main__":
     args = parse_args()
-
-    # Initialize logging
-    # if bool(args.wandb_log):
-    #     # import wandb
-    #     wandb.init(
-    #         project=args.wandb_project_name, name=args.wandb_run_name, config=vars(args)
-    #     )
-
-    logging.basicConfig(
-        filename=args.log_file,
-        filemode="w+",
-        format="%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s",
-        datefmt="%Y-%m-%d-%H-%M",
-        level=logging.INFO,
-    )
-    for arg in vars(args):
-        logging.info(f"{arg}: {getattr(args, arg)}")
     main(args)
