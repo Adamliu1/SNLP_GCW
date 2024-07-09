@@ -230,6 +230,7 @@ def main(args) -> None:
 
     # Prepare.
     if args.no_scheduler:
+        # TODO: TEST THIS BIT
         (
             model,
             optimizer,
@@ -332,7 +333,7 @@ def main(args) -> None:
                 ):
                     samples_count += len(bad_batch["input_ids"])
                     # TODO: fix gradient accumulation, currently because of 'run_training_batch', it's hard to use accelerator's accumulation.
-                    # Currenlty we need to set accelerator config to use accumulation step 1.
+                    # Currently we need to set accelerator config to use accumulation step 1.
                     # with accelerator.accumulate(model):
                     loss, bad_loss = run_training_batch(
                         model=model,
@@ -356,7 +357,7 @@ def main(args) -> None:
                     accelerator.backward(loss / num_batches_per_epoch)
                     bad_loss /= num_batches_per_epoch
                     accu_bad_loss += bad_loss.item()
-                # If args.batch_size < args.samples_count//args.sequential, always perform gradient accumulation.
+                    # If args.batch_size < args.samples_count//args.sequential, always perform gradient accumulation.
                 epoch_num += 1
                 final_model_tag = epoch_num
                 optimizer.step()
@@ -490,6 +491,7 @@ def main(args) -> None:
 
             epoch_num += 1
 
+            # NOTE: here need to verify logic
             if idx >= args.max_unlearn_steps:
                 # NOTE: here I think we need to specify which process id, but it's not important for now.
                 print("max_unlearn_steps reached. Unlearning stopped.")
