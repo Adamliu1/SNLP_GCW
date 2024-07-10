@@ -16,7 +16,6 @@ A script to show an example of how to unlearn harmfulness.
 The dataset used in is `PKU-SafeRLHF` and TruthfulQA. Model supports OPT-1.3B.
 """
 
-import json
 import logging
 import os
 import random
@@ -30,7 +29,6 @@ import numpy as np
 import torch
 import wandb
 from accelerate import Accelerator
-from datasets import load_dataset
 from data_utils import DataloaderConstructor, get_normal_answer, make_dataset
 from parse_args import parse_args
 from peft import AdaLoraConfig, TaskType, get_peft_model
@@ -39,13 +37,11 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, get_scheduler
 from transformers.tokenization_utils_base import BatchEncoding
 from utils import (
     compute_kl,
-    create_mathqa_dataloader_from_dataset,
-    create_piaf_dataloader_from_dataset,
-    create_pku_dataloader_from_dataset,
-    create_symbolic_dataloader_from_dataset,
     get_answer_loss,
     get_rand_ans_loss,
 )
+
+from data_utils import SUPPORTED_RETAINING_SET, SUPPORTED_UNLEARNING_SET
 
 
 def set_seed(seed_num: int) -> None:
@@ -268,213 +264,175 @@ def main(args) -> None:
         tokenizer.pad_token = tokenizer.eos_token
 
     # Load data to unlearn.
-    if args.unlearning_dataset == "PKU-Alignment/PKU-SafeRLHF":
-        # filter entries with harmful responses and draw random samples from the remaining dataset.
-        full_bad_dataset = load_dataset(
-            "PKU-Alignment/PKU-SafeRLHF", split="train"
-        ).filter(
-            lambda entry: not (
-                entry["is_response_0_safe"] or entry["is_response_1_safe"]
-            )
+    if args.unlearning_dataset in SUPPORTED_UNLEARNING_SET:
+        train_bad_dataset, bad_sample_path = make_dataset(
+            args.unlearning_dataset,
+            num_samples=None if args.sequential == -1 else args.samples_count,
+            seed=args.shuffle_seed,
+            save_dir=args.samples_save_dir,
         )
-        if args.shuffle_seed:
-            # shuffle the dataset with a given seed for reproducibility
-            full_bad_dataset = full_bad_dataset.shuffle(seed=args.shuffle_seed)
-        if args.sequential > 0:
-            # NOTE: sequential/batch unlearning using sliced dataset.
-            train_bad_dataset = full_bad_dataset.select(range(args.samples_count))
-        else:
-            # NOTE: full dataset like bytedance.
-            train_bad_dataset = full_bad_dataset
-
-        Path(args.samples_save_dir).mkdir(exist_ok=True)
-        bad_sample_path = f"{args.samples_save_dir}/bad_{args.samples_count if args.sequential > 0 else 'full'}_samples.json"
-        with open(bad_sample_path, "w") as fin:
-            print(f"Writing bad samples to {bad_sample_path}")
-            json.dump(
-                [
-                    train_bad_dataset[i]
-                    for i in range(
-                        args.samples_count
-                        if args.sequential > 0
-                        else len(train_bad_dataset)
-                    )
-                ],
-                fin,
-            )
-
-        train_bad_loaders = create_pku_dataloader_from_dataset(
-            tokenizer,
+        train_bad_loaders = DataloaderConstructor(
             train_bad_dataset,
+            dataset_uri=args.unlearning_dataset,
             batch_size=args.batch_size,
-            splits=max(args.sequential, 1),
-        )
+            tokenizer=tokenizer,
+            num_splits=max(args.sequential, 1),
+        ).get_loaders()
 
-        # XXX: for now this is the prefix that is added before each q and answer,
-        # it is used by get_rand_ans_loss() to extract just the question part and
-        # add a random answer to it.
-        # !!!! Has additional sideffect of model unlearning this pattern!!!!
-        # ADDITONALLY: create_truthfulqa_dataloader() is also using this pattern!!!
-        question_prefix_str = "### Question:"
-        answer_prefix_str = "### Answer:"
-    elif args.unlearning_dataset == "AgentPublic/piaf":
-        # filter entries with harmful responses and draw random samples from the remaining dataset.
-        full_bad_dataset = load_dataset("AgentPublic/piaf", split="train").filter(
-            lambda entry: len(entry["answers"]["text"]) != 0
-        )
-        if args.shuffle_seed:
-            # shuffle the dataset with a given seed for reproducibility
-            full_bad_dataset = full_bad_dataset.shuffle(seed=args.shuffle_seed)
-        if args.sequential > 0:
-            # NOTE: sequential/batch unlearning using sliced dataset.
-            train_bad_dataset = full_bad_dataset.select(range(args.samples_count))
+        if args.unlearning_dataset == "AgentPublic/piaf":
+            question_prefix_str = "### Question:"
+            answer_prefix_str = "### Réponse:"
+        elif args.unlearning_dataset == "allenai/math_qa":
+            question_prefix_str = "Problem:"
+            answer_prefix_str = "rationale:"
         else:
-            # NOTE: full dataset like bytedance.
-            train_bad_dataset = full_bad_dataset
+            question_prefix_str = "### Question:"
+            answer_prefix_str = "### Answer:"
 
-        Path(args.samples_save_dir).mkdir(exist_ok=True)
-        bad_sample_path = f"{args.samples_save_dir}/piaf_{args.samples_count if args.sequential > 0 else 'full'}_samples.json"
-        with open(bad_sample_path, "w") as fin:
-            print(f"Writing bad samples to {bad_sample_path}")
-            json.dump(
-                [
-                    train_bad_dataset[i]
-                    for i in range(
-                        args.samples_count
-                        if args.sequential > 0
-                        else len(train_bad_dataset)
-                    )
-                ],
-                fin,
-            )
-
-        train_bad_loaders = create_piaf_dataloader_from_dataset(
-            tokenizer,
-            train_bad_dataset,
-            batch_size=args.batch_size,
-            splits=max(args.sequential, 1),
-        )
-
-        question_prefix_str = "### Question:"
-        answer_prefix_str = "### Réponse:"
-    elif args.unlearning_dataset == "sail/symbolic-instruction-tuning":
-        # filter entries with harmful responses and draw random samples from the remaining dataset.
-        full_bad_dataset = load_dataset(
-            "sail/symbolic-instruction-tuning", split="train"
-        )
-        if args.shuffle_seed:
-            # shuffle the dataset with a given seed for reproducibility
-            full_bad_dataset = full_bad_dataset.shuffle(seed=args.shuffle_seed)
-        if args.sequential > 0:
-            # NOTE: sequential/batch unlearning using sliced dataset.
-            train_bad_dataset = full_bad_dataset.select(range(args.samples_count))
-        else:
-            # NOTE: full dataset like bytedance.
-            train_bad_dataset = full_bad_dataset
-
-        Path(args.samples_save_dir).mkdir(exist_ok=True)
-        bad_sample_path = f"{args.samples_save_dir}/symbolic_{args.samples_count if args.sequential > 0 else 'full'}_samples.json"
-        with open(bad_sample_path, "w") as fin:
-            print(f"Writing symbolic samples to {bad_sample_path}")
-            json.dump(
-                [
-                    train_bad_dataset[i]
-                    for i in range(
-                        args.samples_count
-                        if args.sequential > 0
-                        else len(train_bad_dataset)
-                    )
-                ],
-                fin,
-            )
-
-        train_bad_loaders = create_symbolic_dataloader_from_dataset(
-            tokenizer,
-            train_bad_dataset,
-            batch_size=args.batch_size,
-            splits=max(args.sequential, 1),
-        )
-
-        question_prefix_str = "### Question:"
-        answer_prefix_str = "### Answer:"
-    elif args.unlearning_dataset == "math_qa":
-        assert (
-            False
-        ), "Mathqa temporarirly disabled - requries implementing returning a List of Datasets for sequential unlearning with equal sizes!"
-        train_dataset = load_dataset("math_qa", split="train")
-        train_bad_loader = create_mathqa_dataloader_from_dataset(
-            tokenizer, train_dataset, batch_size=args.batch_size
-        )
-        question_prefix_str = "Problem:"
-        answer_prefix_str = "rationale:"
+    # if args.unlearning_dataset == "PKU-Alignment/PKU-SafeRLHF":
+    #     # filter entries with harmful responses and draw random samples from the remaining dataset.
+    #     full_bad_dataset = load_dataset(
+    #         "PKU-Alignment/PKU-SafeRLHF", split="train"
+    #     ).filter(
+    #         lambda entry: not (
+    #             entry["is_response_0_safe"] or entry["is_response_1_safe"]
+    #         )
+    #     )
+    #     if args.shuffle_seed:
+    #         # shuffle the dataset with a given seed for reproducibility
+    #         full_bad_dataset = full_bad_dataset.shuffle(seed=args.shuffle_seed)
+    #     if args.sequential > 0:
+    #         # NOTE: sequential/batch unlearning using sliced dataset.
+    #         train_bad_dataset = full_bad_dataset.select(range(args.samples_count))
+    #     else:
+    #         # NOTE: full dataset like bytedance.
+    #         train_bad_dataset = full_bad_dataset
+    #
+    #     Path(args.samples_save_dir).mkdir(exist_ok=True)
+    #     bad_sample_path = f"{args.samples_save_dir}/bad_{args.samples_count if args.sequential > 0 else 'full'}_samples.json"
+    #     with open(bad_sample_path, "w") as fin:
+    #         print(f"Writing bad samples to {bad_sample_path}")
+    #         json.dump(
+    #             [
+    #                 train_bad_dataset[i]
+    #                 for i in range(
+    #                     args.samples_count
+    #                     if args.sequential > 0
+    #                     else len(train_bad_dataset)
+    #                 )
+    #             ],
+    #             fin,
+    #         )
+    #
+    #     train_bad_loaders = create_pku_dataloader_from_dataset(
+    #         tokenizer,
+    #         train_bad_dataset,
+    #         batch_size=args.batch_size,
+    #         splits=max(args.sequential, 1),
+    #     )
+    #
+    #     # XXX: for now this is the prefix that is added before each q and answer,
+    #     # it is used by get_rand_ans_loss() to extract just the question part and
+    #     # add a random answer to it.
+    #     # !!!! Has additional sideffect of model unlearning this pattern!!!!
+    #     # ADDITONALLY: create_truthfulqa_dataloader() is also using this pattern!!!
+    #     question_prefix_str = "### Question:"
+    #     answer_prefix_str = "### Answer:"
+    # elif args.unlearning_dataset == "AgentPublic/piaf":
+    #     # filter entries with harmful responses and draw random samples from the remaining dataset.
+    #     full_bad_dataset = load_dataset("AgentPublic/piaf", split="train").filter(
+    #         lambda entry: len(entry["answers"]["text"]) != 0
+    #     )
+    #     if args.shuffle_seed:
+    #         # shuffle the dataset with a given seed for reproducibility
+    #         full_bad_dataset = full_bad_dataset.shuffle(seed=args.shuffle_seed)
+    #     if args.sequential > 0:
+    #         # NOTE: sequential/batch unlearning using sliced dataset.
+    #         train_bad_dataset = full_bad_dataset.select(range(args.samples_count))
+    #     else:
+    #         # NOTE: full dataset like bytedance.
+    #         train_bad_dataset = full_bad_dataset
+    #
+    #     Path(args.samples_save_dir).mkdir(exist_ok=True)
+    #     bad_sample_path = f"{args.samples_save_dir}/piaf_{args.samples_count if args.sequential > 0 else 'full'}_samples.json"
+    #     with open(bad_sample_path, "w") as fin:
+    #         print(f"Writing bad samples to {bad_sample_path}")
+    #         json.dump(
+    #             [
+    #                 train_bad_dataset[i]
+    #                 for i in range(
+    #                     args.samples_count
+    #                     if args.sequential > 0
+    #                     else len(train_bad_dataset)
+    #                 )
+    #             ],
+    #             fin,
+    #         )
+    #
+    #     train_bad_loaders = create_piaf_dataloader_from_dataset(
+    #         tokenizer,
+    #         train_bad_dataset,
+    #         batch_size=args.batch_size,
+    #         splits=max(args.sequential, 1),
+    #     )
+    #
+    #     question_prefix_str = "### Question:"
+    #     answer_prefix_str = "### Réponse:"
+    # elif args.unlearning_dataset == "sail/symbolic-instruction-tuning":
+    #     # filter entries with harmful responses and draw random samples from the remaining dataset.
+    #     full_bad_dataset = load_dataset(
+    #         "sail/symbolic-instruction-tuning", split="train"
+    #     )
+    #     if args.shuffle_seed:
+    #         # shuffle the dataset with a given seed for reproducibility
+    #         full_bad_dataset = full_bad_dataset.shuffle(seed=args.shuffle_seed)
+    #     if args.sequential > 0:
+    #         # NOTE: sequential/batch unlearning using sliced dataset.
+    #         train_bad_dataset = full_bad_dataset.select(range(args.samples_count))
+    #     else:
+    #         # NOTE: full dataset like bytedance.
+    #         train_bad_dataset = full_bad_dataset
+    #
+    #     Path(args.samples_save_dir).mkdir(exist_ok=True)
+    #     bad_sample_path = f"{args.samples_save_dir}/symbolic_{args.samples_count if args.sequential > 0 else 'full'}_samples.json"
+    #     with open(bad_sample_path, "w") as fin:
+    #         print(f"Writing symbolic samples to {bad_sample_path}")
+    #         json.dump(
+    #             [
+    #                 train_bad_dataset[i]
+    #                 for i in range(
+    #                     args.samples_count
+    #                     if args.sequential > 0
+    #                     else len(train_bad_dataset)
+    #                 )
+    #             ],
+    #             fin,
+    #         )
+    #
+    #     train_bad_loaders = create_symbolic_dataloader_from_dataset(
+    #         tokenizer,
+    #         train_bad_dataset,
+    #         batch_size=args.batch_size,
+    #         splits=max(args.sequential, 1),
+    #     )
+    #
+    #     question_prefix_str = "### Question:"
+    #     answer_prefix_str = "### Answer:"
+    # elif args.unlearning_dataset == "math_qa":
+    #     assert False, "Mathqa temporarirly disabled - requries implementing returning a List of Datasets for sequential unlearning with equal sizes!"
+    #     train_dataset = load_dataset("math_qa", split="train")
+    #     train_bad_loader = create_mathqa_dataloader_from_dataset(
+    #         tokenizer, train_dataset, batch_size=args.batch_size
+    #     )
+    #     question_prefix_str = "Problem:"
+    #     answer_prefix_str = "rationale:"
     else:
         print(f"Unlearning dataset not known! dataset: {args.unlearning_dataset}")
         return
 
     # Get normal data.
-    # if args.retaining_dataset == "truthful_qa":
-    #     (
-    #         train_normal_loaders,
-    #         val_normal_loader,
-    #         test_normal_loader,
-    #         train_normal_dataset,
-    #     ) = create_truthfulqa_dataloader(
-    #         tokenizer,
-    #         batch_size=args.batch_size,
-    #         seed=args.shuffle_seed if args.shuffle_seed is not None else args.seed,
-    #         num_samples=args.samples_count if args.sequential > 0 else None,
-    #         splits=max(args.sequential, 1),
-    #     )
-    #     normal_sample_path = f"{args.samples_save_dir}/normal_{args.samples_count if args.sequential > 0 else 'full'}_samples.json"
-    #     with open(normal_sample_path, "w") as fin:
-    #         print(f"Writing normal samples to {normal_sample_path}")
-    #         json.dump(
-    #             [
-    #                 train_normal_dataset[i]
-    #                 for i in range(
-    #                     args.samples_count
-    #                     if args.sequential > 0
-    #                     else len(train_normal_dataset)
-    #                 )
-    #             ],
-    #             fin,
-    #         )
-    #
-    #     # Load normal answer used for random mismatch.
-    #     normal_ans = get_truthfulQA_answers_plaintext()
-    # elif args.retaining_dataset == "rajpurkar/squad":
-    #     train_split = "train"
-    #     if args.samples_count > 0 and args.sequential != -1:
-    #         train_split = f"{train_split}[:{args.samples_count}]"
-    #     train_normal_dataset = load_dataset("rajpurkar/squad", split=train_split)
-    #     train_normal_loaders = create_squad_dataloader_from_dataset(
-    #         tokenizer,
-    #         train_normal_dataset,
-    #         batch_size=args.batch_size,
-    #         splits=max(args.sequential, 1),
-    #     )
-    #     normal_sample_path = f"{args.samples_save_dir}/squad_{args.samples_count if args.sequential > 0 else 'full'}_samples.json"
-    #     with open(normal_sample_path, "w") as fin:
-    #         print(f"Writing normal samples to {normal_sample_path}")
-    #         json.dump(
-    #             [
-    #                 train_normal_dataset[i]
-    #                 for i in range(
-    #                     args.samples_count
-    #                     if args.sequential > 0
-    #                     else len(train_normal_dataset)
-    #                 )
-    #             ],
-    #             fin,
-    #         )
-    #
-    #     # Load normal answer used for random mismatch.
-    #     normal_ans = get_squad_answers(train_normal_dataset)
-    if args.retaining_dataset in [
-        "rajpurkar/squad",
-        "truthfulqa/truthful_qa",
-        "truthful_qa",
-    ]:
+
+    if args.retaining_dataset in SUPPORTED_RETAINING_SET:
         if args.retaining_dataset == "truthful_qa":
             args.retaining_dataset = "truthfulqa/truthful_qa"
         train_normal_dataset, normal_sample_path = make_dataset(

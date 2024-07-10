@@ -10,6 +10,18 @@ from torch.utils.data import DataLoader, random_split
 from transformers import PreTrainedTokenizerBase
 from transformers.data.data_collator import DataCollatorForLanguageModeling
 
+SUPPORTED_RETAINING_SET = [
+    "rajpurkar/squad",
+    "truthfulqa/truthful_qa",
+    "truthful_qa",
+]
+SUPPORTED_UNLEARNING_SET = [
+    "PKU-Alignment/PKU-SafeRLHF",
+    "AgentPublic/piaf",
+    "sail/symbolic-instruction-tuning",
+    "allenai/math_qa",
+]
+
 
 def make_dataset(
     dataset_uri: str,
@@ -32,6 +44,12 @@ def make_dataset(
         full_dataset = cast(
             Dataset, load_dataset(dataset_uri, split=split)
         )  # the cast function does nothing but making the linter happy
+    if dataset_uri in "PKU-Alignment/PKU-SafeRLHF":
+        full_dataset = full_dataset.filter(
+            lambda entry: not (
+                entry["is_response_0_safe"] or entry["is_response_1_safe"]
+            )
+        )
     if seed is not None:
         full_dataset = full_dataset.shuffle(seed)
     if num_samples is not None:
