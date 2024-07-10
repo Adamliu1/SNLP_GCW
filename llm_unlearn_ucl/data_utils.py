@@ -28,9 +28,10 @@ def make_dataset(
         full_dataset = cast(
             Dataset, load_dataset(dataset_uri, "generation", split="validation")
         )
-    full_dataset = cast(
-        Dataset, load_dataset(dataset_uri, split=split)
-    )  # the cast function does nothing but making the linter happy
+    else:
+        full_dataset = cast(
+            Dataset, load_dataset(dataset_uri, split=split)
+        )  # the cast function does nothing but making the linter happy
     if seed is not None:
         full_dataset = full_dataset.shuffle(seed)
     if num_samples is not None:
