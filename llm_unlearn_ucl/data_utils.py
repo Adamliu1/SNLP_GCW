@@ -26,7 +26,7 @@ def make_dataset(
     )
     if dataset_uri == "truthfulqa/truthful_qa":
         full_dataset = cast(
-            Dataset, load_dataset(dataset_uri, "generation", split=split)
+            Dataset, load_dataset(dataset_uri, "generation", split="validation")
         )
     full_dataset = cast(
         Dataset, load_dataset(dataset_uri, split=split)
