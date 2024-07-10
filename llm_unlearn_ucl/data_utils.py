@@ -1,7 +1,7 @@
 import os
 import random
 from json import dump
-from typing import Callable, List, Optional, cast
+from typing import Callable, List, Optional, Tuple, cast
 
 from datasets import Dataset
 from datasets.load import load_dataset
@@ -17,7 +17,7 @@ def make_dataset(
     seed: Optional[int] = None,
     save_dir: Optional[str] = None,
     split: str = "train",
-) -> Dataset:
+) -> Tuple[Dataset, str]:
     """
     dataset_uri: anything that is compatible with datasets.load_dataset
     """
@@ -40,6 +40,7 @@ def make_dataset(
         full_dataset = full_dataset.select(
             randint(0, len(full_dataset), size=num_samples, dtype=int)
         )
+    save_path = ""
     if save_dir is not None:
         os.makedirs(save_dir, exist_ok=True)
         save_path = os.path.join(
@@ -48,7 +49,7 @@ def make_dataset(
         with open(save_path, "w") as fin:
             print(f"Writing dataset samples to {save_dir}")
             dump([full_dataset[i] for i in range(len(full_dataset))], fin)
-    return full_dataset
+    return full_dataset, save_path
 
 
 class DataloaderConstructor:

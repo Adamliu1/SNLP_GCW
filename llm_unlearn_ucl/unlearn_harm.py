@@ -477,7 +477,7 @@ def main(args) -> None:
     ]:
         if args.retaining_dataset == "truthful_qa":
             args.retaining_dataset = "truthfulqa/truthful_qa"
-        train_normal_dataset = make_dataset(
+        train_normal_dataset, normal_sample_path = make_dataset(
             args.retaining_dataset,
             args.samples_count if args.sequential != -1 else None,
             args.shuffle_seed,
@@ -498,9 +498,10 @@ def main(args) -> None:
     data_sample_artifacts = wandb.Artifact(
         name="training_batch_raw_data", type="batch_data"
     )
-    data_sample_artifacts.add_file(
-        normal_sample_path, name=f"normal_{args.samples_count}_samples.json"
-    )
+    if normal_sample_path != "":
+        data_sample_artifacts.add_file(
+            normal_sample_path, name=f"normal_{args.samples_count}_samples.json"
+        )
     data_sample_artifacts.add_file(
         bad_sample_path, name=f"bad_{args.samples_count}_samples.json"
     )
