@@ -31,7 +31,7 @@ import torch
 import wandb
 from accelerate import Accelerator
 from datasets import load_dataset
-from data_utils import DataloaderConstructor, make_dataset
+from data_utils import DataloaderConstructor, get_normal_answer, make_dataset
 from parse_args import parse_args
 from peft import AdaLoraConfig, TaskType, get_peft_model
 from torch.optim import AdamW
@@ -490,7 +490,9 @@ def main(args) -> None:
             batch_size=args.batch_size,
             tokenizer=tokenizer,
             num_splits=max(args.sequential, 1),
-        )
+        ).get_loaders()
+        normal_ans = get_normal_answer(train_normal_dataset, args.retaining_dataset)
+
     else:
         print(f"Retaining dataset not known! dataset: {args.retaining_dataset}")
         return

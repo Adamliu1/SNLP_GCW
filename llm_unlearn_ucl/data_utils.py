@@ -294,3 +294,19 @@ def get_mappers(
         return __truthfulqa_data_mapper
     else:
         return None
+
+
+def get_normal_answer(dataset: Dataset, dataset_uri: str) -> List:
+    if dataset_uri == "truthfulqa/truthful_qa":
+        result = []
+        for i in dataset:
+            result.extend(i["correct_answers"])
+            result.extend(i["incorrect_answers"])
+        return result
+    elif dataset_uri == "rajpurkar/squad":
+        result = []
+        for i in dataset:
+            result.extend(i["answers"]["text"])
+        return result
+    else:
+        raise ValueError(f"The dataset {dataset_uri} is not supported.")
