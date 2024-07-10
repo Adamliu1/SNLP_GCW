@@ -479,7 +479,7 @@ def main(args) -> None:
             args.retaining_dataset = "truthfulqa/truthful_qa"
         train_normal_dataset = make_dataset(
             args.retaining_dataset,
-            args.num_samples if args.sequential != -1 else None,
+            args.samples_count if args.sequential != -1 else None,
             args.shuffle_seed,
             save_dir=args.samples_save_dir,
         )
