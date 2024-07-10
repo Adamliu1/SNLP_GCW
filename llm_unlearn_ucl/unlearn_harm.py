@@ -31,6 +31,7 @@ import torch
 import wandb
 from accelerate import Accelerator
 from datasets import load_dataset
+from data_utils import DataloaderConstructor, make_dataset
 from parse_args import parse_args
 from peft import AdaLoraConfig, TaskType, get_peft_model
 from torch.optim import AdamW
@@ -41,13 +42,9 @@ from utils import (
     create_mathqa_dataloader_from_dataset,
     create_piaf_dataloader_from_dataset,
     create_pku_dataloader_from_dataset,
-    create_squad_dataloader_from_dataset,
     create_symbolic_dataloader_from_dataset,
-    create_truthfulqa_dataloader,
     get_answer_loss,
     get_rand_ans_loss,
-    get_squad_answers,
-    get_truthfulQA_answers_plaintext,
 )
 
 
@@ -415,64 +412,85 @@ def main(args) -> None:
         return
 
     # Get normal data.
-    if args.retaining_dataset == "truthful_qa":
-        (
-            train_normal_loaders,
-            val_normal_loader,
-            test_normal_loader,
-            train_normal_dataset,
-        ) = create_truthfulqa_dataloader(
-            tokenizer,
-            batch_size=args.batch_size,
-            seed=args.shuffle_seed if args.shuffle_seed is not None else args.seed,
-            num_samples=args.samples_count if args.sequential > 0 else None,
-            splits=max(args.sequential, 1),
+    # if args.retaining_dataset == "truthful_qa":
+    #     (
+    #         train_normal_loaders,
+    #         val_normal_loader,
+    #         test_normal_loader,
+    #         train_normal_dataset,
+    #     ) = create_truthfulqa_dataloader(
+    #         tokenizer,
+    #         batch_size=args.batch_size,
+    #         seed=args.shuffle_seed if args.shuffle_seed is not None else args.seed,
+    #         num_samples=args.samples_count if args.sequential > 0 else None,
+    #         splits=max(args.sequential, 1),
+    #     )
+    #     normal_sample_path = f"{args.samples_save_dir}/normal_{args.samples_count if args.sequential > 0 else 'full'}_samples.json"
+    #     with open(normal_sample_path, "w") as fin:
+    #         print(f"Writing normal samples to {normal_sample_path}")
+    #         json.dump(
+    #             [
+    #                 train_normal_dataset[i]
+    #                 for i in range(
+    #                     args.samples_count
+    #                     if args.sequential > 0
+    #                     else len(train_normal_dataset)
+    #                 )
+    #             ],
+    #             fin,
+    #         )
+    #
+    #     # Load normal answer used for random mismatch.
+    #     normal_ans = get_truthfulQA_answers_plaintext()
+    # elif args.retaining_dataset == "rajpurkar/squad":
+    #     train_split = "train"
+    #     if args.samples_count > 0 and args.sequential != -1:
+    #         train_split = f"{train_split}[:{args.samples_count}]"
+    #     train_normal_dataset = load_dataset("rajpurkar/squad", split=train_split)
+    #     train_normal_loaders = create_squad_dataloader_from_dataset(
+    #         tokenizer,
+    #         train_normal_dataset,
+    #         batch_size=args.batch_size,
+    #         splits=max(args.sequential, 1),
+    #     )
+    #     normal_sample_path = f"{args.samples_save_dir}/squad_{args.samples_count if args.sequential > 0 else 'full'}_samples.json"
+    #     with open(normal_sample_path, "w") as fin:
+    #         print(f"Writing normal samples to {normal_sample_path}")
+    #         json.dump(
+    #             [
+    #                 train_normal_dataset[i]
+    #                 for i in range(
+    #                     args.samples_count
+    #                     if args.sequential > 0
+    #                     else len(train_normal_dataset)
+    #                 )
+    #             ],
+    #             fin,
+    #         )
+    #
+    #     # Load normal answer used for random mismatch.
+    #     normal_ans = get_squad_answers(train_normal_dataset)
+    if args.retaining_dataset in [
+        "rajpurkar/squad",
+        "truthfulqa/truthful_qa",
+        "truthful_qa",
+    ]:
+        if args.retaining_dataset == "truthful_qa":
+            args.retaining_dataset = "truthfulqa/truthful_qa"
+        train_normal_dataset = make_dataset(
+            args.retaining_dataset,
+            args.num_samples if args.sequential != -1 else None,
+            args.shuffle_seed,
+            save_dir=args.samples_save_dir,
         )
-        normal_sample_path = f"{args.samples_save_dir}/normal_{args.samples_count if args.sequential > 0 else 'full'}_samples.json"
-        with open(normal_sample_path, "w") as fin:
-            print(f"Writing normal samples to {normal_sample_path}")
-            json.dump(
-                [
-                    train_normal_dataset[i]
-                    for i in range(
-                        args.samples_count
-                        if args.sequential > 0
-                        else len(train_normal_dataset)
-                    )
-                ],
-                fin,
-            )
 
-        # Load normal answer used for random mismatch.
-        normal_ans = get_truthfulQA_answers_plaintext()
-    elif args.retaining_dataset == "rajpurkar/squad":
-        train_split = "train"
-        if args.samples_count > 0 and args.sequential != -1:
-            train_split = f"{train_split}[:{args.samples_count}]"
-        train_normal_dataset = load_dataset("rajpurkar/squad", split=train_split)
-        train_normal_loaders = create_squad_dataloader_from_dataset(
-            tokenizer,
+        train_normal_loaders = DataloaderConstructor(
             train_normal_dataset,
+            args.retaining_dataset,
             batch_size=args.batch_size,
-            splits=max(args.sequential, 1),
+            tokenizer=tokenizer,
+            num_splits=max(args.sequential, 1),
         )
-        normal_sample_path = f"{args.samples_save_dir}/squad_{args.samples_count if args.sequential > 0 else 'full'}_samples.json"
-        with open(normal_sample_path, "w") as fin:
-            print(f"Writing normal samples to {normal_sample_path}")
-            json.dump(
-                [
-                    train_normal_dataset[i]
-                    for i in range(
-                        args.samples_count
-                        if args.sequential > 0
-                        else len(train_normal_dataset)
-                    )
-                ],
-                fin,
-            )
-
-        # Load normal answer used for random mismatch.
-        normal_ans = get_squad_answers(train_normal_dataset)
     else:
         print(f"Retaining dataset not known! dataset: {args.retaining_dataset}")
         return
