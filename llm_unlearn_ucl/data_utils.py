@@ -45,7 +45,7 @@ def make_dataset(
         save_path = os.path.join(
             save_dir, f"{dataset_uri.split('/')[-1]}_{len(full_dataset)}_samples.json"
         )
-        with open(save_dir, "w") as fin:
+        with open(save_path, "w") as fin:
             print(f"Writing dataset samples to {save_dir}")
             dump([full_dataset[i] for i in range(len(full_dataset))], fin)
     return full_dataset
