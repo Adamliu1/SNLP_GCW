@@ -24,7 +24,6 @@ def make_dataset(
     print(
         f"Loading {num_samples if num_samples is not None else 'all'} samples from {dataset_uri}..."
     )
-
     full_dataset = cast(
         Dataset, load_dataset(dataset_uri, split=split)
     )  # the cast function does nothing but making the linter happy
@@ -264,7 +263,7 @@ def get_mappers(
             return results
 
         return __squad_data_mapper
-    elif dataset_name == "truthfulqa/truthful_qa":
+    elif dataset_name == "truthfulqa/truthful_qa" or dataset_name == "truthful_qa":
 
         def __truthfulqa_data_mapper(samples):
             results = {
