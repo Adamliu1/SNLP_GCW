@@ -24,6 +24,10 @@ def make_dataset(
     print(
         f"Loading {num_samples if num_samples is not None else 'all'} samples from {dataset_uri}..."
     )
+    if dataset_uri == "truthfulqa/truthful_qa":
+        full_dataset = cast(
+            Dataset, load_dataset(dataset_uri, "generation", split=split)
+        )
     full_dataset = cast(
         Dataset, load_dataset(dataset_uri, split=split)
     )  # the cast function does nothing but making the linter happy
