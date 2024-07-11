@@ -323,12 +323,12 @@ def main(args) -> None:
     data_sample_artifacts = wandb.Artifact(
         name="training_batch_raw_data", type="batch_data"
     )
-    if normal_sample_path != "":
+    if os.path.isfile(normal_sample_path):
         data_sample_artifacts.add_file(
             normal_sample_path,
             name=f"normal_{args.samples_count}_samples.json",
         )
-    if bad_sample_path != "":
+    if os.path.isfile(bad_sample_path):
         data_sample_artifacts.add_file(
             bad_sample_path, name=f"bad_{args.samples_count}_samples.json"
         )

@@ -37,6 +37,7 @@ def make_dataset(
         f"Loading {num_samples if num_samples is not None else 'all'} samples from {dataset_uri}..."
     )
     if dataset_uri == "truthfulqa/truthful_qa":
+        # NOTE: truthfulQA is an eval-only dataset and has a different format.
         full_dataset = cast(
             Dataset, load_dataset(dataset_uri, "generation", split="validation")
         )
@@ -45,6 +46,8 @@ def make_dataset(
             Dataset, load_dataset(dataset_uri, split=split)
         )  # the cast function does nothing but making the linter happy
     if dataset_uri in "PKU-Alignment/PKU-SafeRLHF":
+        # NOTE: only keep samples that contain exactly one unsafe response
+        # so that it doesn't change the sample count after mapping
         full_dataset = full_dataset.filter(
             lambda entry: not (
                 entry["is_response_0_safe"] or entry["is_response_1_safe"]
