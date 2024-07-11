@@ -241,7 +241,9 @@ def main(args) -> None:
         )
     else:
         model = AutoModelForCausalLM.from_pretrained(
-            args.model_name, cache_dir=args.cache_dir, torch_dtype=torch.bfloat16
+            args.model_name,
+            cache_dir=args.cache_dir,
+            torch_dtype=torch.bfloat16,
         )
 
     print("Model loaded.")
@@ -289,143 +291,6 @@ def main(args) -> None:
             question_prefix_str = "### Question:"
             answer_prefix_str = "### Answer:"
 
-    # if args.unlearning_dataset == "PKU-Alignment/PKU-SafeRLHF":
-    #     # filter entries with harmful responses and draw random samples from the remaining dataset.
-    #     full_bad_dataset = load_dataset(
-    #         "PKU-Alignment/PKU-SafeRLHF", split="train"
-    #     ).filter(
-    #         lambda entry: not (
-    #             entry["is_response_0_safe"] or entry["is_response_1_safe"]
-    #         )
-    #     )
-    #     if args.shuffle_seed:
-    #         # shuffle the dataset with a given seed for reproducibility
-    #         full_bad_dataset = full_bad_dataset.shuffle(seed=args.shuffle_seed)
-    #     if args.sequential > 0:
-    #         # NOTE: sequential/batch unlearning using sliced dataset.
-    #         train_bad_dataset = full_bad_dataset.select(range(args.samples_count))
-    #     else:
-    #         # NOTE: full dataset like bytedance.
-    #         train_bad_dataset = full_bad_dataset
-    #
-    #     Path(args.samples_save_dir).mkdir(exist_ok=True)
-    #     bad_sample_path = f"{args.samples_save_dir}/bad_{args.samples_count if args.sequential > 0 else 'full'}_samples.json"
-    #     with open(bad_sample_path, "w") as fin:
-    #         print(f"Writing bad samples to {bad_sample_path}")
-    #         json.dump(
-    #             [
-    #                 train_bad_dataset[i]
-    #                 for i in range(
-    #                     args.samples_count
-    #                     if args.sequential > 0
-    #                     else len(train_bad_dataset)
-    #                 )
-    #             ],
-    #             fin,
-    #         )
-    #
-    #     train_bad_loaders = create_pku_dataloader_from_dataset(
-    #         tokenizer,
-    #         train_bad_dataset,
-    #         batch_size=args.batch_size,
-    #         splits=max(args.sequential, 1),
-    #     )
-    #
-    #     # XXX: for now this is the prefix that is added before each q and answer,
-    #     # it is used by get_rand_ans_loss() to extract just the question part and
-    #     # add a random answer to it.
-    #     # !!!! Has additional sideffect of model unlearning this pattern!!!!
-    #     # ADDITONALLY: create_truthfulqa_dataloader() is also using this pattern!!!
-    #     question_prefix_str = "### Question:"
-    #     answer_prefix_str = "### Answer:"
-    # elif args.unlearning_dataset == "AgentPublic/piaf":
-    #     # filter entries with harmful responses and draw random samples from the remaining dataset.
-    #     full_bad_dataset = load_dataset("AgentPublic/piaf", split="train").filter(
-    #         lambda entry: len(entry["answers"]["text"]) != 0
-    #     )
-    #     if args.shuffle_seed:
-    #         # shuffle the dataset with a given seed for reproducibility
-    #         full_bad_dataset = full_bad_dataset.shuffle(seed=args.shuffle_seed)
-    #     if args.sequential > 0:
-    #         # NOTE: sequential/batch unlearning using sliced dataset.
-    #         train_bad_dataset = full_bad_dataset.select(range(args.samples_count))
-    #     else:
-    #         # NOTE: full dataset like bytedance.
-    #         train_bad_dataset = full_bad_dataset
-    #
-    #     Path(args.samples_save_dir).mkdir(exist_ok=True)
-    #     bad_sample_path = f"{args.samples_save_dir}/piaf_{args.samples_count if args.sequential > 0 else 'full'}_samples.json"
-    #     with open(bad_sample_path, "w") as fin:
-    #         print(f"Writing bad samples to {bad_sample_path}")
-    #         json.dump(
-    #             [
-    #                 train_bad_dataset[i]
-    #                 for i in range(
-    #                     args.samples_count
-    #                     if args.sequential > 0
-    #                     else len(train_bad_dataset)
-    #                 )
-    #             ],
-    #             fin,
-    #         )
-    #
-    #     train_bad_loaders = create_piaf_dataloader_from_dataset(
-    #         tokenizer,
-    #         train_bad_dataset,
-    #         batch_size=args.batch_size,
-    #         splits=max(args.sequential, 1),
-    #     )
-    #
-    #     question_prefix_str = "### Question:"
-    #     answer_prefix_str = "### Réponse:"
-    # elif args.unlearning_dataset == "sail/symbolic-instruction-tuning":
-    #     # filter entries with harmful responses and draw random samples from the remaining dataset.
-    #     full_bad_dataset = load_dataset(
-    #         "sail/symbolic-instruction-tuning", split="train"
-    #     )
-    #     if args.shuffle_seed:
-    #         # shuffle the dataset with a given seed for reproducibility
-    #         full_bad_dataset = full_bad_dataset.shuffle(seed=args.shuffle_seed)
-    #     if args.sequential > 0:
-    #         # NOTE: sequential/batch unlearning using sliced dataset.
-    #         train_bad_dataset = full_bad_dataset.select(range(args.samples_count))
-    #     else:
-    #         # NOTE: full dataset like bytedance.
-    #         train_bad_dataset = full_bad_dataset
-    #
-    #     Path(args.samples_save_dir).mkdir(exist_ok=True)
-    #     bad_sample_path = f"{args.samples_save_dir}/symbolic_{args.samples_count if args.sequential > 0 else 'full'}_samples.json"
-    #     with open(bad_sample_path, "w") as fin:
-    #         print(f"Writing symbolic samples to {bad_sample_path}")
-    #         json.dump(
-    #             [
-    #                 train_bad_dataset[i]
-    #                 for i in range(
-    #                     args.samples_count
-    #                     if args.sequential > 0
-    #                     else len(train_bad_dataset)
-    #                 )
-    #             ],
-    #             fin,
-    #         )
-    #
-    #     train_bad_loaders = create_symbolic_dataloader_from_dataset(
-    #         tokenizer,
-    #         train_bad_dataset,
-    #         batch_size=args.batch_size,
-    #         splits=max(args.sequential, 1),
-    #     )
-    #
-    #     question_prefix_str = "### Question:"
-    #     answer_prefix_str = "### Answer:"
-    # elif args.unlearning_dataset == "math_qa":
-    #     assert False, "Mathqa temporarirly disabled - requries implementing returning a List of Datasets for sequential unlearning with equal sizes!"
-    #     train_dataset = load_dataset("math_qa", split="train")
-    #     train_bad_loader = create_mathqa_dataloader_from_dataset(
-    #         tokenizer, train_dataset, batch_size=args.batch_size
-    #     )
-    #     question_prefix_str = "Problem:"
-    #     answer_prefix_str = "rationale:"
     else:
         print(f"Unlearning dataset not known! dataset: {args.unlearning_dataset}")
         return
@@ -460,7 +325,8 @@ def main(args) -> None:
     )
     if normal_sample_path != "":
         data_sample_artifacts.add_file(
-            normal_sample_path, name=f"normal_{args.samples_count}_samples.json"
+            normal_sample_path,
+            name=f"normal_{args.samples_count}_samples.json",
         )
     data_sample_artifacts.add_file(
         bad_sample_path, name=f"bad_{args.samples_count}_samples.json"
@@ -513,7 +379,9 @@ def main(args) -> None:
         )
     else:
         pretrained_model = AutoModelForCausalLM.from_pretrained(
-            args.model_name, cache_dir=args.cache_dir, torch_dtype=torch.bfloat16
+            args.model_name,
+            cache_dir=args.cache_dir,
+            torch_dtype=torch.bfloat16,
         )
         pretrained_model.to(device)
     print("Model loaded.")
@@ -686,7 +554,9 @@ if __name__ == "__main__":
     # Initialize logging
     if bool(args.wandb_log):
         wandb.init(
-            project=args.wandb_project_name, name=args.wandb_run_name, config=vars(args)
+            project=args.wandb_project_name,
+            name=args.wandb_run_name,
+            config=vars(args),
         )
 
     logging.basicConfig(
