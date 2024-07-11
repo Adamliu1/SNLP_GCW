@@ -328,9 +328,10 @@ def main(args) -> None:
             normal_sample_path,
             name=f"normal_{args.samples_count}_samples.json",
         )
-    data_sample_artifacts.add_file(
-        bad_sample_path, name=f"bad_{args.samples_count}_samples.json"
-    )
+    if bad_sample_path != "":
+        data_sample_artifacts.add_file(
+            bad_sample_path, name=f"bad_{args.samples_count}_samples.json"
+        )
     wandb.log_artifact(data_sample_artifacts)
 
     optimizer = AdamW(model.parameters(), lr=args.lr)
