@@ -17,6 +17,7 @@ The dataset used in is `PKU-SafeRLHF` and TruthfulQA. Model supports OPT-1.3B.
 """
 
 import json
+import logging
 from accelerate.logging import get_logger
 import os
 import random
@@ -252,8 +253,14 @@ def main(args) -> None:
     device = accelerator.device
 
     # setup logging
-    # TODO: verify if this is ok, maybe logging format is slightly different from the one before
-    logger = get_logger(args.log_file, log_level="INFO")
+    logging.basicConfig(
+        filename=args.log_file,
+        filemode="w+",
+        format="%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s",
+        datefmt="%Y-%m-%d-%H-%M",
+        level=logging.INFO,
+    )
+    logger = get_logger(__name__)
     if accelerator.is_main_process:
         for arg in vars(args):
             logger.info(f"{arg}: {getattr(args, arg)}")
