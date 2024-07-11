@@ -29,7 +29,13 @@ import numpy as np
 import torch
 import wandb
 from accelerate import Accelerator
-from data_utils import DataloaderConstructor, get_normal_answer, make_dataset
+from data_utils import (
+    SUPPORTED_RETAINING_SET,
+    SUPPORTED_UNLEARNING_SET,
+    DataloaderConstructor,
+    get_normal_answer,
+    make_dataset,
+)
 from parse_args import parse_args
 from peft import AdaLoraConfig, TaskType, get_peft_model
 from torch.optim import AdamW
@@ -40,8 +46,6 @@ from utils import (
     get_answer_loss,
     get_rand_ans_loss,
 )
-
-from data_utils import SUPPORTED_RETAINING_SET, SUPPORTED_UNLEARNING_SET
 
 
 def set_seed(seed_num: int) -> None:
