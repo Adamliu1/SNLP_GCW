@@ -1,7 +1,6 @@
 # Copyright (C) 2024 UCL CS SNLP Naturalnego 语言 Töötlus group
 #    - Szymon Duchniewicz
 #    - Yadong Liu
-#    - Carmen Meinson
 #    - Andrzej Szablewski
 #    - Zhe Yu
 #
@@ -11,9 +10,19 @@
 # https://opensource.org/licenses/MIT
 
 """
-A script to show an example of how to unlearn harmfulness.
+A script to show an example of how to unlearn a specifc task.
 
-The dataset used in is `PKU-SafeRLHF` and TruthfulQA. Model supports OPT-1.3B.
+Supported tasks and corresponding unlearning datasets:
+- Harmfullness: PKU-SafeRLHF
+- French language: AgentPublic/piaf
+- Logical reasoning: sail/symbolic-instruction-tuning
+- (WIP) Mathematical question answering: MathQA
+
+Datasets supported to act as retaining (normalising) datasets:
+- squad
+- truthfulQA
+
+Tested on models: OPT1.3, Llama3 8B, Gemma 2B
 """
 
 import json
@@ -24,7 +33,6 @@ import random
 import time
 from collections import deque
 from pathlib import Path
-from typing import List
 
 # Added
 import numpy as np
@@ -274,21 +282,15 @@ def main(args) -> None:
         model = AutoModelForCausalLM.from_pretrained(
             args.model_name,
             cache_dir=args.cache_dir,
-            load_in_8bit=True,
+            #load_in_8bit=True,
             torch_dtype=torch.float32,
+            trust_remote_code=True,
         )
     else:
-        # TODO: bf16 as option
-        # model = AutoModelForCausalLM.from_pretrained(
-        #     args.model_name,
-        #     cache_dir=args.cache_dir,
-        #     torch_dtype=torch.bfloat16,
-        #     trust_remote_code=True,
-        # )
         model = AutoModelForCausalLM.from_pretrained(
             args.model_name,
             cache_dir=args.cache_dir,
-            torch_dtype=torch.float32,
+            torch_dtype=torch.bfloat16,
             trust_remote_code=True,
         )
 
@@ -587,22 +589,15 @@ def main(args) -> None:
         pretrained_model = AutoModelForCausalLM.from_pretrained(
             args.model_name,
             cache_dir=args.cache_dir,
-            load_in_8bit=True,
+            #load_in_8bit=True,
             torch_dtype=torch.float32,
             trust_remote_code=True,
         )
     else:
-        # TODO: bf16 as option
-        # pretrained_model = AutoModelForCausalLM.from_pretrained(
-        #     args.model_name,
-        #     cache_dir=args.cache_dir,
-        #     torch_dtype=torch.bfloat16,
-        #     trust_remote_code=True,
-        # )
         pretrained_model = AutoModelForCausalLM.from_pretrained(
             args.model_name,
             cache_dir=args.cache_dir,
-            torch_dtype=torch.float32,
+            torch_dtype=torch.bfloat16,
             trust_remote_code=True,
         )
         pretrained_model.to(device)
