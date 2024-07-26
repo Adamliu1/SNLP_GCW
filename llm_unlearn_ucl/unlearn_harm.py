@@ -1,7 +1,6 @@
 # Copyright (C) 2024 UCL CS SNLP Naturalnego 语言 Töötlus group
 #    - Szymon Duchniewicz
 #    - Yadong Liu
-#    - Carmen Meinson
 #    - Andrzej Szablewski
 #    - Zhe Yu
 #
@@ -11,9 +10,19 @@
 # https://opensource.org/licenses/MIT
 
 """
-A script to show an example of how to unlearn harmfulness.
+A script to show an example of how to unlearn a specifc task.
 
-The dataset used in is `PKU-SafeRLHF` and TruthfulQA. Model supports OPT-1.3B.
+Supported tasks and corresponding unlearning datasets:
+- Harmfullness: PKU-SafeRLHF
+- French language: AgentPublic/piaf
+- Logical reasoning: sail/symbolic-instruction-tuning
+- (WIP) Mathematical question answering: MathQA
+
+Datasets supported to act as retaining (normalising) datasets:
+- squad
+- truthfulQA
+
+Tested on models: OPT1.3, Llama3 8B, Gemma 2B
 """
 
 import logging
