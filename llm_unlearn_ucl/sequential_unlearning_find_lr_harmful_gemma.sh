@@ -11,7 +11,8 @@ SEED=2137
 MAX_UNLEARN_STEPS=10240
 # TODO: ENSURE UNLEARNED_MODELS_PATH IS CORRECT WHEN SCHEDULING
 #UNLEARNED_MODELS_PATH="/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/snlp-unlearned-models"
-UNLEARNED_MODELS_PATH="/SAN/intelsys/llm/sduchnie/snlp/SNLP_GCW/snlp-unlearned-models/lr_find"
+WANDB_PROJ_NAME="snlp-SEQUENTIAL_LR_FINDING_1024_64_bs2"
+UNLEARNED_MODELS_PATH="/SAN/intelsys/llm/sduchnie/snlp/SNLP_GCW/snlp-unlearned-models/lr_find_1024_bs2"
 mkdir -p $UNLEARNED_MODELS_PATH/models
 mkdir -p $UNLEARNED_MODELS_PATH/logs
 
@@ -31,7 +32,8 @@ RETAIN_DATASET_PATH="rajpurkar/squad"
 ##### Sequential unlearning + Batch #####
 # Sizes: 128, 512, 1024
 # Splits: 4, 16, 64
-sample_count=128
+sample_count=1024
+split_count=64
 #lrs=(2 5 7 9)
 lrs_pows=("e-6" "e-5" "e-4")
 date
@@ -40,7 +42,8 @@ for lr in "${lrs_pows[@]}"; do
     PROCARR=()
     # Sequential Splits 4; CUDA:0
     LR_MAIN=2
-    RUN_NAME="seq-4-$sample_count-$MODEL_NAME-$UNLEARN_DATASET_NAME-$RETAIN_DATASET_NAME-lr-""$LR_MAIN""$lr"
+    RUN_NAME="seq-$split_count-$sample_count-$MODEL_NAME-$UNLEARN_DATASET_NAME-$RETAIN_DATASET_NAME-lr-""$LR_MAIN""$lr"
+    WANDB_RUN_NAME="$LR_MAIN""$lr"
     GPU_NUM=0
     echo "Starting $RUN_NAME on GPU $GPU_NUM.."
     CUDA_VISIBLE_DEVICES=$GPU_NUM nohup python3 unlearn_harm.py \
@@ -53,17 +56,19 @@ for lr in "${lrs_pows[@]}"; do
                         --unlearning_dataset $UNLEARN_DATASET_PATH \
                         --max_bad_loss 10000 \
                         --samples_count $sample_count \
-                        --sequential 4 \
+                        --sequential $split_count \
                         --num_epochs 20 \
                         --batch_size $BATCH_SIZE \
                         --save_every $SAVE_EVERY_STEPS \
                         --lr "$LR_MAIN""$lr" \
-                        --no_scheduler &> $UNLEARNED_MODELS_PATH/logs/stdout_$RUN_NAME.log &
+                        --wandb_project_name $WANDB_PROJ_NAME \
+                        --wandb_run_name $WANDB_RUN_NAME &> $UNLEARNED_MODELS_PATH/logs/stdout_$RUN_NAME.log &
     PROCARR+=($!)
 
     # Sequential Splits 16; CUDA:1
     LR_MAIN=5
-    RUN_NAME="seq-4-$sample_count-$MODEL_NAME-$UNLEARN_DATASET_NAME-$RETAIN_DATASET_NAME-lr-""$LR_MAIN""$lr"
+    RUN_NAME="seq-$split_count-$sample_count-$MODEL_NAME-$UNLEARN_DATASET_NAME-$RETAIN_DATASET_NAME-lr-""$LR_MAIN""$lr"
+    WANDB_RUN_NAME="$LR_MAIN""$lr"
     GPU_NUM=1
     echo "Starting $RUN_NAME on GPU $GPU_NUM.."
     CUDA_VISIBLE_DEVICES=$GPU_NUM nohup python3 unlearn_harm.py \
@@ -76,19 +81,21 @@ for lr in "${lrs_pows[@]}"; do
                         --unlearning_dataset $UNLEARN_DATASET_PATH \
                         --max_bad_loss 10000 \
                         --samples_count $sample_count \
-                        --sequential 4 \
+                        --sequential $split_count \
                         --num_epochs 20 \
                         --batch_size $BATCH_SIZE \
                         --save_every $SAVE_EVERY_STEPS \
                         --lr "$LR_MAIN""$lr" \
-                        --no_scheduler &> $UNLEARNED_MODELS_PATH/logs/stdout_$RUN_NAME.log &
+                        --wandb_project_name $WANDB_PROJ_NAME \
+                        --wandb_run_name $WANDB_RUN_NAME &> $UNLEARNED_MODELS_PATH/logs/stdout_$RUN_NAME.log &
 
     PROCARR+=($!)
 
     # Sequential Splits 64; CUDA:2
     LR_MAIN=7
-    RUN_NAME="seq-4-$sample_count-$MODEL_NAME-$UNLEARN_DATASET_NAME-$RETAIN_DATASET_NAME-lr-""$LR_MAIN""$lr"
+    RUN_NAME="seq-$split_count-$sample_count-$MODEL_NAME-$UNLEARN_DATASET_NAME-$RETAIN_DATASET_NAME-lr-""$LR_MAIN""$lr"
     GPU_NUM=2
+    WANDB_RUN_NAME="$LR_MAIN""$lr"
     echo "Starting $RUN_NAME on GPU $GPU_NUM.."
     CUDA_VISIBLE_DEVICES=$GPU_NUM nohup python3 unlearn_harm.py \
                         --model_name $MODEL_PATH \
@@ -100,18 +107,20 @@ for lr in "${lrs_pows[@]}"; do
                         --unlearning_dataset $UNLEARN_DATASET_PATH \
                         --max_bad_loss 10000 \
                         --samples_count $sample_count \
-                        --sequential 4 \
+                        --sequential $split_count \
                         --num_epochs 20 \
                         --batch_size $BATCH_SIZE \
                         --save_every $SAVE_EVERY_STEPS \
                         --lr "$LR_MAIN""$lr" \
-                        --no_scheduler &> $UNLEARNED_MODELS_PATH/logs/stdout_$RUN_NAME.log &
+                        --wandb_project_name $WANDB_PROJ_NAME \
+                        --wandb_run_name $WANDB_RUN_NAME &> $UNLEARNED_MODELS_PATH/logs/stdout_$RUN_NAME.log &
     PROCARR+=($!)
            
     # Batch; CUDA:3
     LR_MAIN=9
-    RUN_NAME="seq-4-$sample_count-$MODEL_NAME-$UNLEARN_DATASET_NAME-$RETAIN_DATASET_NAME-lr-""$LR_MAIN""$lr"
+    RUN_NAME="seq-$split_count-$sample_count-$MODEL_NAME-$UNLEARN_DATASET_NAME-$RETAIN_DATASET_NAME-lr-""$LR_MAIN""$lr"
     GPU_NUM=3
+    WANDB_RUN_NAME="$LR_MAIN""$lr"
     echo "Starting $RUN_NAME on GPU $GPU_NUM, saving every $SAVE_EVERY_STEPS_BATCH epoch."
     CUDA_VISIBLE_DEVICES=$GPU_NUM nohup python3 unlearn_harm.py \
                         --model_name $MODEL_PATH \
@@ -123,19 +132,25 @@ for lr in "${lrs_pows[@]}"; do
                         --unlearning_dataset $UNLEARN_DATASET_PATH \
                         --max_bad_loss 10000 \
                         --samples_count $sample_count \
-                        --sequential 4 \
+                        --sequential $split_count \
                         --num_epochs 20 \
                         --batch_size $BATCH_SIZE \
                         --save_every $SAVE_EVERY_STEPS \
                         --lr "$LR_MAIN""$lr" \
-                        --no_scheduler &> $UNLEARNED_MODELS_PATH/logs/stdout_$RUN_NAME.log &
+                        --wandb_project_name $WANDB_PROJ_NAME \
+                        --wandb_run_name $WANDB_RUN_NAME &> $UNLEARNED_MODELS_PATH/logs/stdout_$RUN_NAME.log &
     PROCARR+=($!)
     
     echo "Waiting for processes: ${PROCARR[@]}..."
     wait ${PROCARR[@]}
     echo "Done waiting."
-
+    echo "Syncing wandb runs.."
+    for file in $UNLEARNED_MODELS_PATH/logs/stdout_*; do eval $(cat $file | grep "wandb sync .*" | sed 's/^.\{7\}//'); done;
+    echo "Done syncing. Check wandb ;) "
 done
 
-echo "Done waiting."
+echo "Syncing wandb runs.."
+for file in $UNLEARNED_MODELS_PATH/logs/stdout_*; do eval $(cat $file | grep "wandb sync .*" | sed 's/^.\{7\}//'); done;
+echo "Done syncing. Check wandb ;) "
+
 date

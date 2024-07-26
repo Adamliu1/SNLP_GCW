@@ -247,10 +247,6 @@ def main(args) -> None:
     assert (
         args.samples_count // args.sequential
     ) % args.batch_size == 0, "samples in each 'sequence' (--samples_count / --sequential) should be a multiple of batch_size."
-    # TODO: bf16 as option
-    # accelerator = Accelerator(
-    #     mixed_precision="bf16"
-    # )  # accelerator precision can be specified if required.
     if args.wandb_log:
         accelerator = Accelerator(log_with="wandb")
         accelerator.init_trackers(
