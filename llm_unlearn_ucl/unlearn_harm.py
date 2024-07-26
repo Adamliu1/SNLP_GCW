@@ -278,7 +278,7 @@ def main(args) -> None:
         model = AutoModelForCausalLM.from_pretrained(
             args.model_name,
             cache_dir=args.cache_dir,
-            #load_in_8bit=True,
+            # load_in_8bit=True,
             torch_dtype=torch.float32,
             trust_remote_code=True,
         )
@@ -585,7 +585,7 @@ def main(args) -> None:
         pretrained_model = AutoModelForCausalLM.from_pretrained(
             args.model_name,
             cache_dir=args.cache_dir,
-            #load_in_8bit=True,
+            # load_in_8bit=True,
             torch_dtype=torch.float32,
             trust_remote_code=True,
         )
