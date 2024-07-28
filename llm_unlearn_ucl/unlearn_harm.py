@@ -222,7 +222,6 @@ def run_training_batch(
         # f"ratio (normal) mink unlearning/reference: {np.mean(mink_probs_after_step_normal)/np.mean(mink_probs_base_normal):.3f}"
     )
     logger.info(stats, main_process_only=True)
-    # TODO: should I just do main process? if not, there will be interleaving I'm sure.
     if accelerator.is_local_main_process:
         print(stats)
 
@@ -237,10 +236,7 @@ def main(args) -> None:
     assert (
         args.samples_count // args.sequential
     ) % args.batch_size == 0, "samples in each 'sequence' (--samples_count / --sequential) should be a multiple of batch_size."
-    # TODO: bf16 as option
-    # accelerator = Accelerator(
-    #     mixed_precision="bf16"
-    # )  # accelerator precision can be specified if required.
+
     if args.wandb_log:
         accelerator = Accelerator(log_with="wandb")
         accelerator.init_trackers(
@@ -276,13 +272,6 @@ def main(args) -> None:
             torch_dtype=torch.float32,
         )
     else:
-        # TODO: bf16 as option
-        # model = AutoModelForCausalLM.from_pretrained(
-        #     args.model_name,
-        #     cache_dir=args.cache_dir,
-        #     torch_dtype=torch.bfloat16,
-        #     trust_remote_code=True,
-        # )
         model = AutoModelForCausalLM.from_pretrained(
             args.model_name,
             cache_dir=args.cache_dir,
@@ -303,7 +292,7 @@ def main(args) -> None:
         )
         model = get_peft_model(model, peft_config)
     if not args.use_quantized:
-        pass
+        model.to(device)
 
     tokenizer = AutoTokenizer.from_pretrained(args.model_name, cache_dir=args.cache_dir)
     if tokenizer.pad_token is None:
@@ -364,7 +353,6 @@ def main(args) -> None:
         print(f"Retaining dataset not known! dataset: {args.retaining_dataset}")
         return
 
-    # TODO: TEST THIS
     if bool(args.wandb_log) and accelerator.is_local_main_process:
         data_sample_artifacts = wandb.Artifact(
             name="training_batch_raw_data", type="batch_data"
@@ -385,7 +373,6 @@ def main(args) -> None:
     # Prepare.
     # num_training_steps = args.max_unlearn_steps
     if args.no_scheduler:
-        # TODO: TEST THIS BIT
         (
             model,
             optimizer,
@@ -440,13 +427,6 @@ def main(args) -> None:
             trust_remote_code=True,
         )
     else:
-        # TODO: bf16 as option
-        # pretrained_model = AutoModelForCausalLM.from_pretrained(
-        #     args.model_name,
-        #     cache_dir=args.cache_dir,
-        #     torch_dtype=torch.bfloat16,
-        #     trust_remote_code=True,
-        # )
         pretrained_model = AutoModelForCausalLM.from_pretrained(
             args.model_name,
             cache_dir=args.cache_dir,
@@ -518,7 +498,7 @@ def main(args) -> None:
                     lr_scheduler.step()
                 optimizer.zero_grad()
 
-                # TODO: This only handles deepspeed zero and zero2, zero3 will require change
+                # NOTE: This only handles deepspeed zero and zero2, zero3 will require change
                 if accelerator.is_local_main_process:
                     if args.sequential == 1 and epoch_num % args.save_every == 0:
                         accelerator.wait_for_everyone()  # for model saving
@@ -603,7 +583,7 @@ def main(args) -> None:
 
             # NOTE: here need to verify logic
             if idx >= args.max_unlearn_steps:
-                # TODO: here I think we need to specify which process id
+                # NOTE: here I think we need to specify which process id, but it's not important for now.
                 print("max_unlearn_steps reached. Unlearning stopped.")
                 break
             if avg_loss := abs(np.mean(running_loss)) > args.max_bad_loss:
