@@ -38,6 +38,7 @@ from data_utils import (
     get_normal_answer,
     make_dataset,
 )
+from logger_utils import prepare_and_upload_training_batch_raw_data
 from parse_args import parse_args
 from peft import AdaLoraConfig, TaskType, get_peft_model
 from torch.optim import AdamW
@@ -354,19 +355,7 @@ def main(args) -> None:
         return
 
     if bool(args.wandb_log) and accelerator.is_local_main_process:
-        data_sample_artifacts = wandb.Artifact(
-            name="training_batch_raw_data", type="batch_data"
-        )
-        if os.path.isfile(normal_sample_path):
-            data_sample_artifacts.add_file(
-                normal_sample_path, name=f"normal_{args.samples_count}_samples.json"
-            )
-        if os.path.isfile(bad_sample_path):
-            data_sample_artifacts.add_file(
-                bad_sample_path, name=f"bad_{args.samples_count}_samples.json"
-            )
-        wandb_tracker = accelerator.get_tracker("wandb", unwrap=True)
-        wandb_tracker.log_artifact(data_sample_artifacts)
+        prepare_and_upload_training_batch_raw_data(args, normal_sample_path, bad_sample_path, accelerator)
 
     optimizer = AdamW(model.parameters(), lr=args.lr)
 

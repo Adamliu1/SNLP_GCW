@@ -1,3 +1,14 @@
+# Copyright (C) 2024 UCL CS SNLP Naturalnego 语言 Töötlus group
+#    - Szymon Duchniewicz
+#    - Yadong Liu
+#    - Andrzej Szablewski
+#    - Zhe Yu
+#
+# Adapted from https://github.com/kevinyaobytedance/llm_unlearn.
+#
+# This software is released under the MIT License.
+# https://opensource.org/licenses/MIT
+
 import os
 import random
 from json import dump
