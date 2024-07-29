@@ -238,14 +238,14 @@ def main(args) -> None:
     ) % args.batch_size == 0, "samples in each 'sequence' (--samples_count / --sequential) should be a multiple of batch_size."
 
     if args.wandb_log:
-        accelerator = Accelerator(log_with="wandb")
+        accelerator = Accelerator(log_with="wandb", mixed_precision="bf16")
         accelerator.init_trackers(
             project_name=args.wandb_project_name,
             config=vars(args),
             init_kwargs={"wandb": {"name": args.wandb_run_name}},
         )
     else:
-        accelerator = Accelerator()
+        accelerator = Accelerator(mixed_precision="bf16")
     device = accelerator.device
 
     # setup logging
@@ -269,13 +269,13 @@ def main(args) -> None:
             args.model_name,
             cache_dir=args.cache_dir,
             load_in_8bit=True,
-            torch_dtype=torch.float32,
+            torch_dtype=torch.bfloat16,
         )
     else:
         model = AutoModelForCausalLM.from_pretrained(
             args.model_name,
             cache_dir=args.cache_dir,
-            torch_dtype=torch.float32,
+            torch_dtype=torch.bfloat16,
             trust_remote_code=True,
         )
 
@@ -423,14 +423,14 @@ def main(args) -> None:
             args.model_name,
             cache_dir=args.cache_dir,
             load_in_8bit=True,
-            torch_dtype=torch.float32,
+            torch_dtype=torch.bfloat16,
             trust_remote_code=True,
         )
     else:
         pretrained_model = AutoModelForCausalLM.from_pretrained(
             args.model_name,
             cache_dir=args.cache_dir,
-            torch_dtype=torch.float32,
+            torch_dtype=torch.bfloat16,
             trust_remote_code=True,
         )
         pretrained_model.to(device)
