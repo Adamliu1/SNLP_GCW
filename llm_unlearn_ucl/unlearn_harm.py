@@ -355,7 +355,9 @@ def main(args) -> None:
         return
 
     if bool(args.wandb_log) and accelerator.is_local_main_process:
-        prepare_and_upload_training_batch_raw_data(args, normal_sample_path, bad_sample_path, accelerator)
+        prepare_and_upload_training_batch_raw_data(
+            args, normal_sample_path, bad_sample_path, accelerator
+        )
 
     optimizer = AdamW(model.parameters(), lr=args.lr)
 

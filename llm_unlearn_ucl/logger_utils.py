@@ -13,7 +13,10 @@ import wandb
 import os
 from accelerate import Accelerator
 
-def prepare_and_upload_training_batch_raw_data(args: dict, normal_sample_path: str, bad_sample_path: str, accelerator: Accelerator):
+
+def prepare_and_upload_training_batch_raw_data(
+    args: dict, normal_sample_path: str, bad_sample_path: str, accelerator: Accelerator
+):
     data_sample_artifacts = wandb.Artifact(
         name="training_batch_raw_data", type="batch_data"
     )
