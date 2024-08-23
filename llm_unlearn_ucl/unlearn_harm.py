@@ -70,7 +70,6 @@ def run_training_batch(
     accelerator=None,  # TODO: maybe reorder here
     logger=None,
 ):
-
     ############ GA on answer only. ############
     bad_loss = get_answer_loss("ga", bad_batch, model, device=device)
 
