@@ -16,7 +16,6 @@ A script to show an example of how to unlearn harmfulness.
 The dataset used in is `PKU-SafeRLHF` and TruthfulQA. Model supports OPT-1.3B.
 """
 
-import json
 import logging
 from accelerate.logging import get_logger
 import os
@@ -24,12 +23,10 @@ import random
 import time
 from collections import deque
 from pathlib import Path
-from typing import List
 
 # Added
 import numpy as np
 import torch
-import wandb
 from accelerate import Accelerator
 from data_utils import (
     SUPPORTED_RETAINING_SET,
@@ -38,12 +35,10 @@ from data_utils import (
     get_normal_answer,
     make_dataset,
 )
-from logger_utils import prepare_and_upload_training_batch_raw_data
 from parse_args import parse_args
 from peft import AdaLoraConfig, TaskType, get_peft_model
 from torch.optim import AdamW
 from transformers import AutoModelForCausalLM, AutoTokenizer, get_scheduler
-from transformers.tokenization_utils_base import BatchEncoding
 from utils import (
     compute_kl,
     get_answer_loss,
@@ -55,66 +50,6 @@ def set_seed(seed_num: int) -> None:
     torch.manual_seed(seed_num)
     np.random.seed(seed_num)
     random.seed(seed_num)
-
-
-# def compute_mink_prob(
-#     model: AutoModelForCausalLM,
-#     batch: BatchEncoding,
-#     K: float,
-#     # Compute_for_answer only, or question only? (Normal vs Bad loss)
-#     device: torch.device,
-#     compute_for_answer_only: bool = True,
-# ) -> List[float]:
-#     # Compute the average of min-K% Prob values for the entire batch
-#     # TODO: should we do this on just 2 element batch or entire dataset?
-#     #
-#     # NOTE: Need to properly unpack the batch, compute logits for each batch and
-#     # properly mask the output! only compute min K on the part we are checking if is
-#     # Unlearned/member in pretraining: output
-#     with torch.no_grad():
-#         # TODO: verify: in run.py for mink, calculatePerplexity func (49), they also pass labels=input_ids. WHy?
-#         # TODO: should we: feeed full sentance (question + answer), and then mask out to compute probabilities,
-#         # Or Mask out input, only get logits for the answer and compute probabilities on those
-#         # NOTE: For now, we feed full question, as we are unlearning B given A, so we want individual token
-#         # probabilities of B, given A (but we don't care about token probabilities of A - the question)
-#         outputs = model(
-#             batch["input_ids"].to(device),
-#             attention_mask=batch["attention_mask"].to(device),
-#         )
-#         # OR, something along thelines of
-#         # outputs = model(batch["input_ids"][batch["start_locs"]:], attention_mask=batch["attention_mask"])
-
-#     logits = outputs.logits
-#     probabilities = torch.nn.functional.log_softmax(logits, dim=-1)
-#     no_of_sentences = batch["input_ids"].shape[0]
-#     # If computing for both question and answer, need to set start_locs to 0s!
-#     if compute_for_answer_only:
-#         assert batch.get("start_locs") != None, (
-#             "Compute Min-k % prob: Requested computation only for answer, "
-#             "but the batch does not contain start_locs inside tokenised question+answer pairs!"
-#         )
-#     else:
-#         # start locs by default just after <s> starting token!
-#         batch["start_locs"] = [torch.IntTensor([1]) for _ in range(no_of_sentences)]
-
-#     # Compute for each sentence in the batch
-#     pred_mink = []
-#     for s_idx in range(no_of_sentences):
-#         # extract prob for each token in the unlearned answer given all previous tokens
-#         input_ids_sentence = batch["input_ids"][s_idx]  # [1:]
-#         all_prob = []
-#         for i in range(batch["start_locs"][s_idx].item(), len(input_ids_sentence)):
-#             token_id = input_ids_sentence[i]
-#             # i is 1 ahead of the actual token, as we want the probability of that token given all previous tokens
-#             probability = probabilities[s_idx, i - 1, token_id].item()
-#             all_prob.append(probability)
-#         # Get top-K % probs and compute their mean (it was log_softmax, so top k% is actually mink% prob)
-#         k_length = int(len(all_prob) * K)
-#         topk_prob = np.sort(all_prob)[:k_length]
-#         pred_mink.append(-np.mean(topk_prob).item())
-
-#     # All mean MIN-K% prob in: pred_mink. For now, return all
-#     return pred_mink
 
 
 def run_training_batch(
@@ -135,39 +70,6 @@ def run_training_batch(
     accelerator=None,  # TODO: maybe reorder here
     logger=None,
 ):
-    # # Calculate min-k% prob score on bad_batch using the unmodified pre-trained model
-    # mink_probs_base = compute_mink_prob(
-    #     model=pretrained_model,
-    #     batch=bad_batch,
-    #     K=args.mink_prob_k,
-    #     device=device,
-    #     compute_for_answer_only=True,
-    # )
-    # # Calculate min-k% prob score on normal_batch using the unmodified pre-trained model
-    # mink_probs_base_normal = compute_mink_prob(
-    #     model=pretrained_model,
-    #     batch=normal_batch,
-    #     K=args.mink_prob_k,
-    #     device=device,
-    #     compute_for_answer_only=False,
-    # )
-    # # TODO: THIS NEED TO BE CALCULATED AFTER GRADIENT STEP!!! (otherwise we are comparing against previous gradient update!)
-    # # Calculate min-k% prob score on bad_batch using the model under unlearning
-    # mink_probs_after_step = compute_mink_prob(
-    #     model=model,
-    #     batch=bad_batch,
-    #     K=args.mink_prob_k,
-    #     device=device,
-    #     compute_for_answer_only=True,
-    # )
-    # # Calculate min-k% prob score on normal_batch using the model under unlearning
-    # mink_probs_after_step_normal = compute_mink_prob(
-    #     model=model,
-    #     batch=normal_batch,
-    #     K=args.mink_prob_k,
-    #     device=device,
-    #     compute_for_answer_only=False,
-    # )
 
     ############ GA on answer only. ############
     bad_loss = get_answer_loss("ga", bad_batch, model, device=device)
@@ -205,12 +107,6 @@ def run_training_batch(
                 "bad_loss": -bad_loss,
                 "normal_loss": normal_loss,
                 "final_loss": loss,
-                # "ratio (bad) mink unlearning/reference": np.mean(mink_probs_after_step)
-                # / np.mean(mink_probs_base),
-                # "ratio (normal) mink unlearning/reference": np.mean(
-                #     mink_probs_after_step_normal
-                # )
-                # / np.mean(mink_probs_base_normal),
             }
         )
 
@@ -219,8 +115,6 @@ def run_training_batch(
         f"samples seen: {samples_count}, "
         f"bad_loss: {-bad_loss:.2f}, "
         f"current_div_loss: {normal_loss:.2f}, "
-        # f"ratio (bad) mink unlearning/reference: {np.mean(mink_probs_after_step)/np.mean(mink_probs_base):.3f}, "
-        # f"ratio (normal) mink unlearning/reference: {np.mean(mink_probs_after_step_normal)/np.mean(mink_probs_base_normal):.3f}"
     )
     logger.info(stats, main_process_only=True)
     if accelerator.is_local_main_process:
@@ -239,14 +133,14 @@ def main(args) -> None:
     ) % args.batch_size == 0, "samples in each 'sequence' (--samples_count / --sequential) should be a multiple of batch_size."
 
     if args.wandb_log:
-        accelerator = Accelerator(log_with="wandb", mixed_precision="bf16")
+        accelerator = Accelerator(log_with="wandb")
         accelerator.init_trackers(
             project_name=args.wandb_project_name,
             config=vars(args),
             init_kwargs={"wandb": {"name": args.wandb_run_name}},
         )
     else:
-        accelerator = Accelerator(mixed_precision="bf16")
+        accelerator = Accelerator()
     device = accelerator.device
 
     # setup logging
@@ -264,36 +158,15 @@ def main(args) -> None:
     accelerator.wait_for_everyone()
 
     print(f"Loading model {args.model_name} for training...")
-    if args.use_quantized:
-        # Uncomment for quantized
-        model = AutoModelForCausalLM.from_pretrained(
-            args.model_name,
-            cache_dir=args.cache_dir,
-            load_in_8bit=True,
-            torch_dtype=torch.bfloat16,
-        )
-    else:
-        model = AutoModelForCausalLM.from_pretrained(
-            args.model_name,
-            cache_dir=args.cache_dir,
-            torch_dtype=torch.bfloat16,
-            trust_remote_code=True,
-        )
+    model = AutoModelForCausalLM.from_pretrained(
+        args.model_name,
+        cache_dir=args.cache_dir,
+        torch_dtype=torch.bfloat16,
+        trust_remote_code=True,
+    )
 
+    model.to(device)
     print("Model loaded.")
-
-    # If use LoRA.
-    if args.use_lora:
-        peft_config = AdaLoraConfig(
-            task_type=TaskType.CAUSAL_LM,
-            inference_mode=False,
-            r=32,
-            lora_alpha=16,
-            target_modules=["q_proj", "v_proj"],
-        )
-        model = get_peft_model(model, peft_config)
-    if not args.use_quantized:
-        model.to(device)
 
     tokenizer = AutoTokenizer.from_pretrained(args.model_name, cache_dir=args.cache_dir)
     if tokenizer.pad_token is None:
@@ -354,15 +227,9 @@ def main(args) -> None:
         print(f"Retaining dataset not known! dataset: {args.retaining_dataset}")
         return
 
-    if bool(args.wandb_log) and accelerator.is_local_main_process:
-        prepare_and_upload_training_batch_raw_data(
-            args, normal_sample_path, bad_sample_path, accelerator
-        )
-
     optimizer = AdamW(model.parameters(), lr=args.lr)
 
     # Prepare.
-    # num_training_steps = args.max_unlearn_steps
     if args.no_scheduler:
         (
             model,
@@ -408,23 +275,14 @@ def main(args) -> None:
     if accelerator.is_local_main_process:
         print(f"Loading model {args.model_name} for reference ('fully learned')...")
 
-    if args.use_quantized:
-        # Uncomment for quantized
-        pretrained_model = AutoModelForCausalLM.from_pretrained(
-            args.model_name,
-            cache_dir=args.cache_dir,
-            load_in_8bit=True,
-            torch_dtype=torch.bfloat16,
-            trust_remote_code=True,
-        )
-    else:
-        pretrained_model = AutoModelForCausalLM.from_pretrained(
-            args.model_name,
-            cache_dir=args.cache_dir,
-            torch_dtype=torch.bfloat16,
-            trust_remote_code=True,
-        )
-        pretrained_model.to(device)
+    # NOTE: accelerate.prepare only handles one model, it works now, but maybe cause some inefficiency.
+    pretrained_model = AutoModelForCausalLM.from_pretrained(
+        args.model_name,
+        cache_dir=args.cache_dir,
+        torch_dtype=torch.bfloat16,
+        trust_remote_code=True,
+    )
+    pretrained_model.to(device)
 
     if accelerator.is_local_main_process:
         print("Model loaded.")
@@ -456,8 +314,8 @@ def main(args) -> None:
                     train_normal_loader, train_bad_loader
                 ):
                     samples_count += len(bad_batch["input_ids"])
-                    # TODO: verify if this implementation is correct
-                    # TODO: fix gradient accumulation
+                    # TODO: fix gradient accumulation, currently because of 'run_training_batch', it's hard to use accelerator's accumulation.
+                    # Currenlty we need to set accelerator config to use accumulation step 1.
                     # with accelerator.accumulate(model):
                     loss, bad_loss = run_training_batch(
                         model=model,
@@ -481,7 +339,7 @@ def main(args) -> None:
                     accelerator.backward(loss / num_batches_per_epoch)
                     bad_loss /= num_batches_per_epoch
                     accu_bad_loss += bad_loss.item()
-                    # If args.batch_size < args.samples_count//args.sequential, always perform gradient accumulation.
+                # If args.batch_size < args.samples_count//args.sequential, always perform gradient accumulation.
                 epoch_num += 1
                 final_model_tag = epoch_num
                 optimizer.step()
@@ -572,7 +430,6 @@ def main(args) -> None:
 
             epoch_num += 1
 
-            # NOTE: here need to verify logic
             if idx >= args.max_unlearn_steps:
                 # NOTE: here I think we need to specify which process id, but it's not important for now.
                 print("max_unlearn_steps reached. Unlearning stopped.")
