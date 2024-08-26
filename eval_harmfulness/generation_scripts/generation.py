@@ -33,7 +33,12 @@ def generate_answers(
         inputs = tokenizer(batch["prompt"], return_tensors="pt", padding=True).to(
             device
         )
-        outputs = model.generate(**inputs, max_new_tokens=max_new_tokens)
+        outputs = model.generate(
+            **inputs,
+            max_new_tokens=max_new_tokens,
+            do_sample=True,
+            temperature=0.75,
+        )
         prompt_len = inputs["input_ids"].shape[1]
         responses = tokenizer.batch_decode(
             outputs[:, prompt_len:], skip_special_tokens=True
