@@ -55,7 +55,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--cache_dir",
         type=str,
-        default="./.cache_dir",
+        default="./.cache",
         help="Path to the cache directory.",
     )
 
