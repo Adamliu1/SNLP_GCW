@@ -28,6 +28,7 @@ from pathlib import Path
 import numpy as np
 import torch
 from accelerate import Accelerator
+from accelerate.utils import InitProcessGroupKwargs
 from data_utils import (
     SUPPORTED_RETAINING_SET,
     SUPPORTED_UNLEARNING_SET,
@@ -36,7 +37,6 @@ from data_utils import (
     make_dataset,
 )
 from parse_args import parse_args
-from peft import AdaLoraConfig, TaskType, get_peft_model
 from torch.optim import AdamW
 from transformers import AutoModelForCausalLM, AutoTokenizer, get_scheduler
 from utils import (
@@ -124,22 +124,37 @@ def run_training_batch(
 
 def main(args) -> None:
     set_seed(args.seed)
+
+    # TODO: make this nicer
+    # handle precision
+    if args.precision == "fp16":
+        precision = torch.float16
+    elif args.precision == "fp32":
+        precision = torch.float32
+    elif args.precision == "bf16":
+        precision = torch.bfloat16
+    else:
+        precision = torch.bfloat16
+
     assert (
         args.samples_count % args.sequential == 0
     ), "samples_count should be divisible by number of splits for sequential learning (--sequential)."
     assert (
         args.samples_count // args.sequential
     ) % args.batch_size == 0, "samples in each 'sequence' (--samples_count / --sequential) should be a multiple of batch_size."
+    
+    # TODO: make this as an argument, so can change backend between gloo and nccl
+    kwargs = InitProcessGroupKwargs(backend="gloo")
 
     if args.wandb_log:
-        accelerator = Accelerator(log_with="wandb")
+        accelerator = Accelerator(log_with="wandb", kwargs_handlers=[kwargs])
         accelerator.init_trackers(
             project_name=args.wandb_project_name,
             config=vars(args),
             init_kwargs={"wandb": {"name": args.wandb_run_name}},
         )
     else:
-        accelerator = Accelerator()
+        accelerator = Accelerator(kwargs_handlers=[kwargs])
     device = accelerator.device
 
     # setup logging
@@ -160,12 +175,28 @@ def main(args) -> None:
     model = AutoModelForCausalLM.from_pretrained(
         args.model_name,
         cache_dir=args.cache_dir,
-        torch_dtype=torch.bfloat16,
+        torch_dtype=precision,
         trust_remote_code=True,
     )
 
     model.to(device)
     print("Model loaded.")
+
+    # Reference model for computing KL.
+    if accelerator.is_local_main_process:
+        print(f"Loading model {args.model_name} for reference ('fully learned')...")
+
+    # NOTE: accelerate.prepare only handles one model, it works now, but maybe cause some inefficiency.
+    pretrained_model = AutoModelForCausalLM.from_pretrained(
+        args.model_name,
+        cache_dir=args.cache_dir,
+        torch_dtype=precision,
+        trust_remote_code=True,
+    )
+    pretrained_model.to(device)
+
+    if accelerator.is_local_main_process:
+        print("Model loaded.")
 
     tokenizer = AutoTokenizer.from_pretrained(args.model_name, cache_dir=args.cache_dir)
     if tokenizer.pad_token is None:
@@ -366,6 +397,7 @@ def main(args) -> None:
 
                 # NOTE: This only handles deepspeed zero and zero2, zero3 will require change
                 if accelerator.is_local_main_process:
+                    # NOTE: this is for batch unlearning
                     if args.sequential == 1 and epoch_num % args.save_every == 0:
                         accelerator.wait_for_everyone()  # for model saving
                         # NOTE: Batch unlearning, save for every epoch
@@ -463,9 +495,6 @@ def main(args) -> None:
     if accelerator.is_local_main_process:
         end_time = time.time()
         logger.info("Total time: %d sec" % (end_time - start_time))
-
-    if args.use_lora:
-        model = model.merge_and_unload()
 
     # Save final model.
     if accelerator.is_local_main_process:

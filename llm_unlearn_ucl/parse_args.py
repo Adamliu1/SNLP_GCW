@@ -20,20 +20,19 @@ def parse_args() -> argparse.Namespace:
     )
 
     parser.add_argument(
+        "--precision",
+        type=str,
+        default="bf16",
+        choices=["fp32", "bf16", "fp16"],
+        help="Precision of the model.",
+    )
+
+    parser.add_argument(
         "--mink_prob_k",
         type=float,
         default=0.2,
         help="K value as a float for percentage of of lowest "
         "probability tokens to consider, used by Min-K percent PROB https://arxiv.org/pdf/2310.16789.pdf",
-    )
-
-    parser.add_argument("--use_lora", action="store_true")
-
-    parser.add_argument(
-        "--use_quantized",
-        type=bool,
-        default=False,
-        help="Set to True if using quantised models.",
     )
 
     parser.add_argument(
