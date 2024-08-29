@@ -1,668 +1,0 @@
-The following values were not passed to `accelerate launch` and had defaults used instead:
-	`--num_processes` was set to a value of `4`
-		More than one GPU was found, enabling multi-GPU training.
-		If this was unintended please pass in `--num_processes=1`.
-	`--num_machines` was set to a value of `1`
-	`--mixed_precision` was set to a value of `'no'`
-	`--dynamo_backend` was set to a value of `'no'`
-To avoid this warning pass in values for each of the problematic parameters or run `accelerate config`.
-[W socket.cpp:436] [c10d] The server socket cannot be initialized on [::]:29500 (errno: 97 - Address family not supported by protocol).
-[W socket.cpp:663] [c10d] The client socket cannot be initialized to connect to [::ffff:127.0.0.1]:29500 (errno: 97 - Address family not supported by protocol).
-wandb: Tracking run with wandb version 0.16.4
-wandb: W&B syncing is set to `offline` in this directory.  
-wandb: Run `wandb online` or set WANDB_MODE=online to enable cloud syncing.
-wandb: Tracking run with wandb version 0.16.4
-wandb: W&B syncing is set to `offline` in this directory.  
-wandb: Run `wandb online` or set WANDB_MODE=online to enable cloud syncing.
-wandb: Tracking run with wandb version 0.16.4
-wandb: W&B syncing is set to `offline` in this directory.  
-wandb: Run `wandb online` or set WANDB_MODE=online to enable cloud syncing.
-wandb: Tracking run with wandb version 0.16.4
-wandb: W&B syncing is set to `offline` in this directory.  
-wandb: Run `wandb online` or set WANDB_MODE=online to enable cloud syncing.
-2024-03-20:04:27:26,652 INFO     [__main__.py:223] Verbosity set to INFO
-2024-03-20:04:27:26,653 INFO     [__init__.py:369] lm_eval.tasks.initialize_tasks() is deprecated and no longer necessary. It will be removed in v0.4.2 release. TaskManager will instead be used.
-2024-03-20:04:27:26,661 INFO     [__main__.py:223] Verbosity set to INFO
-2024-03-20:04:27:26,661 INFO     [__init__.py:369] lm_eval.tasks.initialize_tasks() is deprecated and no longer necessary. It will be removed in v0.4.2 release. TaskManager will instead be used.
-2024-03-20:04:27:26,715 INFO     [__main__.py:223] Verbosity set to INFO
-2024-03-20:04:27:26,716 INFO     [__init__.py:369] lm_eval.tasks.initialize_tasks() is deprecated and no longer necessary. It will be removed in v0.4.2 release. TaskManager will instead be used.
-2024-03-20:04:27:26,821 INFO     [__main__.py:223] Verbosity set to INFO
-2024-03-20:04:27:26,822 INFO     [__init__.py:369] lm_eval.tasks.initialize_tasks() is deprecated and no longer necessary. It will be removed in v0.4.2 release. TaskManager will instead be used.
-2024-03-20:04:27:30,982 INFO     [__main__.py:309] Selected Tasks: ['arc_challenge', 'gsm8k', 'hellaswag', 'mmlu', 'toxigen', 'truthfulqa', 'winogrande']
-2024-03-20:04:27:30,982 INFO     [__main__.py:310] Loading selected tasks...
-2024-03-20:04:27:30,983 INFO     [evaluator.py:135] Setting random seed to 0 | Setting numpy seed to 1234 | Setting torch manual seed to 1234
-[W socket.cpp:663] [c10d] The client socket cannot be initialized to connect to [::ffff:127.0.0.1]:29500 (errno: 97 - Address family not supported by protocol).
-2024-03-20:04:27:31,013 INFO     [__main__.py:309] Selected Tasks: ['arc_challenge', 'gsm8k', 'hellaswag', 'mmlu', 'toxigen', 'truthfulqa', 'winogrande']
-2024-03-20:04:27:31,014 INFO     [__main__.py:310] Loading selected tasks...
-2024-03-20:04:27:31,015 INFO     [evaluator.py:135] Setting random seed to 0 | Setting numpy seed to 1234 | Setting torch manual seed to 1234
-[W socket.cpp:663] [c10d] The client socket cannot be initialized to connect to [::ffff:127.0.0.1]:29500 (errno: 97 - Address family not supported by protocol).
-2024-03-20:04:27:31,081 INFO     [__main__.py:309] Selected Tasks: ['arc_challenge', 'gsm8k', 'hellaswag', 'mmlu', 'toxigen', 'truthfulqa', 'winogrande']
-2024-03-20:04:27:31,081 INFO     [__main__.py:310] Loading selected tasks...
-2024-03-20:04:27:31,082 INFO     [evaluator.py:135] Setting random seed to 0 | Setting numpy seed to 1234 | Setting torch manual seed to 1234
-[W socket.cpp:663] [c10d] The client socket cannot be initialized to connect to [::ffff:127.0.0.1]:29500 (errno: 97 - Address family not supported by protocol).
-Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]2024-03-20:04:27:31,178 INFO     [__main__.py:309] Selected Tasks: ['arc_challenge', 'gsm8k', 'hellaswag', 'mmlu', 'toxigen', 'truthfulqa', 'winogrande']
-2024-03-20:04:27:31,178 INFO     [__main__.py:310] Loading selected tasks...
-2024-03-20:04:27:31,180 INFO     [evaluator.py:135] Setting random seed to 0 | Setting numpy seed to 1234 | Setting torch manual seed to 1234
-[W socket.cpp:663] [c10d] The client socket cannot be initialized to connect to [::ffff:127.0.0.1]:29500 (errno: 97 - Address family not supported by protocol).
-Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:01<00:01,  1.42s/it]Loading checkpoint shards:  50%|█████     | 1/2 [00:01<00:01,  1.02s/it]Loading checkpoint shards:  50%|█████     | 1/2 [00:01<00:01,  1.04s/it]Loading checkpoint shards:  50%|█████     | 1/2 [00:01<00:01,  1.04s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:01<00:00,  1.45it/s]Loading checkpoint shards: 100%|██████████| 2/2 [00:01<00:00,  1.25it/s]
-Loading checkpoint shards: 100%|██████████| 2/2 [00:01<00:00,  1.95it/s]Loading checkpoint shards: 100%|██████████| 2/2 [00:01<00:00,  1.70it/s]
-[2024-03-20 04:27:32,833] [INFO] [real_accelerator.py:191:get_accelerator] Setting ds_accelerator to cuda (auto detect)
-Loading checkpoint shards: 100%|██████████| 2/2 [00:01<00:00,  1.93it/s]Loading checkpoint shards: 100%|██████████| 2/2 [00:01<00:00,  1.67it/s]
-[2024-03-20 04:27:32,880] [INFO] [real_accelerator.py:191:get_accelerator] Setting ds_accelerator to cuda (auto detect)
-Loading checkpoint shards: 100%|██████████| 2/2 [00:01<00:00,  1.94it/s]Loading checkpoint shards: 100%|██████████| 2/2 [00:01<00:00,  1.68it/s]
-[2024-03-20 04:27:32,903] [INFO] [real_accelerator.py:191:get_accelerator] Setting ds_accelerator to cuda (auto detect)
-[2024-03-20 04:27:32,952] [INFO] [real_accelerator.py:191:get_accelerator] Setting ds_accelerator to cuda (auto detect)
-2024-03-20:04:27:33,129 INFO     [huggingface.py:331] Using 4 devices with data parallelism
-2024-03-20:04:27:33,129 INFO     [evaluator.py:179] Using cache at /scratch0/aszablew/math-qa-experiment-toxicity/.cache/opt1.3b_unlearned_mathqa_idx_500/cache_rank0.db
-2024-03-20:04:27:33,129 INFO     [evaluator.py:179] Using cache at /scratch0/aszablew/math-qa-experiment-toxicity/.cache/opt1.3b_unlearned_mathqa_idx_500/cache_rank2.db
-2024-03-20:04:27:33,132 INFO     [evaluator.py:193] get_task_dict has been updated to accept an optional argument, `task_manager`Read more here:https://github.com/EleutherAI/lm-evaluation-harness/blob/main/docs/interface.md#external-library-usage
-2024-03-20:04:27:33,132 INFO     [evaluator.py:193] get_task_dict has been updated to accept an optional argument, `task_manager`Read more here:https://github.com/EleutherAI/lm-evaluation-harness/blob/main/docs/interface.md#external-library-usage
-2024-03-20:04:27:33,151 INFO     [evaluator.py:179] Using cache at /scratch0/aszablew/math-qa-experiment-toxicity/.cache/opt1.3b_unlearned_mathqa_idx_500/cache_rank1.db
-2024-03-20:04:27:33,153 INFO     [evaluator.py:193] get_task_dict has been updated to accept an optional argument, `task_manager`Read more here:https://github.com/EleutherAI/lm-evaluation-harness/blob/main/docs/interface.md#external-library-usage
-2024-03-20:04:27:33,199 INFO     [evaluator.py:179] Using cache at /scratch0/aszablew/math-qa-experiment-toxicity/.cache/opt1.3b_unlearned_mathqa_idx_500/cache_rank3.db
-2024-03-20:04:27:33,202 INFO     [evaluator.py:193] get_task_dict has been updated to accept an optional argument, `task_manager`Read more here:https://github.com/EleutherAI/lm-evaluation-harness/blob/main/docs/interface.md#external-library-usage
-/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/venv/lib64/python3.9/site-packages/datasets/load.py:1461: FutureWarning: The repository for hellaswag contains custom code which must be executed to correctly load the dataset. You can inspect the repository content at https://hf.co/datasets/hellaswag
-You can avoid this message in future by passing the argument `trust_remote_code=True`.
-Passing `trust_remote_code=True` will be mandatory to load this dataset from the next major release of `datasets`.
-  warnings.warn(
-/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/venv/lib64/python3.9/site-packages/datasets/load.py:1461: FutureWarning: The repository for hellaswag contains custom code which must be executed to correctly load the dataset. You can inspect the repository content at https://hf.co/datasets/hellaswag
-You can avoid this message in future by passing the argument `trust_remote_code=True`.
-Passing `trust_remote_code=True` will be mandatory to load this dataset from the next major release of `datasets`.
-  warnings.warn(
-/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/venv/lib64/python3.9/site-packages/datasets/load.py:1461: FutureWarning: The repository for hellaswag contains custom code which must be executed to correctly load the dataset. You can inspect the repository content at https://hf.co/datasets/hellaswag
-You can avoid this message in future by passing the argument `trust_remote_code=True`.
-Passing `trust_remote_code=True` will be mandatory to load this dataset from the next major release of `datasets`.
-  warnings.warn(
-/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/venv/lib64/python3.9/site-packages/datasets/load.py:1461: FutureWarning: The repository for hellaswag contains custom code which must be executed to correctly load the dataset. You can inspect the repository content at https://hf.co/datasets/hellaswag
-You can avoid this message in future by passing the argument `trust_remote_code=True`.
-Passing `trust_remote_code=True` will be mandatory to load this dataset from the next major release of `datasets`.
-  warnings.warn(
-/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/venv/lib64/python3.9/site-packages/datasets/load.py:1461: FutureWarning: The repository for hails/mmlu_no_train contains custom code which must be executed to correctly load the dataset. You can inspect the repository content at https://hf.co/datasets/hails/mmlu_no_train
-You can avoid this message in future by passing the argument `trust_remote_code=True`.
-Passing `trust_remote_code=True` will be mandatory to load this dataset from the next major release of `datasets`.
-  warnings.warn(
-/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/venv/lib64/python3.9/site-packages/datasets/load.py:1461: FutureWarning: The repository for hails/mmlu_no_train contains custom code which must be executed to correctly load the dataset. You can inspect the repository content at https://hf.co/datasets/hails/mmlu_no_train
-You can avoid this message in future by passing the argument `trust_remote_code=True`.
-Passing `trust_remote_code=True` will be mandatory to load this dataset from the next major release of `datasets`.
-  warnings.warn(
-/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/venv/lib64/python3.9/site-packages/datasets/load.py:1461: FutureWarning: The repository for hails/mmlu_no_train contains custom code which must be executed to correctly load the dataset. You can inspect the repository content at https://hf.co/datasets/hails/mmlu_no_train
-You can avoid this message in future by passing the argument `trust_remote_code=True`.
-Passing `trust_remote_code=True` will be mandatory to load this dataset from the next major release of `datasets`.
-  warnings.warn(
-/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/venv/lib64/python3.9/site-packages/datasets/load.py:1461: FutureWarning: The repository for hails/mmlu_no_train contains custom code which must be executed to correctly load the dataset. You can inspect the repository content at https://hf.co/datasets/hails/mmlu_no_train
-You can avoid this message in future by passing the argument `trust_remote_code=True`.
-Passing `trust_remote_code=True` will be mandatory to load this dataset from the next major release of `datasets`.
-  warnings.warn(
-2024-03-20:04:29:34,689 INFO     [task.py:386] Building contexts for winogrande on rank 1...
-  0%|          | 0/317 [00:00<?, ?it/s]100%|██████████| 317/317 [00:00<00:00, 124156.72it/s]
-2024-03-20:04:29:35,054 INFO     [task.py:386] Building contexts for winogrande on rank 3...
-  0%|          | 0/316 [00:00<?, ?it/s]100%|██████████| 316/316 [00:00<00:00, 120195.89it/s]
-2024-03-20:04:29:35,923 INFO     [task.py:386] Building contexts for winogrande on rank 0...
-  0%|          | 0/317 [00:00<?, ?it/s]100%|██████████| 317/317 [00:00<00:00, 126279.26it/s]
-2024-03-20:04:29:36,161 INFO     [task.py:386] Building contexts for winogrande on rank 2...
-  0%|          | 0/317 [00:00<?, ?it/s]100%|██████████| 317/317 [00:00<00:00, 122452.97it/s]
-2024-03-20:04:29:46,373 INFO     [task.py:386] Building contexts for truthfulqa_mc2 on rank 3...
-2024-03-20:04:29:46,373 INFO     [task.py:386] Building contexts for truthfulqa_mc2 on rank 1...
-2024-03-20:04:29:46,374 INFO     [task.py:386] Building contexts for truthfulqa_mc2 on rank 2...
-2024-03-20:04:29:46,374 INFO     [task.py:386] Building contexts for truthfulqa_mc2 on rank 0...
-  0%|          | 0/204 [00:00<?, ?it/s]  0%|          | 0/204 [00:00<?, ?it/s]  0%|          | 0/204 [00:00<?, ?it/s]  0%|          | 0/205 [00:00<?, ?it/s] 55%|█████▍    | 112/204 [00:00<00:00, 1118.89it/s] 56%|█████▌    | 114/204 [00:00<00:00, 1136.24it/s] 55%|█████▍    | 112/204 [00:00<00:00, 1114.94it/s] 55%|█████▌    | 113/205 [00:00<00:00, 1126.65it/s]100%|██████████| 204/204 [00:00<00:00, 1141.20it/s]
-100%|██████████| 204/204 [00:00<00:00, 1131.38it/s]
-100%|██████████| 205/205 [00:00<00:00, 1133.55it/s]
-100%|██████████| 204/204 [00:00<00:00, 1119.92it/s]
-2024-03-20:04:29:46,594 INFO     [task.py:386] Building contexts for truthfulqa_mc1 on rank 0...
-2024-03-20:04:29:46,594 INFO     [task.py:386] Building contexts for truthfulqa_mc1 on rank 1...
-2024-03-20:04:29:46,594 INFO     [task.py:386] Building contexts for truthfulqa_mc1 on rank 2...
-  0%|          | 0/204 [00:00<?, ?it/s]  0%|          | 0/204 [00:00<?, ?it/s]  0%|          | 0/205 [00:00<?, ?it/s]2024-03-20:04:29:46,823 INFO     [task.py:386] Building contexts for truthfulqa_mc1 on rank 3...
-  0%|          | 0/204 [00:00<?, ?it/s] 12%|█▏        | 25/205 [00:00<00:01, 100.48it/s] 19%|█▉        | 39/204 [00:00<00:01, 150.52it/s] 20%|█▉        | 40/204 [00:00<00:01, 149.76it/s] 56%|█████▋    | 115/204 [00:00<00:00, 1145.86it/s] 68%|██████▊   | 140/205 [00:00<00:00, 483.04it/s] 75%|███████▌  | 154/204 [00:00<00:00, 505.00it/s] 75%|███████▌  | 154/204 [00:00<00:00, 494.12it/s]100%|██████████| 204/204 [00:00<00:00, 505.98it/s]
-100%|██████████| 205/205 [00:00<00:00, 505.71it/s]
-100%|██████████| 204/204 [00:00<00:00, 1145.82it/s]
-100%|██████████| 204/204 [00:00<00:00, 495.68it/s]
-2024-03-20:04:29:47,041 INFO     [task.py:386] Building contexts for truthfulqa_gen on rank 3...
-2024-03-20:04:29:47,041 INFO     [task.py:386] Building contexts for truthfulqa_gen on rank 0...
-2024-03-20:04:29:47,041 INFO     [task.py:386] Building contexts for truthfulqa_gen on rank 1...
-2024-03-20:04:29:47,041 INFO     [task.py:386] Building contexts for truthfulqa_gen on rank 2...
-  0%|          | 0/204 [00:00<?, ?it/s]  0%|          | 0/204 [00:00<?, ?it/s]  0%|          | 0/204 [00:00<?, ?it/s]  0%|          | 0/205 [00:00<?, ?it/s] 94%|█████████▍| 192/204 [00:00<00:00, 1916.00it/s] 99%|█████████▉| 202/204 [00:00<00:00, 2010.63it/s] 98%|█████████▊| 200/205 [00:00<00:00, 1998.80it/s] 98%|█████████▊| 199/204 [00:00<00:00, 1982.59it/s]100%|██████████| 204/204 [00:00<00:00, 2005.60it/s]
-100%|██████████| 205/205 [00:00<00:00, 1993.57it/s]
-100%|██████████| 204/204 [00:00<00:00, 1978.02it/s]
-100%|██████████| 204/204 [00:00<00:00, 1915.33it/s]
-2024-03-20:04:29:47,185 INFO     [task.py:386] Building contexts for toxigen on rank 0...
-2024-03-20:04:29:47,185 INFO     [task.py:386] Building contexts for toxigen on rank 3...
-2024-03-20:04:29:47,185 INFO     [task.py:386] Building contexts for toxigen on rank 1...
-2024-03-20:04:29:47,185 INFO     [task.py:386] Building contexts for toxigen on rank 2...
-  0%|          | 0/235 [00:00<?, ?it/s]  0%|          | 0/235 [00:00<?, ?it/s]  0%|          | 0/235 [00:00<?, ?it/s]  0%|          | 0/235 [00:00<?, ?it/s]100%|██████████| 235/235 [00:00<00:00, 3762.15it/s]
-100%|██████████| 235/235 [00:00<00:00, 3731.67it/s]
-100%|██████████| 235/235 [00:00<00:00, 3755.26it/s]
-100%|██████████| 235/235 [00:00<00:00, 3726.87it/s]
-2024-03-20:04:29:47,303 INFO     [task.py:386] Building contexts for mmlu_world_religions on rank 1...
-2024-03-20:04:29:47,303 INFO     [task.py:386] Building contexts for mmlu_world_religions on rank 0...
-2024-03-20:04:29:47,303 INFO     [task.py:386] Building contexts for mmlu_world_religions on rank 2...
-2024-03-20:04:29:47,303 INFO     [task.py:386] Building contexts for mmlu_world_religions on rank 3...
-  0%|          | 0/43 [00:00<?, ?it/s]  0%|          | 0/42 [00:00<?, ?it/s]  0%|          | 0/43 [00:00<?, ?it/s]  0%|          | 0/43 [00:00<?, ?it/s]100%|██████████| 42/42 [00:00<00:00, 1176.37it/s]
-100%|██████████| 43/43 [00:00<00:00, 1177.89it/s]
-100%|██████████| 43/43 [00:00<00:00, 1183.30it/s]
-100%|██████████| 43/43 [00:00<00:00, 1174.62it/s]
-2024-03-20:04:29:47,348 INFO     [task.py:386] Building contexts for mmlu_professional_law on rank 1...
-2024-03-20:04:29:47,349 INFO     [task.py:386] Building contexts for mmlu_professional_law on rank 0...
-2024-03-20:04:29:47,349 INFO     [task.py:386] Building contexts for mmlu_professional_law on rank 3...
-2024-03-20:04:29:47,349 INFO     [task.py:386] Building contexts for mmlu_professional_law on rank 2...
-  0%|          | 0/384 [00:00<?, ?it/s]  0%|          | 0/383 [00:00<?, ?it/s]  0%|          | 0/383 [00:00<?, ?it/s]  0%|          | 0/384 [00:00<?, ?it/s] 32%|███▏      | 121/384 [00:00<00:00, 1200.79it/s] 31%|███       | 119/383 [00:00<00:00, 1183.55it/s] 31%|███       | 119/383 [00:00<00:00, 1184.87it/s] 32%|███▏      | 121/384 [00:00<00:00, 1202.32it/s] 63%|██████▎   | 242/384 [00:00<00:00, 1202.65it/s] 62%|██████▏   | 239/383 [00:00<00:00, 1189.99it/s] 62%|██████▏   | 239/383 [00:00<00:00, 1188.33it/s] 63%|██████▎   | 242/384 [00:00<00:00, 1204.87it/s] 95%|█████████▍| 363/384 [00:00<00:00, 1204.62it/s] 94%|█████████▎| 359/383 [00:00<00:00, 1193.85it/s] 94%|█████████▎| 359/383 [00:00<00:00, 1191.23it/s] 95%|█████████▍| 363/384 [00:00<00:00, 1205.19it/s]100%|██████████| 384/384 [00:00<00:00, 1202.85it/s]
-100%|██████████| 384/384 [00:00<00:00, 1203.97it/s]
-100%|██████████| 383/383 [00:00<00:00, 1191.14it/s]
-100%|██████████| 383/383 [00:00<00:00, 1189.46it/s]
-2024-03-20:04:29:47,712 INFO     [task.py:386] Building contexts for mmlu_prehistory on rank 3...
-2024-03-20:04:29:47,713 INFO     [task.py:386] Building contexts for mmlu_prehistory on rank 0...
-2024-03-20:04:29:47,713 INFO     [task.py:386] Building contexts for mmlu_prehistory on rank 1...
-2024-03-20:04:29:47,713 INFO     [task.py:386] Building contexts for mmlu_prehistory on rank 2...
-  0%|          | 0/81 [00:00<?, ?it/s]  0%|          | 0/81 [00:00<?, ?it/s]  0%|          | 0/81 [00:00<?, ?it/s]  0%|          | 0/81 [00:00<?, ?it/s]100%|██████████| 81/81 [00:00<00:00, 1193.61it/s]100%|██████████| 81/81 [00:00<00:00, 1198.31it/s]
-
-100%|██████████| 81/81 [00:00<00:00, 1183.69it/s]
-100%|██████████| 81/81 [00:00<00:00, 1186.81it/s]
-2024-03-20:04:29:47,791 INFO     [task.py:386] Building contexts for mmlu_philosophy on rank 1...
-2024-03-20:04:29:47,791 INFO     [task.py:386] Building contexts for mmlu_philosophy on rank 0...
-2024-03-20:04:29:47,791 INFO     [task.py:386] Building contexts for mmlu_philosophy on rank 3...
-2024-03-20:04:29:47,791 INFO     [task.py:386] Building contexts for mmlu_philosophy on rank 2...
-  0%|          | 0/78 [00:00<?, ?it/s]  0%|          | 0/77 [00:00<?, ?it/s]  0%|          | 0/78 [00:00<?, ?it/s]  0%|          | 0/78 [00:00<?, ?it/s]100%|██████████| 77/77 [00:00<00:00, 1192.19it/s]100%|██████████| 78/78 [00:00<00:00, 1206.24it/s]
-
-100%|██████████| 78/78 [00:00<00:00, 1206.21it/s]
-100%|██████████| 78/78 [00:00<00:00, 1181.94it/s]
-2024-03-20:04:29:47,867 INFO     [task.py:386] Building contexts for mmlu_moral_scenarios on rank 3...
-2024-03-20:04:29:47,867 INFO     [task.py:386] Building contexts for mmlu_moral_scenarios on rank 0...
-2024-03-20:04:29:47,867 INFO     [task.py:386] Building contexts for mmlu_moral_scenarios on rank 2...
-2024-03-20:04:29:47,867 INFO     [task.py:386] Building contexts for mmlu_moral_scenarios on rank 1...
-  0%|          | 0/223 [00:00<?, ?it/s]  0%|          | 0/224 [00:00<?, ?it/s]  0%|          | 0/224 [00:00<?, ?it/s]  0%|          | 0/224 [00:00<?, ?it/s] 53%|█████▎    | 119/223 [00:00<00:00, 1183.20it/s] 54%|█████▎    | 120/224 [00:00<00:00, 1197.84it/s] 53%|█████▎    | 118/224 [00:00<00:00, 1179.44it/s] 54%|█████▎    | 120/224 [00:00<00:00, 1194.72it/s]100%|██████████| 224/224 [00:00<00:00, 1195.69it/s]
-100%|██████████| 224/224 [00:00<00:00, 1195.51it/s]
-100%|██████████| 224/224 [00:00<00:00, 1182.80it/s]
-100%|██████████| 223/223 [00:00<00:00, 1164.89it/s]
-2024-03-20:04:29:48,083 INFO     [task.py:386] Building contexts for mmlu_moral_disputes on rank 0...
-2024-03-20:04:29:48,083 INFO     [task.py:386] Building contexts for mmlu_moral_disputes on rank 1...
-2024-03-20:04:29:48,083 INFO     [task.py:386] Building contexts for mmlu_moral_disputes on rank 2...
-2024-03-20:04:29:48,083 INFO     [task.py:386] Building contexts for mmlu_moral_disputes on rank 3...
-  0%|          | 0/87 [00:00<?, ?it/s]  0%|          | 0/86 [00:00<?, ?it/s]  0%|          | 0/86 [00:00<?, ?it/s]  0%|          | 0/87 [00:00<?, ?it/s]100%|██████████| 87/87 [00:00<00:00, 1203.22it/s]
-100%|██████████| 86/86 [00:00<00:00, 1189.01it/s]
-100%|██████████| 86/86 [00:00<00:00, 1183.15it/s]
-100%|██████████| 87/87 [00:00<00:00, 1197.99it/s]
-2024-03-20:04:29:48,166 INFO     [task.py:386] Building contexts for mmlu_logical_fallacies on rank 1...
-2024-03-20:04:29:48,166 INFO     [task.py:386] Building contexts for mmlu_logical_fallacies on rank 0...
-2024-03-20:04:29:48,166 INFO     [task.py:386] Building contexts for mmlu_logical_fallacies on rank 3...
-2024-03-20:04:29:48,166 INFO     [task.py:386] Building contexts for mmlu_logical_fallacies on rank 2...
-  0%|          | 0/41 [00:00<?, ?it/s]  0%|          | 0/40 [00:00<?, ?it/s]  0%|          | 0/41 [00:00<?, ?it/s]  0%|          | 0/41 [00:00<?, ?it/s]100%|██████████| 40/40 [00:00<00:00, 1177.00it/s]
-100%|██████████| 41/41 [00:00<00:00, 1177.72it/s]
-100%|██████████| 41/41 [00:00<00:00, 1179.01it/s]
-100%|██████████| 41/41 [00:00<00:00, 1172.90it/s]
-2024-03-20:04:29:48,206 INFO     [task.py:386] Building contexts for mmlu_jurisprudence on rank 3...
-2024-03-20:04:29:48,206 INFO     [task.py:386] Building contexts for mmlu_jurisprudence on rank 1...
-2024-03-20:04:29:48,206 INFO     [task.py:386] Building contexts for mmlu_jurisprudence on rank 0...
-2024-03-20:04:29:48,207 INFO     [task.py:386] Building contexts for mmlu_jurisprudence on rank 2...
-  0%|          | 0/27 [00:00<?, ?it/s]  0%|          | 0/27 [00:00<?, ?it/s]  0%|          | 0/27 [00:00<?, ?it/s]  0%|          | 0/27 [00:00<?, ?it/s]100%|██████████| 27/27 [00:00<00:00, 1178.43it/s]
-100%|██████████| 27/27 [00:00<00:00, 1166.91it/s]100%|██████████| 27/27 [00:00<00:00, 1162.25it/s]
-
-100%|██████████| 27/27 [00:00<00:00, 1149.26it/s]
-2024-03-20:04:29:48,234 INFO     [task.py:386] Building contexts for mmlu_international_law on rank 2...
-2024-03-20:04:29:48,234 INFO     [task.py:386] Building contexts for mmlu_international_law on rank 0...
-2024-03-20:04:29:48,234 INFO     [task.py:386] Building contexts for mmlu_international_law on rank 1...
-2024-03-20:04:29:48,234 INFO     [task.py:386] Building contexts for mmlu_international_law on rank 3...
-  0%|          | 0/30 [00:00<?, ?it/s]  0%|          | 0/30 [00:00<?, ?it/s]  0%|          | 0/30 [00:00<?, ?it/s]  0%|          | 0/31 [00:00<?, ?it/s]100%|██████████| 30/30 [00:00<00:00, 1194.48it/s]
-100%|██████████| 30/30 [00:00<00:00, 1174.68it/s]
-100%|██████████| 30/30 [00:00<00:00, 1168.24it/s]
-100%|██████████| 31/31 [00:00<00:00, 1186.57it/s]
-2024-03-20:04:29:48,265 INFO     [task.py:386] Building contexts for mmlu_high_school_world_history on rank 1...
-2024-03-20:04:29:48,265 INFO     [task.py:386] Building contexts for mmlu_high_school_world_history on rank 2...
-2024-03-20:04:29:48,265 INFO     [task.py:386] Building contexts for mmlu_high_school_world_history on rank 0...
-2024-03-20:04:29:48,265 INFO     [task.py:386] Building contexts for mmlu_high_school_world_history on rank 3...
-  0%|          | 0/59 [00:00<?, ?it/s]  0%|          | 0/59 [00:00<?, ?it/s]  0%|          | 0/59 [00:00<?, ?it/s]  0%|          | 0/60 [00:00<?, ?it/s]100%|██████████| 59/59 [00:00<00:00, 1198.90it/s]
-100%|██████████| 59/59 [00:00<00:00, 1183.35it/s]
-100%|██████████| 59/59 [00:00<00:00, 1173.88it/s]
-100%|██████████| 60/60 [00:00<00:00, 1190.56it/s]
-2024-03-20:04:29:48,324 INFO     [task.py:386] Building contexts for mmlu_high_school_us_history on rank 2...
-2024-03-20:04:29:48,324 INFO     [task.py:386] Building contexts for mmlu_high_school_us_history on rank 3...
-2024-03-20:04:29:48,324 INFO     [task.py:386] Building contexts for mmlu_high_school_us_history on rank 0...
-2024-03-20:04:29:48,324 INFO     [task.py:386] Building contexts for mmlu_high_school_us_history on rank 1...
-  0%|          | 0/51 [00:00<?, ?it/s]  0%|          | 0/51 [00:00<?, ?it/s]  0%|          | 0/51 [00:00<?, ?it/s]  0%|          | 0/51 [00:00<?, ?it/s]100%|██████████| 51/51 [00:00<00:00, 1203.63it/s]
-100%|██████████| 51/51 [00:00<00:00, 1196.79it/s]
-100%|██████████| 51/51 [00:00<00:00, 1177.47it/s]
-100%|██████████| 51/51 [00:00<00:00, 1177.55it/s]
-2024-03-20:04:29:48,374 INFO     [task.py:386] Building contexts for mmlu_high_school_european_history on rank 0...
-2024-03-20:04:29:48,374 INFO     [task.py:386] Building contexts for mmlu_high_school_european_history on rank 3...
-2024-03-20:04:29:48,374 INFO     [task.py:386] Building contexts for mmlu_high_school_european_history on rank 2...
-2024-03-20:04:29:48,374 INFO     [task.py:386] Building contexts for mmlu_high_school_european_history on rank 1...
-  0%|          | 0/41 [00:00<?, ?it/s]  0%|          | 0/41 [00:00<?, ?it/s]  0%|          | 0/41 [00:00<?, ?it/s]  0%|          | 0/42 [00:00<?, ?it/s]100%|██████████| 41/41 [00:00<00:00, 1197.91it/s]
-100%|██████████| 41/41 [00:00<00:00, 1180.19it/s]
-100%|██████████| 41/41 [00:00<00:00, 1175.44it/s]
-100%|██████████| 42/42 [00:00<00:00, 1185.72it/s]
-2024-03-20:04:29:48,416 INFO     [task.py:386] Building contexts for mmlu_formal_logic on rank 2...
-2024-03-20:04:29:48,416 INFO     [task.py:386] Building contexts for mmlu_formal_logic on rank 3...
-2024-03-20:04:29:48,416 INFO     [task.py:386] Building contexts for mmlu_formal_logic on rank 0...
-2024-03-20:04:29:48,416 INFO     [task.py:386] Building contexts for mmlu_formal_logic on rank 1...
-  0%|          | 0/31 [00:00<?, ?it/s]  0%|          | 0/32 [00:00<?, ?it/s]  0%|          | 0/31 [00:00<?, ?it/s]  0%|          | 0/32 [00:00<?, ?it/s]100%|██████████| 31/31 [00:00<00:00, 1175.67it/s]
-100%|██████████| 31/31 [00:00<00:00, 1166.72it/s]
-100%|██████████| 32/32 [00:00<00:00, 1191.19it/s]
-100%|██████████| 32/32 [00:00<00:00, 1185.56it/s]
-2024-03-20:04:29:48,447 INFO     [task.py:386] Building contexts for mmlu_us_foreign_policy on rank 3...
-2024-03-20:04:29:48,447 INFO     [task.py:386] Building contexts for mmlu_us_foreign_policy on rank 1...
-2024-03-20:04:29:48,447 INFO     [task.py:386] Building contexts for mmlu_us_foreign_policy on rank 2...
-2024-03-20:04:29:48,447 INFO     [task.py:386] Building contexts for mmlu_us_foreign_policy on rank 0...
-  0%|          | 0/25 [00:00<?, ?it/s]  0%|          | 0/25 [00:00<?, ?it/s]  0%|          | 0/25 [00:00<?, ?it/s]  0%|          | 0/25 [00:00<?, ?it/s]100%|██████████| 25/25 [00:00<00:00, 1186.98it/s]
-100%|██████████| 25/25 [00:00<00:00, 1179.34it/s]
-100%|██████████| 25/25 [00:00<00:00, 1158.17it/s]
-100%|██████████| 25/25 [00:00<00:00, 1154.62it/s]
-2024-03-20:04:29:48,473 INFO     [task.py:386] Building contexts for mmlu_sociology on rank 1...
-2024-03-20:04:29:48,473 INFO     [task.py:386] Building contexts for mmlu_sociology on rank 0...
-2024-03-20:04:29:48,473 INFO     [task.py:386] Building contexts for mmlu_sociology on rank 3...
-2024-03-20:04:29:48,473 INFO     [task.py:386] Building contexts for mmlu_sociology on rank 2...
-  0%|          | 0/50 [00:00<?, ?it/s]  0%|          | 0/50 [00:00<?, ?it/s]  0%|          | 0/50 [00:00<?, ?it/s]  0%|          | 0/51 [00:00<?, ?it/s]100%|██████████| 50/50 [00:00<00:00, 1203.88it/s]
-100%|██████████| 50/50 [00:00<00:00, 1187.45it/s]
-100%|██████████| 50/50 [00:00<00:00, 1171.99it/s]
-100%|██████████| 51/51 [00:00<00:00, 1186.61it/s]
-2024-03-20:04:29:48,523 INFO     [task.py:386] Building contexts for mmlu_security_studies on rank 0...
-2024-03-20:04:29:48,523 INFO     [task.py:386] Building contexts for mmlu_security_studies on rank 3...
-2024-03-20:04:29:48,523 INFO     [task.py:386] Building contexts for mmlu_security_studies on rank 1...
-2024-03-20:04:29:48,523 INFO     [task.py:386] Building contexts for mmlu_security_studies on rank 2...
-  0%|          | 0/61 [00:00<?, ?it/s]  0%|          | 0/62 [00:00<?, ?it/s]  0%|          | 0/61 [00:00<?, ?it/s]  0%|          | 0/61 [00:00<?, ?it/s]100%|██████████| 61/61 [00:00<00:00, 1203.68it/s]
-100%|██████████| 61/61 [00:00<00:00, 1182.59it/s]100%|██████████| 61/61 [00:00<00:00, 1189.88it/s]
-
-100%|██████████| 62/62 [00:00<00:00, 1192.26it/s]
-2024-03-20:04:29:48,582 INFO     [task.py:386] Building contexts for mmlu_public_relations on rank 3...
-2024-03-20:04:29:48,582 INFO     [task.py:386] Building contexts for mmlu_public_relations on rank 2...
-2024-03-20:04:29:48,582 INFO     [task.py:386] Building contexts for mmlu_public_relations on rank 1...
-2024-03-20:04:29:48,582 INFO     [task.py:386] Building contexts for mmlu_public_relations on rank 0...
-  0%|          | 0/28 [00:00<?, ?it/s]  0%|          | 0/27 [00:00<?, ?it/s]  0%|          | 0/27 [00:00<?, ?it/s]  0%|          | 0/28 [00:00<?, ?it/s]100%|██████████| 27/27 [00:00<00:00, 1174.08it/s]
-100%|██████████| 27/27 [00:00<00:00, 1157.39it/s]
-100%|██████████| 28/28 [00:00<00:00, 1182.18it/s]
-100%|██████████| 28/28 [00:00<00:00, 1179.38it/s]
-2024-03-20:04:29:48,611 INFO     [task.py:386] Building contexts for mmlu_professional_psychology on rank 1...
-2024-03-20:04:29:48,611 INFO     [task.py:386] Building contexts for mmlu_professional_psychology on rank 0...
-2024-03-20:04:29:48,611 INFO     [task.py:386] Building contexts for mmlu_professional_psychology on rank 3...
-2024-03-20:04:29:48,611 INFO     [task.py:386] Building contexts for mmlu_professional_psychology on rank 2...
-  0%|          | 0/153 [00:00<?, ?it/s]  0%|          | 0/153 [00:00<?, ?it/s]  0%|          | 0/153 [00:00<?, ?it/s]  0%|          | 0/153 [00:00<?, ?it/s] 78%|███████▊  | 119/153 [00:00<00:00, 1187.91it/s] 78%|███████▊  | 119/153 [00:00<00:00, 1185.84it/s] 79%|███████▉  | 121/153 [00:00<00:00, 1201.91it/s] 80%|███████▉  | 122/153 [00:00<00:00, 1211.93it/s]100%|██████████| 153/153 [00:00<00:00, 1210.08it/s]
-100%|██████████| 153/153 [00:00<00:00, 1201.00it/s]
-100%|██████████| 153/153 [00:00<00:00, 1186.13it/s]
-100%|██████████| 153/153 [00:00<00:00, 1186.02it/s]
-2024-03-20:04:29:48,757 INFO     [task.py:386] Building contexts for mmlu_human_sexuality on rank 0...
-2024-03-20:04:29:48,757 INFO     [task.py:386] Building contexts for mmlu_human_sexuality on rank 3...
-2024-03-20:04:29:48,757 INFO     [task.py:386] Building contexts for mmlu_human_sexuality on rank 1...
-2024-03-20:04:29:48,757 INFO     [task.py:386] Building contexts for mmlu_human_sexuality on rank 2...
-  0%|          | 0/33 [00:00<?, ?it/s]  0%|          | 0/32 [00:00<?, ?it/s]  0%|          | 0/33 [00:00<?, ?it/s]  0%|          | 0/33 [00:00<?, ?it/s]100%|██████████| 32/32 [00:00<00:00, 1168.44it/s]
-100%|██████████| 33/33 [00:00<00:00, 1196.59it/s]
-100%|██████████| 33/33 [00:00<00:00, 1184.94it/s]
-100%|██████████| 33/33 [00:00<00:00, 1177.52it/s]
-2024-03-20:04:29:48,790 INFO     [task.py:386] Building contexts for mmlu_high_school_psychology on rank 1...
-2024-03-20:04:29:48,790 INFO     [task.py:386] Building contexts for mmlu_high_school_psychology on rank 3...
-2024-03-20:04:29:48,790 INFO     [task.py:386] Building contexts for mmlu_high_school_psychology on rank 2...
-2024-03-20:04:29:48,790 INFO     [task.py:386] Building contexts for mmlu_high_school_psychology on rank 0...
-  0%|          | 0/136 [00:00<?, ?it/s]  0%|          | 0/136 [00:00<?, ?it/s]  0%|          | 0/136 [00:00<?, ?it/s]  0%|          | 0/137 [00:00<?, ?it/s] 89%|████████▉ | 121/136 [00:00<00:00, 1204.21it/s] 88%|████████▊ | 120/136 [00:00<00:00, 1194.51it/s] 87%|████████▋ | 118/136 [00:00<00:00, 1170.96it/s] 88%|████████▊ | 121/137 [00:00<00:00, 1206.40it/s]100%|██████████| 136/136 [00:00<00:00, 1202.25it/s]
-100%|██████████| 136/136 [00:00<00:00, 1191.79it/s]
-100%|██████████| 137/137 [00:00<00:00, 1204.34it/s]
-100%|██████████| 136/136 [00:00<00:00, 1170.27it/s]
-2024-03-20:04:29:48,922 INFO     [task.py:386] Building contexts for mmlu_high_school_microeconomics on rank 1...
-2024-03-20:04:29:48,922 INFO     [task.py:386] Building contexts for mmlu_high_school_microeconomics on rank 0...
-2024-03-20:04:29:48,922 INFO     [task.py:386] Building contexts for mmlu_high_school_microeconomics on rank 3...
-2024-03-20:04:29:48,922 INFO     [task.py:386] Building contexts for mmlu_high_school_microeconomics on rank 2...
-  0%|          | 0/60 [00:00<?, ?it/s]  0%|          | 0/59 [00:00<?, ?it/s]  0%|          | 0/59 [00:00<?, ?it/s]  0%|          | 0/60 [00:00<?, ?it/s]100%|██████████| 59/59 [00:00<00:00, 1186.03it/s]100%|██████████| 59/59 [00:00<00:00, 1182.75it/s]
-
-100%|██████████| 60/60 [00:00<00:00, 1204.02it/s]100%|██████████| 60/60 [00:00<00:00, 1196.01it/s]
-
-2024-03-20:04:29:48,980 INFO     [task.py:386] Building contexts for mmlu_high_school_macroeconomics on rank 1...
-2024-03-20:04:29:48,980 INFO     [task.py:386] Building contexts for mmlu_high_school_macroeconomics on rank 2...
-2024-03-20:04:29:48,980 INFO     [task.py:386] Building contexts for mmlu_high_school_macroeconomics on rank 0...
-2024-03-20:04:29:48,980 INFO     [task.py:386] Building contexts for mmlu_high_school_macroeconomics on rank 3...
-  0%|          | 0/98 [00:00<?, ?it/s]  0%|          | 0/97 [00:00<?, ?it/s]  0%|          | 0/97 [00:00<?, ?it/s]  0%|          | 0/98 [00:00<?, ?it/s]100%|██████████| 97/97 [00:00<00:00, 1194.53it/s]
-100%|██████████| 98/98 [00:00<00:00, 1202.52it/s]
-100%|██████████| 98/98 [00:00<00:00, 1204.62it/s]
-100%|██████████| 97/97 [00:00<00:00, 1188.50it/s]
-2024-03-20:04:29:49,073 INFO     [task.py:386] Building contexts for mmlu_high_school_government_and_politics on rank 1...
-2024-03-20:04:29:49,073 INFO     [task.py:386] Building contexts for mmlu_high_school_government_and_politics on rank 2...
-2024-03-20:04:29:49,073 INFO     [task.py:386] Building contexts for mmlu_high_school_government_and_politics on rank 0...
-2024-03-20:04:29:49,073 INFO     [task.py:386] Building contexts for mmlu_high_school_government_and_politics on rank 3...
-  0%|          | 0/48 [00:00<?, ?it/s]  0%|          | 0/48 [00:00<?, ?it/s]  0%|          | 0/48 [00:00<?, ?it/s]  0%|          | 0/49 [00:00<?, ?it/s]100%|██████████| 48/48 [00:00<00:00, 1190.94it/s]
-100%|██████████| 48/48 [00:00<00:00, 1177.84it/s]
-100%|██████████| 48/48 [00:00<00:00, 1170.05it/s]
-100%|██████████| 49/49 [00:00<00:00, 1193.38it/s]
-2024-03-20:04:29:49,120 INFO     [task.py:386] Building contexts for mmlu_high_school_geography on rank 1...
-2024-03-20:04:29:49,120 INFO     [task.py:386] Building contexts for mmlu_high_school_geography on rank 3...
-2024-03-20:04:29:49,120 INFO     [task.py:386] Building contexts for mmlu_high_school_geography on rank 2...
-2024-03-20:04:29:49,120 INFO     [task.py:386] Building contexts for mmlu_high_school_geography on rank 0...
-  0%|          | 0/50 [00:00<?, ?it/s]  0%|          | 0/49 [00:00<?, ?it/s]  0%|          | 0/49 [00:00<?, ?it/s]  0%|          | 0/50 [00:00<?, ?it/s]100%|██████████| 49/49 [00:00<00:00, 1183.72it/s]
-100%|██████████| 49/49 [00:00<00:00, 1179.06it/s]
-100%|██████████| 50/50 [00:00<00:00, 1198.98it/s]
-100%|██████████| 50/50 [00:00<00:00, 1191.23it/s]
-2024-03-20:04:29:49,169 INFO     [task.py:386] Building contexts for mmlu_econometrics on rank 3...
-2024-03-20:04:29:49,169 INFO     [task.py:386] Building contexts for mmlu_econometrics on rank 1...
-2024-03-20:04:29:49,169 INFO     [task.py:386] Building contexts for mmlu_econometrics on rank 2...
-2024-03-20:04:29:49,169 INFO     [task.py:386] Building contexts for mmlu_econometrics on rank 0...
-  0%|          | 0/29 [00:00<?, ?it/s]  0%|          | 0/28 [00:00<?, ?it/s]  0%|          | 0/29 [00:00<?, ?it/s]  0%|          | 0/28 [00:00<?, ?it/s]100%|██████████| 28/28 [00:00<00:00, 1157.77it/s]100%|██████████| 28/28 [00:00<00:00, 1152.17it/s]
-
-100%|██████████| 29/29 [00:00<00:00, 1184.83it/s]
-100%|██████████| 29/29 [00:00<00:00, 1171.99it/s]
-2024-03-20:04:29:49,198 INFO     [task.py:386] Building contexts for mmlu_virology on rank 0...
-2024-03-20:04:29:49,198 INFO     [task.py:386] Building contexts for mmlu_virology on rank 3...
-2024-03-20:04:29:49,198 INFO     [task.py:386] Building contexts for mmlu_virology on rank 1...
-2024-03-20:04:29:49,198 INFO     [task.py:386] Building contexts for mmlu_virology on rank 2...
-  0%|          | 0/42 [00:00<?, ?it/s]  0%|          | 0/41 [00:00<?, ?it/s]  0%|          | 0/42 [00:00<?, ?it/s]  0%|          | 0/41 [00:00<?, ?it/s]100%|██████████| 41/41 [00:00<00:00, 1177.70it/s]
-100%|██████████| 42/42 [00:00<00:00, 1196.79it/s]
-100%|██████████| 42/42 [00:00<00:00, 1190.77it/s]
-100%|██████████| 41/41 [00:00<00:00, 1171.43it/s]
-2024-03-20:04:29:49,240 INFO     [task.py:386] Building contexts for mmlu_professional_medicine on rank 0...
-2024-03-20:04:29:49,240 INFO     [task.py:386] Building contexts for mmlu_professional_medicine on rank 2...
-2024-03-20:04:29:49,240 INFO     [task.py:386] Building contexts for mmlu_professional_medicine on rank 1...
-2024-03-20:04:29:49,240 INFO     [task.py:386] Building contexts for mmlu_professional_medicine on rank 3...
-  0%|          | 0/68 [00:00<?, ?it/s]  0%|          | 0/68 [00:00<?, ?it/s]  0%|          | 0/68 [00:00<?, ?it/s]  0%|          | 0/68 [00:00<?, ?it/s]100%|██████████| 68/68 [00:00<00:00, 1193.25it/s]
-100%|██████████| 68/68 [00:00<00:00, 1184.04it/s]
-100%|██████████| 68/68 [00:00<00:00, 1174.86it/s]
-100%|██████████| 68/68 [00:00<00:00, 1164.38it/s]
-2024-03-20:04:29:49,307 INFO     [task.py:386] Building contexts for mmlu_professional_accounting on rank 3...
-2024-03-20:04:29:49,307 INFO     [task.py:386] Building contexts for mmlu_professional_accounting on rank 2...
-2024-03-20:04:29:49,307 INFO     [task.py:386] Building contexts for mmlu_professional_accounting on rank 1...
-2024-03-20:04:29:49,307 INFO     [task.py:386] Building contexts for mmlu_professional_accounting on rank 0...
-  0%|          | 0/71 [00:00<?, ?it/s]  0%|          | 0/70 [00:00<?, ?it/s]  0%|          | 0/70 [00:00<?, ?it/s]  0%|          | 0/71 [00:00<?, ?it/s]100%|██████████| 70/70 [00:00<00:00, 1188.09it/s]
-100%|██████████| 71/71 [00:00<00:00, 1207.06it/s]
-100%|██████████| 70/70 [00:00<00:00, 1182.80it/s]
-100%|██████████| 71/71 [00:00<00:00, 1193.64it/s]
-2024-03-20:04:29:49,375 INFO     [task.py:386] Building contexts for mmlu_nutrition on rank 0...
-2024-03-20:04:29:49,375 INFO     [task.py:386] Building contexts for mmlu_nutrition on rank 3...
-2024-03-20:04:29:49,375 INFO     [task.py:386] Building contexts for mmlu_nutrition on rank 2...
-2024-03-20:04:29:49,375 INFO     [task.py:386] Building contexts for mmlu_nutrition on rank 1...
-  0%|          | 0/76 [00:00<?, ?it/s]  0%|          | 0/76 [00:00<?, ?it/s]  0%|          | 0/77 [00:00<?, ?it/s]  0%|          | 0/77 [00:00<?, ?it/s]100%|██████████| 76/76 [00:00<00:00, 1197.96it/s]
-100%|██████████| 77/77 [00:00<00:00, 1197.51it/s]
-100%|██████████| 76/76 [00:00<00:00, 1178.64it/s]
-100%|██████████| 77/77 [00:00<00:00, 1168.70it/s]
-2024-03-20:04:29:49,452 INFO     [task.py:386] Building contexts for mmlu_miscellaneous on rank 0...
-2024-03-20:04:29:49,452 INFO     [task.py:386] Building contexts for mmlu_miscellaneous on rank 3...
-2024-03-20:04:29:49,452 INFO     [task.py:386] Building contexts for mmlu_miscellaneous on rank 1...
-2024-03-20:04:29:49,452 INFO     [task.py:386] Building contexts for mmlu_miscellaneous on rank 2...
-  0%|          | 0/195 [00:00<?, ?it/s]  0%|          | 0/196 [00:00<?, ?it/s]  0%|          | 0/196 [00:00<?, ?it/s]  0%|          | 0/196 [00:00<?, ?it/s] 62%|██████▏   | 121/195 [00:00<00:00, 1206.97it/s] 61%|██████    | 120/196 [00:00<00:00, 1196.06it/s] 62%|██████▏   | 121/196 [00:00<00:00, 1205.45it/s] 62%|██████▏   | 121/196 [00:00<00:00, 1209.85it/s]100%|██████████| 195/195 [00:00<00:00, 1207.27it/s]
-100%|██████████| 196/196 [00:00<00:00, 1203.49it/s]100%|██████████| 196/196 [00:00<00:00, 1207.74it/s]
-
-100%|██████████| 196/196 [00:00<00:00, 1197.00it/s]
-2024-03-20:04:29:49,636 INFO     [task.py:386] Building contexts for mmlu_medical_genetics on rank 3...
-2024-03-20:04:29:49,636 INFO     [task.py:386] Building contexts for mmlu_medical_genetics on rank 0...
-2024-03-20:04:29:49,636 INFO     [task.py:386] Building contexts for mmlu_medical_genetics on rank 1...
-2024-03-20:04:29:49,636 INFO     [task.py:386] Building contexts for mmlu_medical_genetics on rank 2...
-  0%|          | 0/25 [00:00<?, ?it/s]  0%|          | 0/25 [00:00<?, ?it/s]  0%|          | 0/25 [00:00<?, ?it/s]  0%|          | 0/25 [00:00<?, ?it/s]100%|██████████| 25/25 [00:00<00:00, 1180.64it/s]
-100%|██████████| 25/25 [00:00<00:00, 1166.20it/s]
-100%|██████████| 25/25 [00:00<00:00, 1160.76it/s]100%|██████████| 25/25 [00:00<00:00, 1163.80it/s]
-
-2024-03-20:04:29:49,662 INFO     [task.py:386] Building contexts for mmlu_marketing on rank 0...
-2024-03-20:04:29:49,662 INFO     [task.py:386] Building contexts for mmlu_marketing on rank 1...
-2024-03-20:04:29:49,662 INFO     [task.py:386] Building contexts for mmlu_marketing on rank 3...
-2024-03-20:04:29:49,662 INFO     [task.py:386] Building contexts for mmlu_marketing on rank 2...
-  0%|          | 0/59 [00:00<?, ?it/s]  0%|          | 0/58 [00:00<?, ?it/s]  0%|          | 0/59 [00:00<?, ?it/s]  0%|          | 0/58 [00:00<?, ?it/s]100%|██████████| 58/58 [00:00<00:00, 1193.82it/s]
-100%|██████████| 59/59 [00:00<00:00, 1203.61it/s]
-100%|██████████| 58/58 [00:00<00:00, 1184.25it/s]
-100%|██████████| 59/59 [00:00<00:00, 1200.10it/s]
-2024-03-20:04:29:49,718 INFO     [task.py:386] Building contexts for mmlu_management on rank 2...
-2024-03-20:04:29:49,718 INFO     [task.py:386] Building contexts for mmlu_management on rank 3...
-2024-03-20:04:29:49,718 INFO     [task.py:386] Building contexts for mmlu_management on rank 1...
-2024-03-20:04:29:49,718 INFO     [task.py:386] Building contexts for mmlu_management on rank 0...
-  0%|          | 0/25 [00:00<?, ?it/s]  0%|          | 0/26 [00:00<?, ?it/s]  0%|          | 0/26 [00:00<?, ?it/s]  0%|          | 0/26 [00:00<?, ?it/s]100%|██████████| 25/25 [00:00<00:00, 1180.48it/s]
-100%|██████████| 26/26 [00:00<00:00, 1176.92it/s]
-100%|██████████| 26/26 [00:00<00:00, 1169.73it/s]
-100%|██████████| 26/26 [00:00<00:00, 1159.74it/s]
-2024-03-20:04:29:49,744 INFO     [task.py:386] Building contexts for mmlu_human_aging on rank 3...
-2024-03-20:04:29:49,744 INFO     [task.py:386] Building contexts for mmlu_human_aging on rank 0...
-2024-03-20:04:29:49,744 INFO     [task.py:386] Building contexts for mmlu_human_aging on rank 1...
-2024-03-20:04:29:49,744 INFO     [task.py:386] Building contexts for mmlu_human_aging on rank 2...
-  0%|          | 0/56 [00:00<?, ?it/s]  0%|          | 0/55 [00:00<?, ?it/s]  0%|          | 0/56 [00:00<?, ?it/s]  0%|          | 0/56 [00:00<?, ?it/s]100%|██████████| 55/55 [00:00<00:00, 1188.33it/s]
-100%|██████████| 56/56 [00:00<00:00, 1194.50it/s]
-100%|██████████| 56/56 [00:00<00:00, 1188.99it/s]
-100%|██████████| 56/56 [00:00<00:00, 1179.22it/s]
-2024-03-20:04:29:49,799 INFO     [task.py:386] Building contexts for mmlu_global_facts on rank 0...
-2024-03-20:04:29:49,799 INFO     [task.py:386] Building contexts for mmlu_global_facts on rank 3...
-2024-03-20:04:29:49,799 INFO     [task.py:386] Building contexts for mmlu_global_facts on rank 1...
-2024-03-20:04:29:49,799 INFO     [task.py:386] Building contexts for mmlu_global_facts on rank 2...
-  0%|          | 0/25 [00:00<?, ?it/s]  0%|          | 0/25 [00:00<?, ?it/s]  0%|          | 0/25 [00:00<?, ?it/s]  0%|          | 0/25 [00:00<?, ?it/s]100%|██████████| 25/25 [00:00<00:00, 1176.63it/s]100%|██████████| 25/25 [00:00<00:00, 1174.53it/s]
-
-100%|██████████| 25/25 [00:00<00:00, 1178.89it/s]
-100%|██████████| 25/25 [00:00<00:00, 1168.69it/s]
-2024-03-20:04:29:49,824 INFO     [task.py:386] Building contexts for mmlu_college_medicine on rank 3...
-2024-03-20:04:29:49,824 INFO     [task.py:386] Building contexts for mmlu_college_medicine on rank 0...
-2024-03-20:04:29:49,824 INFO     [task.py:386] Building contexts for mmlu_college_medicine on rank 2...
-2024-03-20:04:29:49,824 INFO     [task.py:386] Building contexts for mmlu_college_medicine on rank 1...
-  0%|          | 0/43 [00:00<?, ?it/s]  0%|          | 0/43 [00:00<?, ?it/s]  0%|          | 0/44 [00:00<?, ?it/s]  0%|          | 0/43 [00:00<?, ?it/s]100%|██████████| 43/43 [00:00<00:00, 1191.41it/s]
-100%|██████████| 43/43 [00:00<00:00, 1175.30it/s]
-100%|██████████| 44/44 [00:00<00:00, 1197.19it/s]100%|██████████| 43/43 [00:00<00:00, 1167.79it/s]
-
-2024-03-20:04:29:49,867 INFO     [task.py:386] Building contexts for mmlu_clinical_knowledge on rank 3...
-2024-03-20:04:29:49,867 INFO     [task.py:386] Building contexts for mmlu_clinical_knowledge on rank 1...
-2024-03-20:04:29:49,867 INFO     [task.py:386] Building contexts for mmlu_clinical_knowledge on rank 0...
-2024-03-20:04:29:49,867 INFO     [task.py:386] Building contexts for mmlu_clinical_knowledge on rank 2...
-  0%|          | 0/66 [00:00<?, ?it/s]  0%|          | 0/66 [00:00<?, ?it/s]  0%|          | 0/66 [00:00<?, ?it/s]  0%|          | 0/67 [00:00<?, ?it/s]100%|██████████| 66/66 [00:00<00:00, 1196.20it/s]
-100%|██████████| 66/66 [00:00<00:00, 1186.23it/s]
-100%|██████████| 66/66 [00:00<00:00, 1183.19it/s]
-100%|██████████| 67/67 [00:00<00:00, 1196.72it/s]
-2024-03-20:04:29:49,931 INFO     [task.py:386] Building contexts for mmlu_business_ethics on rank 2...
-2024-03-20:04:29:49,931 INFO     [task.py:386] Building contexts for mmlu_business_ethics on rank 3...
-2024-03-20:04:29:49,931 INFO     [task.py:386] Building contexts for mmlu_business_ethics on rank 1...
-2024-03-20:04:29:49,931 INFO     [task.py:386] Building contexts for mmlu_business_ethics on rank 0...
-  0%|          | 0/25 [00:00<?, ?it/s]  0%|          | 0/25 [00:00<?, ?it/s]  0%|          | 0/25 [00:00<?, ?it/s]  0%|          | 0/25 [00:00<?, ?it/s]100%|██████████| 25/25 [00:00<00:00, 1190.05it/s]
-100%|██████████| 25/25 [00:00<00:00, 1181.12it/s]100%|██████████| 25/25 [00:00<00:00, 1184.30it/s]
-
-100%|██████████| 25/25 [00:00<00:00, 1174.88it/s]
-2024-03-20:04:29:49,956 INFO     [task.py:386] Building contexts for mmlu_machine_learning on rank 3...
-2024-03-20:04:29:49,956 INFO     [task.py:386] Building contexts for mmlu_machine_learning on rank 0...
-2024-03-20:04:29:49,956 INFO     [task.py:386] Building contexts for mmlu_machine_learning on rank 1...
-2024-03-20:04:29:49,956 INFO     [task.py:386] Building contexts for mmlu_machine_learning on rank 2...
-  0%|          | 0/28 [00:00<?, ?it/s]  0%|          | 0/28 [00:00<?, ?it/s]  0%|          | 0/28 [00:00<?, ?it/s]  0%|          | 0/28 [00:00<?, ?it/s]100%|██████████| 28/28 [00:00<00:00, 1177.24it/s]100%|██████████| 28/28 [00:00<00:00, 1177.17it/s]
-
-100%|██████████| 28/28 [00:00<00:00, 1166.84it/s]100%|██████████| 28/28 [00:00<00:00, 1167.60it/s]
-
-2024-03-20:04:29:49,984 INFO     [task.py:386] Building contexts for mmlu_high_school_statistics on rank 3...
-2024-03-20:04:29:49,984 INFO     [task.py:386] Building contexts for mmlu_high_school_statistics on rank 1...
-2024-03-20:04:29:49,984 INFO     [task.py:386] Building contexts for mmlu_high_school_statistics on rank 2...
-2024-03-20:04:29:49,984 INFO     [task.py:386] Building contexts for mmlu_high_school_statistics on rank 0...
-  0%|          | 0/54 [00:00<?, ?it/s]  0%|          | 0/54 [00:00<?, ?it/s]  0%|          | 0/54 [00:00<?, ?it/s]  0%|          | 0/54 [00:00<?, ?it/s]100%|██████████| 54/54 [00:00<00:00, 1193.08it/s]100%|██████████| 54/54 [00:00<00:00, 1189.37it/s]
-
-100%|██████████| 54/54 [00:00<00:00, 1189.63it/s]
-100%|██████████| 54/54 [00:00<00:00, 1177.72it/s]
-2024-03-20:04:29:50,037 INFO     [task.py:386] Building contexts for mmlu_high_school_physics on rank 1...
-2024-03-20:04:29:50,037 INFO     [task.py:386] Building contexts for mmlu_high_school_physics on rank 3...
-2024-03-20:04:29:50,037 INFO     [task.py:386] Building contexts for mmlu_high_school_physics on rank 0...
-2024-03-20:04:29:50,037 INFO     [task.py:386] Building contexts for mmlu_high_school_physics on rank 2...
-  0%|          | 0/37 [00:00<?, ?it/s]  0%|          | 0/38 [00:00<?, ?it/s]  0%|          | 0/38 [00:00<?, ?it/s]  0%|          | 0/38 [00:00<?, ?it/s]100%|██████████| 37/37 [00:00<00:00, 1182.31it/s]
-100%|██████████| 38/38 [00:00<00:00, 1183.55it/s]
-100%|██████████| 38/38 [00:00<00:00, 1186.21it/s]
-100%|██████████| 38/38 [00:00<00:00, 1175.63it/s]
-2024-03-20:04:29:50,075 INFO     [task.py:386] Building contexts for mmlu_high_school_mathematics on rank 1...
-2024-03-20:04:29:50,075 INFO     [task.py:386] Building contexts for mmlu_high_school_mathematics on rank 0...
-2024-03-20:04:29:50,075 INFO     [task.py:386] Building contexts for mmlu_high_school_mathematics on rank 2...
-2024-03-20:04:29:50,075 INFO     [task.py:386] Building contexts for mmlu_high_school_mathematics on rank 3...
-  0%|          | 0/68 [00:00<?, ?it/s]  0%|          | 0/67 [00:00<?, ?it/s]  0%|          | 0/67 [00:00<?, ?it/s]  0%|          | 0/68 [00:00<?, ?it/s]100%|██████████| 67/67 [00:00<00:00, 1191.97it/s]
-100%|██████████| 68/68 [00:00<00:00, 1203.44it/s]
-100%|██████████| 67/67 [00:00<00:00, 1186.41it/s]
-100%|██████████| 68/68 [00:00<00:00, 1192.98it/s]
-2024-03-20:04:29:50,140 INFO     [task.py:386] Building contexts for mmlu_high_school_computer_science on rank 1...
-2024-03-20:04:29:50,140 INFO     [task.py:386] Building contexts for mmlu_high_school_computer_science on rank 3...
-2024-03-20:04:29:50,140 INFO     [task.py:386] Building contexts for mmlu_high_school_computer_science on rank 2...
-2024-03-20:04:29:50,140 INFO     [task.py:386] Building contexts for mmlu_high_school_computer_science on rank 0...
-  0%|          | 0/25 [00:00<?, ?it/s]  0%|          | 0/25 [00:00<?, ?it/s]  0%|          | 0/25 [00:00<?, ?it/s]  0%|          | 0/25 [00:00<?, ?it/s]100%|██████████| 25/25 [00:00<00:00, 1178.76it/s]
-100%|██████████| 25/25 [00:00<00:00, 1175.81it/s]
-100%|██████████| 25/25 [00:00<00:00, 1174.99it/s]100%|██████████| 25/25 [00:00<00:00, 1169.69it/s]
-
-2024-03-20:04:29:50,165 INFO     [task.py:386] Building contexts for mmlu_high_school_chemistry on rank 3...
-2024-03-20:04:29:50,165 INFO     [task.py:386] Building contexts for mmlu_high_school_chemistry on rank 0...
-2024-03-20:04:29:50,165 INFO     [task.py:386] Building contexts for mmlu_high_school_chemistry on rank 2...
-2024-03-20:04:29:50,165 INFO     [task.py:386] Building contexts for mmlu_high_school_chemistry on rank 1...
-  0%|          | 0/50 [00:00<?, ?it/s]  0%|          | 0/51 [00:00<?, ?it/s]  0%|          | 0/51 [00:00<?, ?it/s]  0%|          | 0/51 [00:00<?, ?it/s]100%|██████████| 50/50 [00:00<00:00, 1183.55it/s]
-100%|██████████| 51/51 [00:00<00:00, 1195.71it/s]
-100%|██████████| 51/51 [00:00<00:00, 1193.17it/s]
-100%|██████████| 51/51 [00:00<00:00, 1174.77it/s]
-2024-03-20:04:29:50,215 INFO     [task.py:386] Building contexts for mmlu_high_school_biology on rank 1...
-2024-03-20:04:29:50,215 INFO     [task.py:386] Building contexts for mmlu_high_school_biology on rank 3...
-2024-03-20:04:29:50,215 INFO     [task.py:386] Building contexts for mmlu_high_school_biology on rank 0...
-2024-03-20:04:29:50,216 INFO     [task.py:386] Building contexts for mmlu_high_school_biology on rank 2...
-  0%|          | 0/78 [00:00<?, ?it/s]  0%|          | 0/77 [00:00<?, ?it/s]  0%|          | 0/77 [00:00<?, ?it/s]  0%|          | 0/78 [00:00<?, ?it/s]100%|██████████| 77/77 [00:00<00:00, 1191.67it/s]
-100%|██████████| 78/78 [00:00<00:00, 1195.80it/s]100%|██████████| 78/78 [00:00<00:00, 1202.33it/s]
-
-100%|██████████| 77/77 [00:00<00:00, 1128.40it/s]
-2024-03-20:04:29:50,294 INFO     [task.py:386] Building contexts for mmlu_elementary_mathematics on rank 1...
-2024-03-20:04:29:50,294 INFO     [task.py:386] Building contexts for mmlu_elementary_mathematics on rank 3...
-2024-03-20:04:29:50,294 INFO     [task.py:386] Building contexts for mmlu_elementary_mathematics on rank 2...
-2024-03-20:04:29:50,294 INFO     [task.py:386] Building contexts for mmlu_elementary_mathematics on rank 0...
-  0%|          | 0/94 [00:00<?, ?it/s]  0%|          | 0/95 [00:00<?, ?it/s]  0%|          | 0/95 [00:00<?, ?it/s]  0%|          | 0/94 [00:00<?, ?it/s]100%|██████████| 94/94 [00:00<00:00, 1186.26it/s]
-100%|██████████| 95/95 [00:00<00:00, 1202.89it/s]
-100%|██████████| 94/94 [00:00<00:00, 1183.63it/s]
-100%|██████████| 95/95 [00:00<00:00, 1191.99it/s]
-2024-03-20:04:29:50,384 INFO     [task.py:386] Building contexts for mmlu_electrical_engineering on rank 3...
-2024-03-20:04:29:50,384 INFO     [task.py:386] Building contexts for mmlu_electrical_engineering on rank 0...
-2024-03-20:04:29:50,384 INFO     [task.py:386] Building contexts for mmlu_electrical_engineering on rank 2...
-2024-03-20:04:29:50,384 INFO     [task.py:386] Building contexts for mmlu_electrical_engineering on rank 1...
-  0%|          | 0/36 [00:00<?, ?it/s]  0%|          | 0/36 [00:00<?, ?it/s]  0%|          | 0/36 [00:00<?, ?it/s]  0%|          | 0/37 [00:00<?, ?it/s]100%|██████████| 36/36 [00:00<00:00, 1184.83it/s]
-100%|██████████| 36/36 [00:00<00:00, 1178.04it/s]
-100%|██████████| 36/36 [00:00<00:00, 1176.10it/s]
-100%|██████████| 37/37 [00:00<00:00, 1196.64it/s]
-2024-03-20:04:29:50,420 INFO     [task.py:386] Building contexts for mmlu_conceptual_physics on rank 3...
-2024-03-20:04:29:50,420 INFO     [task.py:386] Building contexts for mmlu_conceptual_physics on rank 1...
-2024-03-20:04:29:50,420 INFO     [task.py:386] Building contexts for mmlu_conceptual_physics on rank 2...
-2024-03-20:04:29:50,421 INFO     [task.py:386] Building contexts for mmlu_conceptual_physics on rank 0...
-  0%|          | 0/58 [00:00<?, ?it/s]  0%|          | 0/59 [00:00<?, ?it/s]  0%|          | 0/59 [00:00<?, ?it/s]  0%|          | 0/59 [00:00<?, ?it/s]100%|██████████| 58/58 [00:00<00:00, 1185.32it/s]
-100%|██████████| 59/59 [00:00<00:00, 1195.06it/s]
-100%|██████████| 59/59 [00:00<00:00, 1185.52it/s]
-100%|██████████| 59/59 [00:00<00:00, 1187.40it/s]
-2024-03-20:04:29:50,478 INFO     [task.py:386] Building contexts for mmlu_computer_security on rank 3...
-2024-03-20:04:29:50,478 INFO     [task.py:386] Building contexts for mmlu_computer_security on rank 1...
-2024-03-20:04:29:50,478 INFO     [task.py:386] Building contexts for mmlu_computer_security on rank 0...
-2024-03-20:04:29:50,478 INFO     [task.py:386] Building contexts for mmlu_computer_security on rank 2...
-  0%|          | 0/25 [00:00<?, ?it/s]  0%|          | 0/25 [00:00<?, ?it/s]  0%|          | 0/25 [00:00<?, ?it/s]  0%|          | 0/25 [00:00<?, ?it/s]100%|██████████| 25/25 [00:00<00:00, 1177.79it/s]
-100%|██████████| 25/25 [00:00<00:00, 1170.13it/s]
-100%|██████████| 25/25 [00:00<00:00, 1172.27it/s]
-100%|██████████| 25/25 [00:00<00:00, 1157.19it/s]
-2024-03-20:04:29:50,503 INFO     [task.py:386] Building contexts for mmlu_college_physics on rank 1...
-2024-03-20:04:29:50,503 INFO     [task.py:386] Building contexts for mmlu_college_physics on rank 0...
-2024-03-20:04:29:50,503 INFO     [task.py:386] Building contexts for mmlu_college_physics on rank 3...
-2024-03-20:04:29:50,503 INFO     [task.py:386] Building contexts for mmlu_college_physics on rank 2...
-  0%|          | 0/25 [00:00<?, ?it/s]  0%|          | 0/25 [00:00<?, ?it/s]  0%|          | 0/26 [00:00<?, ?it/s]  0%|          | 0/26 [00:00<?, ?it/s]100%|██████████| 25/25 [00:00<00:00, 1166.60it/s]
-100%|██████████| 25/25 [00:00<00:00, 1149.00it/s]
-100%|██████████| 26/26 [00:00<00:00, 1177.45it/s]100%|██████████| 26/26 [00:00<00:00, 1177.56it/s]
-
-2024-03-20:04:29:50,529 INFO     [task.py:386] Building contexts for mmlu_college_mathematics on rank 3...
-2024-03-20:04:29:50,529 INFO     [task.py:386] Building contexts for mmlu_college_mathematics on rank 2...
-2024-03-20:04:29:50,529 INFO     [task.py:386] Building contexts for mmlu_college_mathematics on rank 0...
-2024-03-20:04:29:50,529 INFO     [task.py:386] Building contexts for mmlu_college_mathematics on rank 1...
-  0%|          | 0/25 [00:00<?, ?it/s]  0%|          | 0/25 [00:00<?, ?it/s]  0%|          | 0/25 [00:00<?, ?it/s]  0%|          | 0/25 [00:00<?, ?it/s]100%|██████████| 25/25 [00:00<00:00, 1183.94it/s]
-100%|██████████| 25/25 [00:00<00:00, 1178.10it/s]100%|██████████| 25/25 [00:00<00:00, 1169.92it/s]
-
-100%|██████████| 25/25 [00:00<00:00, 1162.77it/s]
-2024-03-20:04:29:50,554 INFO     [task.py:386] Building contexts for mmlu_college_computer_science on rank 1...
-2024-03-20:04:29:50,554 INFO     [task.py:386] Building contexts for mmlu_college_computer_science on rank 0...
-2024-03-20:04:29:50,554 INFO     [task.py:386] Building contexts for mmlu_college_computer_science on rank 3...
-2024-03-20:04:29:50,554 INFO     [task.py:386] Building contexts for mmlu_college_computer_science on rank 2...
-  0%|          | 0/25 [00:00<?, ?it/s]  0%|          | 0/25 [00:00<?, ?it/s]  0%|          | 0/25 [00:00<?, ?it/s]  0%|          | 0/25 [00:00<?, ?it/s]100%|██████████| 25/25 [00:00<00:00, 1187.99it/s]
-100%|██████████| 25/25 [00:00<00:00, 1180.55it/s]100%|██████████| 25/25 [00:00<00:00, 1185.29it/s]
-
-100%|██████████| 25/25 [00:00<00:00, 1157.36it/s]
-2024-03-20:04:29:50,580 INFO     [task.py:386] Building contexts for mmlu_college_chemistry on rank 1...
-2024-03-20:04:29:50,580 INFO     [task.py:386] Building contexts for mmlu_college_chemistry on rank 3...
-2024-03-20:04:29:50,580 INFO     [task.py:386] Building contexts for mmlu_college_chemistry on rank 0...
-2024-03-20:04:29:50,580 INFO     [task.py:386] Building contexts for mmlu_college_chemistry on rank 2...
-  0%|          | 0/25 [00:00<?, ?it/s]  0%|          | 0/25 [00:00<?, ?it/s]  0%|          | 0/25 [00:00<?, ?it/s]  0%|          | 0/25 [00:00<?, ?it/s]100%|██████████| 25/25 [00:00<00:00, 1190.44it/s]100%|██████████| 25/25 [00:00<00:00, 1183.48it/s]
-
-100%|██████████| 25/25 [00:00<00:00, 1177.57it/s]
-100%|██████████| 25/25 [00:00<00:00, 1170.98it/s]
-2024-03-20:04:29:50,605 INFO     [task.py:386] Building contexts for mmlu_college_biology on rank 3...
-2024-03-20:04:29:50,605 INFO     [task.py:386] Building contexts for mmlu_college_biology on rank 1...
-2024-03-20:04:29:50,605 INFO     [task.py:386] Building contexts for mmlu_college_biology on rank 0...
-2024-03-20:04:29:50,605 INFO     [task.py:386] Building contexts for mmlu_college_biology on rank 2...
-  0%|          | 0/36 [00:00<?, ?it/s]  0%|          | 0/36 [00:00<?, ?it/s]  0%|          | 0/36 [00:00<?, ?it/s]  0%|          | 0/36 [00:00<?, ?it/s]100%|██████████| 36/36 [00:00<00:00, 1196.25it/s]
-100%|██████████| 36/36 [00:00<00:00, 1188.49it/s]100%|██████████| 36/36 [00:00<00:00, 1194.04it/s]
-
-100%|██████████| 36/36 [00:00<00:00, 1176.94it/s]
-2024-03-20:04:29:50,641 INFO     [task.py:386] Building contexts for mmlu_astronomy on rank 3...
-2024-03-20:04:29:50,641 INFO     [task.py:386] Building contexts for mmlu_astronomy on rank 1...
-2024-03-20:04:29:50,641 INFO     [task.py:386] Building contexts for mmlu_astronomy on rank 0...
-2024-03-20:04:29:50,641 INFO     [task.py:386] Building contexts for mmlu_astronomy on rank 2...
-  0%|          | 0/38 [00:00<?, ?it/s]  0%|          | 0/38 [00:00<?, ?it/s]  0%|          | 0/38 [00:00<?, ?it/s]  0%|          | 0/38 [00:00<?, ?it/s]100%|██████████| 38/38 [00:00<00:00, 1200.12it/s]
-100%|██████████| 38/38 [00:00<00:00, 1190.26it/s]100%|██████████| 38/38 [00:00<00:00, 1189.63it/s]
-
-100%|██████████| 38/38 [00:00<00:00, 1177.42it/s]
-2024-03-20:04:29:50,678 INFO     [task.py:386] Building contexts for mmlu_anatomy on rank 0...
-2024-03-20:04:29:50,678 INFO     [task.py:386] Building contexts for mmlu_anatomy on rank 3...
-2024-03-20:04:29:50,678 INFO     [task.py:386] Building contexts for mmlu_anatomy on rank 1...
-2024-03-20:04:29:50,678 INFO     [task.py:386] Building contexts for mmlu_anatomy on rank 2...
-  0%|          | 0/34 [00:00<?, ?it/s]  0%|          | 0/33 [00:00<?, ?it/s]  0%|          | 0/34 [00:00<?, ?it/s]  0%|          | 0/34 [00:00<?, ?it/s]100%|██████████| 33/33 [00:00<00:00, 1184.07it/s]
-100%|██████████| 34/34 [00:00<00:00, 1195.94it/s]
-100%|██████████| 34/34 [00:00<00:00, 1196.24it/s]
-100%|██████████| 34/34 [00:00<00:00, 1177.71it/s]
-2024-03-20:04:29:50,712 INFO     [task.py:386] Building contexts for mmlu_abstract_algebra on rank 0...
-2024-03-20:04:29:50,712 INFO     [task.py:386] Building contexts for mmlu_abstract_algebra on rank 3...
-2024-03-20:04:29:50,712 INFO     [task.py:386] Building contexts for mmlu_abstract_algebra on rank 1...
-2024-03-20:04:29:50,712 INFO     [task.py:386] Building contexts for mmlu_abstract_algebra on rank 2...
-  0%|          | 0/25 [00:00<?, ?it/s]  0%|          | 0/25 [00:00<?, ?it/s]  0%|          | 0/25 [00:00<?, ?it/s]  0%|          | 0/25 [00:00<?, ?it/s]100%|██████████| 25/25 [00:00<00:00, 1182.32it/s]100%|██████████| 25/25 [00:00<00:00, 1185.73it/s]
-100%|██████████| 25/25 [00:00<00:00, 1175.92it/s]
-
-100%|██████████| 25/25 [00:00<00:00, 1165.06it/s]
-2024-03-20:04:29:50,759 INFO     [task.py:386] Building contexts for hellaswag on rank 1...
-2024-03-20:04:29:50,763 INFO     [task.py:386] Building contexts for hellaswag on rank 0...
-2024-03-20:04:29:50,764 INFO     [task.py:386] Building contexts for hellaswag on rank 3...
-2024-03-20:04:29:50,764 INFO     [task.py:386] Building contexts for hellaswag on rank 2...
-  0%|          | 0/2511 [00:00<?, ?it/s]  0%|          | 0/2510 [00:00<?, ?it/s]  0%|          | 0/2511 [00:00<?, ?it/s]  5%|▍         | 113/2511 [00:00<00:05, 462.64it/s]  7%|▋         | 167/2511 [00:00<00:03, 587.59it/s]  0%|          | 0/2510 [00:00<?, ?it/s]  8%|▊         | 195/2510 [00:00<00:03, 657.29it/s] 22%|██▏       | 545/2511 [00:00<00:01, 1885.29it/s] 24%|██▍       | 599/2511 [00:00<00:01, 1835.66it/s] 17%|█▋        | 426/2510 [00:00<00:00, 4256.99it/s] 25%|██▍       | 620/2510 [00:00<00:01, 1823.90it/s] 39%|███▉      | 984/2511 [00:00<00:00, 2748.38it/s] 41%|████      | 1035/2511 [00:00<00:00, 2650.85it/s] 34%|███▍      | 859/2510 [00:00<00:00, 4295.03it/s] 42%|████▏     | 1052/2510 [00:00<00:00, 2613.69it/s] 57%|█████▋    | 1424/2511 [00:00<00:00, 3291.78it/s] 59%|█████▊    | 1472/2511 [00:00<00:00, 3192.55it/s] 51%|█████▏    | 1292/2510 [00:00<00:00, 4307.60it/s] 59%|█████▉    | 1484/2510 [00:00<00:00, 3144.53it/s] 74%|███████▍  | 1864/2511 [00:00<00:00, 3644.47it/s] 76%|███████▌  | 1907/2511 [00:00<00:00, 3551.05it/s] 69%|██████▊   | 1725/2510 [00:00<00:00, 4316.14it/s] 76%|███████▌  | 1912/2510 [00:00<00:00, 3492.21it/s] 92%|█████████▏| 2306/2511 [00:00<00:00, 3886.18it/s] 93%|█████████▎| 2344/2511 [00:00<00:00, 3801.45it/s] 86%|████████▌ | 2160/2510 [00:00<00:00, 4326.42it/s]100%|██████████| 2511/2511 [00:00<00:00, 3171.79it/s]
- 93%|█████████▎| 2342/2510 [00:00<00:00, 3736.53it/s]100%|██████████| 2511/2511 [00:00<00:00, 3049.32it/s]
-100%|██████████| 2510/2510 [00:00<00:00, 2996.96it/s]
-100%|██████████| 2510/2510 [00:00<00:00, 4313.24it/s]
-2024-03-20:04:29:52,289 INFO     [task.py:386] Building contexts for gsm8k on rank 0...
-2024-03-20:04:29:52,289 INFO     [task.py:386] Building contexts for gsm8k on rank 1...
-2024-03-20:04:29:52,289 INFO     [task.py:386] Building contexts for gsm8k on rank 3...
-2024-03-20:04:29:52,290 INFO     [task.py:386] Building contexts for gsm8k on rank 2...
-  0%|          | 0/330 [00:00<?, ?it/s]  0%|          | 0/329 [00:00<?, ?it/s]  0%|          | 0/330 [00:00<?, ?it/s]  0%|          | 0/330 [00:00<?, ?it/s]  8%|▊         | 27/330 [00:00<00:01, 269.94it/s]  8%|▊         | 27/329 [00:00<00:01, 265.95it/s]  8%|▊         | 27/330 [00:00<00:01, 264.64it/s]  8%|▊         | 28/330 [00:00<00:01, 271.00it/s] 16%|█▋        | 54/329 [00:00<00:01, 268.14it/s] 17%|█▋        | 55/330 [00:00<00:01, 271.18it/s] 16%|█▋        | 54/330 [00:00<00:01, 264.75it/s] 17%|█▋        | 56/330 [00:00<00:01, 272.51it/s] 25%|██▍       | 81/329 [00:00<00:00, 264.82it/s] 25%|██▌       | 83/330 [00:00<00:00, 271.78it/s] 25%|██▍       | 81/330 [00:00<00:00, 264.78it/s] 25%|██▌       | 84/330 [00:00<00:00, 273.03it/s] 33%|███▎      | 108/330 [00:00<00:00, 265.46it/s] 34%|███▎      | 111/330 [00:00<00:00, 272.73it/s] 33%|███▎      | 109/329 [00:00<00:00, 267.10it/s] 34%|███▍      | 112/330 [00:00<00:00, 273.70it/s] 41%|████      | 135/330 [00:00<00:00, 265.43it/s] 42%|████▏     | 140/330 [00:00<00:00, 274.43it/s] 42%|████▏     | 139/330 [00:00<00:00, 271.46it/s] 42%|████▏     | 137/329 [00:00<00:00, 268.21it/s] 49%|████▉     | 162/330 [00:00<00:00, 265.37it/s] 51%|█████     | 168/330 [00:00<00:00, 274.79it/s] 51%|█████     | 167/330 [00:00<00:00, 271.56it/s] 50%|█████     | 165/329 [00:00<00:00, 268.98it/s] 57%|█████▋    | 189/330 [00:00<00:00, 265.46it/s] 59%|█████▉    | 196/330 [00:00<00:00, 274.14it/s] 59%|█████▉    | 195/330 [00:00<00:00, 272.27it/s] 59%|█████▊    | 193/329 [00:00<00:00, 269.86it/s] 65%|██████▌   | 216/330 [00:00<00:00, 266.02it/s] 68%|██████▊   | 224/330 [00:00<00:00, 274.51it/s] 68%|██████▊   | 223/330 [00:00<00:00, 272.66it/s] 67%|██████▋   | 221/329 [00:00<00:00, 270.43it/s] 74%|███████▎  | 243/330 [00:00<00:00, 266.20it/s] 76%|███████▋  | 252/330 [00:00<00:00, 275.16it/s] 76%|███████▌  | 251/330 [00:00<00:00, 272.68it/s] 76%|███████▌  | 249/329 [00:00<00:00, 270.89it/s] 82%|████████▏ | 270/330 [00:01<00:00, 266.43it/s] 85%|████████▍ | 280/330 [00:01<00:00, 275.50it/s] 85%|████████▍ | 279/330 [00:01<00:00, 273.25it/s] 84%|████████▍ | 277/329 [00:01<00:00, 271.00it/s] 90%|█████████ | 297/330 [00:01<00:00, 266.61it/s] 93%|█████████▎| 308/330 [00:01<00:00, 275.60it/s] 93%|█████████▎| 307/330 [00:01<00:00, 273.54it/s] 93%|█████████▎| 305/329 [00:01<00:00, 271.32it/s]100%|██████████| 330/330 [00:01<00:00, 274.72it/s]
-100%|██████████| 330/330 [00:01<00:00, 272.60it/s]
- 98%|█████████▊| 324/330 [00:01<00:00, 266.94it/s]100%|██████████| 329/329 [00:01<00:00, 269.86it/s]
-100%|██████████| 330/330 [00:01<00:00, 266.00it/s]
-2024-03-20:04:29:53,551 INFO     [task.py:386] Building contexts for arc_challenge on rank 2...
-2024-03-20:04:29:53,552 INFO     [task.py:386] Building contexts for arc_challenge on rank 0...
-2024-03-20:04:29:53,552 INFO     [task.py:386] Building contexts for arc_challenge on rank 1...
-2024-03-20:04:29:53,552 INFO     [task.py:386] Building contexts for arc_challenge on rank 3...
-  0%|          | 0/293 [00:00<?, ?it/s]  0%|          | 0/293 [00:00<?, ?it/s]  0%|          | 0/293 [00:00<?, ?it/s]  0%|          | 0/293 [00:00<?, ?it/s] 63%|██████▎   | 184/293 [00:00<00:00, 1838.29it/s] 61%|██████    | 179/293 [00:00<00:00, 1786.40it/s] 63%|██████▎   | 184/293 [00:00<00:00, 1838.98it/s] 62%|██████▏   | 182/293 [00:00<00:00, 1809.29it/s]100%|██████████| 293/293 [00:00<00:00, 1839.35it/s]
-100%|██████████| 293/293 [00:00<00:00, 1838.83it/s]
-100%|██████████| 293/293 [00:00<00:00, 1809.66it/s]
-100%|██████████| 293/293 [00:00<00:00, 1788.37it/s]
-2024-03-20:04:29:53,755 INFO     [evaluator.py:359] Running loglikelihood requests
-2024-03-20:04:29:53,755 INFO     [evaluator.py:359] Running loglikelihood requests
-2024-03-20:04:29:53,755 INFO     [evaluator.py:359] Running loglikelihood requests
-2024-03-20:04:29:53,755 INFO     [evaluator.py:359] Running loglikelihood requests
-2024-03-20:04:29:53,761 INFO     [model.py:225] Loading 'loglikelihood' responses from cache '/scratch0/aszablew/math-qa-experiment-toxicity/.cache/opt1.3b_unlearned_mathqa_idx_500/cache_rank2.db' where possible...
-2024-03-20:04:29:53,761 INFO     [model.py:225] Loading 'loglikelihood' responses from cache '/scratch0/aszablew/math-qa-experiment-toxicity/.cache/opt1.3b_unlearned_mathqa_idx_500/cache_rank3.db' where possible...
-Checking cached requests:   0%|          | 0/28766 [00:00<?, ?it/s]Checking cached requests:   0%|          | 0/28783 [00:00<?, ?it/s]2024-03-20:04:29:53,762 INFO     [model.py:225] Loading 'loglikelihood' responses from cache '/scratch0/aszablew/math-qa-experiment-toxicity/.cache/opt1.3b_unlearned_mathqa_idx_500/cache_rank1.db' where possible...
-Checking cached requests:   0%|          | 0/28848 [00:00<?, ?it/s]2024-03-20:04:29:53,762 INFO     [model.py:225] Loading 'loglikelihood' responses from cache '/scratch0/aszablew/math-qa-experiment-toxicity/.cache/opt1.3b_unlearned_mathqa_idx_500/cache_rank0.db' where possible...
-Checking cached requests:   0%|          | 0/29036 [00:00<?, ?it/s]Checking cached requests:   3%|▎         | 912/28766 [00:00<00:03, 9119.88it/s]Checking cached requests:   3%|▎         | 992/28783 [00:00<00:02, 9914.69it/s]Checking cached requests:   4%|▍         | 1174/28848 [00:00<00:02, 11733.94it/s]Checking cached requests:   3%|▎         | 912/29036 [00:00<00:03, 9113.49it/s]Checking cached requests:   8%|▊         | 2169/28783 [00:00<00:02, 11003.84it/s]Checking cached requests:   8%|▊         | 2348/28848 [00:00<00:02, 11715.89it/s]Checking cached requests:   6%|▋         | 1824/28766 [00:00<00:03, 8879.87it/s]Checking cached requests:   6%|▋         | 1824/29036 [00:00<00:03, 8894.94it/s]Checking cached requests:  12%|█▏        | 3347/28783 [00:00<00:02, 11356.51it/s]Checking cached requests:  12%|█▏        | 3529/28848 [00:00<00:02, 11757.01it/s]Checking cached requests:  10%|▉         | 2744/28766 [00:00<00:02, 9023.62it/s]Checking cached requests:   9%|▉         | 2748/29036 [00:00<00:02, 9049.85it/s]Checking cached requests:  16%|█▋        | 4705/28848 [00:00<00:02, 11663.85it/s]Checking cached requests:  13%|█▎        | 3647/28766 [00:00<00:02, 8916.57it/s]Checking cached requests:  13%|█▎        | 3654/29036 [00:00<00:02, 8928.30it/s]Checking cached requests:  16%|█▌        | 4483/28783 [00:00<00:02, 10719.36it/s]Checking cached requests:  20%|██        | 5877/28848 [00:00<00:01, 11680.88it/s]Checking cached requests:  16%|█▌        | 4543/28766 [00:00<00:02, 8930.71it/s]Checking cached requests:  16%|█▌        | 4551/29036 [00:00<00:02, 8942.11it/s]Checking cached requests:  19%|█▉        | 5560/28783 [00:00<00:02, 10392.29it/s]Checking cached requests:  24%|██▍       | 7057/28848 [00:00<00:01, 11719.98it/s]Checking cached requests:  19%|█▉        | 5437/28766 [00:00<00:02, 8884.11it/s]Checking cached requests:  19%|█▉        | 5446/29036 [00:00<00:02, 8862.72it/s]Checking cached requests:  23%|██▎       | 6604/28783 [00:00<00:02, 10273.64it/s]Checking cached requests:  29%|██▊       | 8230/28848 [00:00<00:01, 11642.30it/s]Checking cached requests:  22%|██▏       | 6326/28766 [00:00<00:02, 8877.14it/s]Checking cached requests:  22%|██▏       | 6333/29036 [00:00<00:02, 8846.83it/s]Checking cached requests:  27%|██▋       | 7634/28783 [00:00<00:02, 10203.37it/s]Checking cached requests:  33%|███▎      | 9409/28848 [00:00<00:01, 11687.65it/s]Checking cached requests:  25%|██▌       | 7214/28766 [00:00<00:02, 8858.52it/s]Checking cached requests:  25%|██▍       | 7218/29036 [00:00<00:02, 8821.64it/s]Checking cached requests:  30%|███       | 8656/28783 [00:00<00:01, 10113.14it/s]Checking cached requests:  37%|███▋      | 10591/28848 [00:00<00:01, 11726.70it/s]Checking cached requests:  28%|██▊       | 8100/28766 [00:00<00:02, 8799.16it/s]Checking cached requests:  28%|██▊       | 8101/29036 [00:00<00:02, 8772.09it/s]Checking cached requests:  34%|███▎      | 9669/28783 [00:00<00:01, 10091.15it/s]Checking cached requests:  41%|████      | 11764/28848 [00:01<00:01, 11725.67it/s]Checking cached requests:  31%|███       | 8981/28766 [00:01<00:02, 8799.10it/s]Checking cached requests:  31%|███       | 8979/29036 [00:01<00:02, 8739.31it/s]Checking cached requests:  37%|███▋      | 10679/28783 [00:01<00:01, 10079.98it/s]Checking cached requests:  45%|████▍     | 12943/28848 [00:01<00:01, 11742.96it/s]Checking cached requests:  34%|███▍      | 9866/28766 [00:01<00:02, 8813.78it/s]Checking cached requests:  34%|███▍      | 9858/29036 [00:01<00:02, 8752.31it/s]Checking cached requests:  41%|████      | 11688/28783 [00:01<00:01, 10072.28it/s]Checking cached requests:  49%|████▉     | 14124/28848 [00:01<00:01, 11763.13it/s]Checking cached requests:  37%|███▋      | 10750/28766 [00:01<00:02, 8820.07it/s]Checking cached requests:  37%|███▋      | 10737/29036 [00:01<00:02, 8763.20it/s]Checking cached requests:  44%|████▍     | 12696/28783 [00:01<00:01, 10067.48it/s]Checking cached requests:  53%|█████▎    | 15301/28848 [00:01<00:01, 11694.82it/s]Checking cached requests:  40%|████      | 11633/28766 [00:01<00:01, 8806.01it/s]Checking cached requests:  40%|███▉      | 11614/29036 [00:01<00:02, 8691.57it/s]Checking cached requests:  48%|████▊     | 13705/28783 [00:01<00:01, 10071.26it/s]Checking cached requests:  57%|█████▋    | 16471/28848 [00:01<00:01, 11613.83it/s]Checking cached requests:  44%|████▎     | 12514/28766 [00:01<00:01, 8798.24it/s]Checking cached requests:  43%|████▎     | 12485/29036 [00:01<00:01, 8696.32it/s]Checking cached requests:  51%|█████     | 14713/28783 [00:01<00:01, 10072.92it/s]Checking cached requests:  61%|██████    | 17633/28848 [00:01<00:00, 11538.79it/s]Checking cached requests:  47%|████▋     | 13394/28766 [00:01<00:01, 8785.78it/s]Checking cached requests:  46%|████▌     | 13361/29036 [00:01<00:01, 8713.17it/s]Checking cached requests:  55%|█████▍    | 15721/28783 [00:01<00:01, 10065.09it/s]Checking cached requests:  65%|██████▌   | 18788/28848 [00:01<00:00, 11517.51it/s]Checking cached requests:  50%|████▉     | 14275/28766 [00:01<00:01, 8792.11it/s]Checking cached requests:  49%|████▉     | 14242/29036 [00:01<00:01, 8739.36it/s]Checking cached requests:  58%|█████▊    | 16730/28783 [00:01<00:01, 10072.08it/s]Checking cached requests:  69%|██████▉   | 19940/28848 [00:01<00:00, 11498.50it/s]Checking cached requests:  53%|█████▎    | 15158/28766 [00:01<00:01, 8803.33it/s]Checking cached requests:  52%|█████▏    | 15121/29036 [00:01<00:01, 8753.24it/s]Checking cached requests:  62%|██████▏   | 17742/28783 [00:01<00:01, 10085.40it/s]Checking cached requests:  73%|███████▎  | 21090/28848 [00:01<00:00, 11484.29it/s]Checking cached requests:  56%|█████▌    | 16039/28766 [00:01<00:01, 8803.07it/s]Checking cached requests:  55%|█████▌    | 15998/29036 [00:01<00:01, 8757.78it/s]Checking cached requests:  65%|██████▌   | 18757/28783 [00:01<00:00, 10102.66it/s]Checking cached requests:  59%|█████▉    | 16924/28766 [00:01<00:01, 8816.21it/s]Checking cached requests:  77%|███████▋  | 22239/28848 [00:01<00:00, 11440.25it/s]Checking cached requests:  58%|█████▊    | 16878/29036 [00:01<00:01, 8770.39it/s]Checking cached requests:  69%|██████▊   | 19768/28783 [00:01<00:00, 10104.50it/s]Checking cached requests:  62%|██████▏   | 17806/28766 [00:02<00:01, 8814.80it/s]Checking cached requests:  81%|████████  | 23384/28848 [00:02<00:00, 11406.44it/s]Checking cached requests:  61%|██████    | 17756/29036 [00:02<00:01, 8771.22it/s]Checking cached requests:  72%|███████▏  | 20784/28783 [00:02<00:00, 10120.21it/s]Checking cached requests:  65%|██████▍   | 18693/28766 [00:02<00:01, 8828.58it/s]Checking cached requests:  85%|████████▌ | 24525/28848 [00:02<00:00, 11374.80it/s]Checking cached requests:  64%|██████▍   | 18637/29036 [00:02<00:01, 8781.57it/s]Checking cached requests:  76%|███████▌  | 21797/28783 [00:02<00:00, 10078.44it/s]Checking cached requests:  68%|██████▊   | 19583/28766 [00:02<00:01, 8848.30it/s]Checking cached requests:  89%|████████▉ | 25663/28848 [00:02<00:00, 11366.44it/s]Checking cached requests:  67%|██████▋   | 19521/29036 [00:02<00:01, 8797.55it/s]Checking cached requests:  79%|███████▉  | 22805/28783 [00:02<00:00, 10043.74it/s]Checking cached requests:  71%|███████   | 20468/28766 [00:02<00:00, 8812.95it/s]Checking cached requests:  93%|█████████▎| 26800/28848 [00:02<00:00, 11355.79it/s]Checking cached requests:  70%|███████   | 20406/29036 [00:02<00:00, 8811.26it/s]Checking cached requests:  83%|████████▎ | 23810/28783 [00:02<00:00, 10025.71it/s]Checking cached requests:  74%|███████▍  | 21350/28766 [00:02<00:00, 8798.24it/s]Checking cached requests:  97%|█████████▋| 27941/28848 [00:02<00:00, 11370.36it/s]Checking cached requests:  73%|███████▎  | 21288/29036 [00:02<00:00, 8796.75it/s]Checking cached requests:  86%|████████▌ | 24813/28783 [00:02<00:00, 10015.78it/s]Checking cached requests: 100%|██████████| 28848/28848 [00:02<00:00, 11554.01it/s]
-2024-03-20:04:29:56,259 INFO     [model.py:249] Cached requests: 0, Requests remaining: 28848
-Checking cached requests:  77%|███████▋  | 22235/28766 [00:02<00:00, 8811.79it/s]Checking cached requests:  76%|███████▋  | 22172/29036 [00:02<00:00, 8806.80it/s]Checking cached requests:  90%|████████▉ | 25822/28783 [00:02<00:00, 10036.74it/s]Checking cached requests:  80%|████████  | 23138/28766 [00:02<00:00, 8874.29it/s]Checking cached requests:  79%|███████▉  | 23067/29036 [00:02<00:00, 8848.16it/s]Checking cached requests:  93%|█████████▎| 26842/28783 [00:02<00:00, 10083.65it/s]Checking cached requests:  84%|████████▎ | 24045/28766 [00:02<00:00, 8932.41it/s]Checking cached requests:  83%|████████▎ | 23963/29036 [00:02<00:00, 8878.81it/s]Checking cached requests:  97%|█████████▋| 27860/28783 [00:02<00:00, 10109.89it/s]Checking cached requests:  87%|████████▋ | 24947/28766 [00:02<00:00, 8958.02it/s]Checking cached requests:  86%|████████▌ | 24862/29036 [00:02<00:00, 8909.84it/s]Checking cached requests: 100%|██████████| 28783/28783 [00:02<00:00, 10166.74it/s]
-2024-03-20:04:29:56,593 INFO     [model.py:249] Cached requests: 0, Requests remaining: 28783
-Checking cached requests:  90%|████████▉ | 25859/28766 [00:02<00:00, 9004.97it/s]Checking cached requests:  89%|████████▊ | 25764/29036 [00:02<00:00, 8941.58it/s]Checking cached requests:  93%|█████████▎| 26773/28766 [00:03<00:00, 9042.79it/s]Checking cached requests:  92%|█████████▏| 26666/29036 [00:03<00:00, 8964.93it/s]Checking cached requests:  96%|█████████▌| 27685/28766 [00:03<00:00, 9064.22it/s]Checking cached requests:  95%|█████████▍| 27568/29036 [00:03<00:00, 8981.34it/s]Checking cached requests:  99%|█████████▉| 28606/28766 [00:03<00:00, 9107.27it/s]Checking cached requests:  98%|█████████▊| 28474/29036 [00:03<00:00, 9004.68it/s]Checking cached requests: 100%|██████████| 28766/28766 [00:03<00:00, 8892.41it/s]
-2024-03-20:04:29:56,997 INFO     [model.py:249] Cached requests: 0, Requests remaining: 28766
-Checking cached requests: 100%|██████████| 29036/29036 [00:03<00:00, 8851.87it/s]
-2024-03-20:04:29:57,043 INFO     [model.py:249] Cached requests: 0, Requests remaining: 29036
-Passed argument batch_size = auto:1. Detecting largest batch size
-Passed argument batch_size = auto:1. Detecting largest batch size
-Running loglikelihood requests:   0%|          | 0/29036 [00:00<?, ?it/s]Passed argument batch_size = auto:1. Detecting largest batch size
-Passed argument batch_size = auto:1. Detecting largest batch size
-Determined largest batch size: 64
-Determined largest batch size: 64
-Determined largest batch size: 64
-Determined largest batch size: 64
-Running loglikelihood requests:   0%|          | 1/29036 [01:06<537:24:13, 66.63s/it]Running loglikelihood requests:   1%|          | 257/29036 [01:11<1:35:54,  5.00it/s]Running loglikelihood requests:   2%|▏         | 513/29036 [01:15<43:27, 10.94it/s]  Running loglikelihood requests:   3%|▎         | 769/29036 [01:18<26:24, 17.84it/s]Running loglikelihood requests:   4%|▎         | 1025/29036 [01:22<18:12, 25.63it/s]Running loglikelihood requests:   4%|▍         | 1281/29036 [01:25<13:34, 34.08it/s]Running loglikelihood requests:   5%|▌         | 1537/29036 [01:28<10:36, 43.23it/s]Running loglikelihood requests:   6%|▌         | 1793/29036 [01:30<08:36, 52.72it/s]Running loglikelihood requests:   7%|▋         | 2017/29036 [01:33<07:35, 59.36it/s]Running loglikelihood requests:   8%|▊         | 2209/29036 [01:35<07:01, 63.72it/s]Running loglikelihood requests:   8%|▊         | 2376/29036 [01:38<06:46, 65.61it/s]Running loglikelihood requests:   9%|▊         | 2527/29036 [01:40<06:43, 65.73it/s]Running loglikelihood requests:   9%|▉         | 2661/29036 [01:42<06:50, 64.32it/s]Running loglikelihood requests:  10%|▉         | 2792/29036 [01:44<06:58, 62.73it/s]Running loglikelihood requests:  10%|█         | 2907/29036 [01:47<07:19, 59.47it/s]Running loglikelihood requests:  10%|█         | 3024/29036 [01:49<07:28, 57.94it/s]Running loglikelihood requests:  11%|█         | 3138/29036 [01:51<07:39, 56.36it/s]Running loglikelihood requests:  11%|█         | 3257/29036 [01:53<07:40, 55.99it/s]Running loglikelihood requests:  12%|█▏        | 3380/29036 [01:55<07:36, 56.26it/s]Running loglikelihood requests:  12%|█▏        | 3492/29036 [01:57<07:44, 55.02it/s]Running loglikelihood requests:  12%|█▏        | 3610/29036 [02:00<07:42, 54.97it/s]Running loglikelihood requests:  13%|█▎        | 3717/29036 [02:02<07:56, 53.16it/s]Running loglikelihood requests:  13%|█▎        | 3839/29036 [02:04<07:44, 54.21it/s]Running loglikelihood requests:  14%|█▎        | 3951/29036 [02:06<07:45, 53.86it/s]Running loglikelihood requests:  14%|█▍        | 4054/29036 [02:08<07:56, 52.44it/s]Running loglikelihood requests:  14%|█▍        | 4170/29036 [02:10<07:46, 53.26it/s]Running loglikelihood requests:  15%|█▍        | 4292/29036 [02:12<07:32, 54.72it/s]Running loglikelihood requests:  15%|█▌        | 4396/29036 [02:14<07:42, 53.24it/s]Running loglikelihood requests:  15%|█▌        | 4495/29036 [02:16<07:56, 51.50it/s]Running loglikelihood requests:  16%|█▌        | 4604/29036 [02:19<07:52, 51.74it/s]Running loglikelihood requests:  16%|█▌        | 4716/29036 [02:21<07:44, 52.36it/s]Running loglikelihood requests:  17%|█▋        | 4828/29036 [02:23<07:39, 52.74it/s]Running loglikelihood requests:  17%|█▋        | 4949/29036 [02:25<07:23, 54.30it/s]Running loglikelihood requests:  18%|█▊        | 5082/29036 [02:27<06:56, 57.47it/s]Running loglikelihood requests:  18%|█▊        | 5203/29036 [02:29<06:50, 58.07it/s]Running loglikelihood requests:  19%|█▊        | 5400/29036 [02:31<05:37, 70.06it/s]Running loglikelihood requests:  19%|█▉        | 5653/29036 [02:33<04:25, 88.19it/s]Running loglikelihood requests:  20%|██        | 5906/29036 [02:35<03:52, 99.43it/s]Running loglikelihood requests:  21%|██        | 6138/29036 [02:36<03:29, 109.04it/s]Running loglikelihood requests:  22%|██▏       | 6349/29036 [02:38<03:19, 113.90it/s]Running loglikelihood requests:  22%|██▏       | 6506/29036 [02:40<03:27, 108.82it/s]Running loglikelihood requests:  23%|██▎       | 6648/29036 [02:41<03:38, 102.41it/s]Running loglikelihood requests:  23%|██▎       | 6763/29036 [02:43<03:58, 93.50it/s] Running loglikelihood requests:  24%|██▍       | 6914/29036 [02:45<03:56, 93.35it/s]Running loglikelihood requests:  24%|██▍       | 7020/29036 [02:46<04:16, 85.78it/s]Running loglikelihood requests:  25%|██▍       | 7135/29036 [02:48<04:26, 82.26it/s]Running loglikelihood requests:  25%|██▍       | 7220/29036 [02:49<04:53, 74.32it/s]Running loglikelihood requests:  25%|██▌       | 7314/29036 [02:51<05:08, 70.31it/s]Running loglikelihood requests:  26%|██▌       | 7468/29036 [02:52<04:34, 78.51it/s]Running loglikelihood requests:  26%|██▌       | 7532/29036 [02:54<05:17, 67.72it/s]Running loglikelihood requests:  26%|██▋       | 7662/29036 [02:56<04:55, 72.42it/s]Running loglikelihood requests:  27%|██▋       | 7769/29036 [02:57<04:57, 71.49it/s]Running loglikelihood requests:  27%|██▋       | 7884/29036 [02:59<04:52, 72.32it/s]Running loglikelihood requests:  28%|██▊       | 8011/29036 [03:00<04:39, 75.22it/s]Running loglikelihood requests:  28%|██▊       | 8087/29036 [03:02<05:09, 67.64it/s]Running loglikelihood requests:  28%|██▊       | 8154/29036 [03:03<05:42, 61.03it/s]Running loglikelihood requests:  29%|██▊       | 8296/29036 [03:05<04:53, 70.76it/s]Running loglikelihood requests:  29%|██▉       | 8360/29036 [03:06<05:35, 61.62it/s]Running loglikelihood requests:  29%|██▉       | 8508/29036 [03:08<04:43, 72.34it/s]Running loglikelihood requests:  30%|██▉       | 8572/29036 [03:09<05:20, 63.79it/s]Running loglikelihood requests:  30%|██▉       | 8709/29036 [03:11<04:42, 71.92it/s]Running loglikelihood requests:  30%|███       | 8773/29036 [03:12<05:19, 63.39it/s]Running loglikelihood requests:  31%|███       | 8891/29036 [03:14<04:56, 67.98it/s]Running loglikelihood requests:  31%|███       | 8955/29036 [03:15<05:31, 60.64it/s]Running loglikelihood requests:  31%|███       | 9070/29036 [03:17<05:04, 65.55it/s]Running loglikelihood requests:  31%|███▏      | 9134/29036 [03:18<05:37, 58.95it/s]Running loglikelihood requests:  32%|███▏      | 9273/29036 [03:20<04:46, 69.07it/s]Running loglikelihood requests:  32%|███▏      | 9337/29036 [03:21<05:20, 61.42it/s]Running loglikelihood requests:  32%|███▏      | 9401/29036 [03:23<05:52, 55.70it/s]Running loglikelihood requests:  33%|███▎      | 9507/29036 [03:24<05:24, 60.24it/s]Running loglikelihood requests:  33%|███▎      | 9571/29036 [03:26<05:48, 55.82it/s]Running loglikelihood requests:  33%|███▎      | 9710/29036 [03:27<04:45, 67.76it/s]Running loglikelihood requests:  34%|███▎      | 9774/29036 [03:29<05:15, 60.97it/s]Running loglikelihood requests:  34%|███▍      | 9838/29036 [03:30<05:52, 54.45it/s]Running loglikelihood requests:  34%|███▍      | 9956/29036 [03:32<05:04, 62.57it/s]Running loglikelihood requests:  35%|███▍      | 10020/29036 [03:33<05:30, 57.50it/s]Running loglikelihood requests:  35%|███▍      | 10138/29036 [03:34<04:51, 64.88it/s]Running loglikelihood requests:  35%|███▌      | 10205/29036 [03:36<05:15, 59.74it/s]Running loglikelihood requests:  35%|███▌      | 10281/29036 [03:37<05:24, 57.75it/s]Running loglikelihood requests:  36%|███▌      | 10396/29036 [03:39<04:49, 64.33it/s]Running loglikelihood requests:  36%|███▌      | 10460/29036 [03:40<05:17, 58.47it/s]Running loglikelihood requests:  36%|███▋      | 10551/29036 [03:42<05:06, 60.22it/s]Running loglikelihood requests:  37%|███▋      | 10615/29036 [03:43<05:29, 55.90it/s]Running loglikelihood requests:  37%|███▋      | 10679/29036 [03:44<05:47, 52.81it/s]Running loglikelihood requests:  37%|███▋      | 10812/29036 [03:46<04:41, 64.75it/s]Running loglikelihood requests:  37%|███▋      | 10876/29036 [03:47<05:08, 58.88it/s]Running loglikelihood requests:  38%|███▊      | 10940/29036 [03:49<05:31, 54.60it/s]Running loglikelihood requests:  38%|███▊      | 11079/29036 [03:50<04:24, 67.83it/s]Running loglikelihood requests:  38%|███▊      | 11143/29036 [03:51<04:49, 61.74it/s]Running loglikelihood requests:  39%|███▊      | 11207/29036 [03:53<05:10, 57.36it/s]Running loglikelihood requests:  39%|███▉      | 11352/29036 [03:54<04:07, 71.46it/s]Running loglikelihood requests:  39%|███▉      | 11416/29036 [03:56<04:34, 64.27it/s]Running loglikelihood requests:  40%|███▉      | 11480/29036 [03:57<04:56, 59.12it/s]Running loglikelihood requests:  40%|███▉      | 11592/29036 [03:58<04:24, 65.85it/s]Running loglikelihood requests:  40%|████      | 11656/29036 [04:00<04:53, 59.13it/s]Running loglikelihood requests:  40%|████      | 11720/29036 [04:01<05:10, 55.73it/s]Running loglikelihood requests:  41%|████      | 11865/29036 [04:02<04:03, 70.62it/s]Running loglikelihood requests:  41%|████      | 11929/29036 [04:04<04:27, 63.84it/s]Running loglikelihood requests:  41%|████▏     | 11993/29036 [04:05<04:48, 58.99it/s]Running loglikelihood requests:  42%|████▏     | 12129/29036 [04:07<04:00, 70.40it/s]Running loglikelihood requests:  42%|████▏     | 12193/29036 [04:08<04:24, 63.59it/s]Running loglikelihood requests:  42%|████▏     | 12269/29036 [04:09<04:32, 61.56it/s]Running loglikelihood requests:  43%|████▎     | 12373/29036 [04:11<04:11, 66.18it/s]Running loglikelihood requests:  43%|████▎     | 12437/29036 [04:12<04:33, 60.61it/s]Running loglikelihood requests:  43%|████▎     | 12556/29036 [04:13<03:59, 68.71it/s]Running loglikelihood requests:  44%|████▎     | 12653/29036 [04:15<03:55, 69.60it/s]Running loglikelihood requests:  44%|████▍     | 12717/29036 [04:16<04:18, 63.12it/s]Running loglikelihood requests:  44%|████▍     | 12844/29036 [04:17<03:42, 72.89it/s]Running loglikelihood requests:  45%|████▍     | 12929/29036 [04:19<03:48, 70.46it/s]Running loglikelihood requests:  45%|████▍     | 12993/29036 [04:20<04:10, 64.12it/s][2024-03-20 04:34:26,910] torch.distributed.elastic.agent.server.api: [WARNING] Received Signals.SIGHUP death signal, shutting down workers
-[2024-03-20 04:34:26,912] torch.distributed.elastic.multiprocessing.api: [WARNING] Sending process 1423302 closing signal SIGHUP
-[2024-03-20 04:34:26,912] torch.distributed.elastic.multiprocessing.api: [WARNING] Sending process 1423303 closing signal SIGHUP
-[2024-03-20 04:34:26,912] torch.distributed.elastic.multiprocessing.api: [WARNING] Sending process 1423304 closing signal SIGHUP
-[2024-03-20 04:34:26,912] torch.distributed.elastic.multiprocessing.api: [WARNING] Sending process 1423305 closing signal SIGHUP
-Traceback (most recent call last):
-  File "/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/venv/bin/accelerate", line 8, in <module>
-    sys.exit(main())
-  File "/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/venv/lib64/python3.9/site-packages/accelerate/commands/accelerate_cli.py", line 47, in main
-    args.func(args)
-  File "/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/venv/lib64/python3.9/site-packages/accelerate/commands/launch.py", line 977, in launch_command
-    multi_gpu_launcher(args)
-  File "/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/venv/lib64/python3.9/site-packages/accelerate/commands/launch.py", line 646, in multi_gpu_launcher
-    distrib_run.run(args)
-  File "/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/venv/lib64/python3.9/site-packages/torch/distributed/run.py", line 797, in run
-    elastic_launch(
-  File "/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/venv/lib64/python3.9/site-packages/torch/distributed/launcher/api.py", line 134, in __call__
-    return launch_agent(self._config, self._entrypoint, list(args))
-  File "/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/venv/lib64/python3.9/site-packages/torch/distributed/launcher/api.py", line 255, in launch_agent
-    result = agent.run()
-  File "/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/venv/lib64/python3.9/site-packages/torch/distributed/elastic/metrics/api.py", line 124, in wrapper
-    result = f(*args, **kwargs)
-  File "/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/venv/lib64/python3.9/site-packages/torch/distributed/elastic/agent/server/api.py", line 736, in run
-    result = self._invoke_run(role)
-  File "/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/venv/lib64/python3.9/site-packages/torch/distributed/elastic/agent/server/api.py", line 877, in _invoke_run
-    time.sleep(monitor_interval)
-  File "/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/venv/lib64/python3.9/site-packages/torch/distributed/elastic/multiprocessing/api.py", line 62, in _terminate_process_handler
-    raise SignalException(f"Process {os.getpid()} got signal: {sigval}", sigval=sigval)
-torch.distributed.elastic.multiprocessing.api.SignalException: Process 1423234 got signal: 1
