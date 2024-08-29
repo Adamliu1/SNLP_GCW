@@ -4,7 +4,7 @@
 
 # Accelerate used in a multi-gpu setting. Python for single-gpu.
 # LAUNCHER="accelerate launch"
-LAUNCHER="python3"
+LAUNCHER="accelerate launch"
 
 # Experiment config
 MODEL_NAME=$1
@@ -38,9 +38,7 @@ mkdir $RESULTS_PATH
 mkdir $LOGS_PATH
 
 # Tasks selection
-# HF_LLM_LEADERBOARD_TASKS="truthfulqa"
-HF_LLM_LEADERBOARD_TASKS="arc_challenge,hellaswag,truthfulqa,mmlu,winogrande,gsm8k,french_bench,logiqa,piqa,squadv2"
-TASKS=$HF_LLM_LEADERBOARD_TASKS
+TASKS="arc_challenge,hellaswag,truthfulqa,mmlu,winogrande,french_bench,mnli,piqa,squadv2,toxigen,gsm8k"
 
 # Run evaluation
 
@@ -48,24 +46,13 @@ hostname
 
 echo $(date)
 
-# $LAUNCHER -m lm_eval --model hf \
-#     --model_args pretrained=$MODELS_PATH,cache_dir=$MODELS_CACHE_PATH,dtype='bfloat16' \
-#     --tasks $TASKS \
-#     --device $3 \
-#     --batch_size auto \
-#     --trust_remote_code \
-#     --output_path $RESULTS_PATH/$MODEL_NAME/$MODEL_NAME.json \
-#     --wandb_args project=snlp,name=$EXPERIMENT_NAME-$MODEL_NAME,group=$EXPERIMENT_NAME,mode=offline,dir=$WANDB_PATH \
-#     --use_cache $EXPERIMENT_SCRATCH_PATH/.cache/$MODEL_NAME/cache &> $LOGS_PATH/$MODEL_NAME.log 
-
-$LAUNCHER -m lm_eval --model hf \
-    --model_args pretrained=$MODELS_PATH,cache_dir=$MODELS_CACHE_PATH,dtype='bfloat16' \
+HF_HOME=/scratch0/aszablew/.huggingface CUDA_VISIBLE_DEVICES=$3 $LAUNCHER --num_processes=1 -m lm_eval --model hf \
+    --model_args pretrained=$MODELS_PATH \
     --tasks $TASKS \
-    --device $3 \
-    --batch_size auto \
+    --device "cuda" \
+    --batch_size "auto" \
     --trust_remote_code \
-    --output_path $RESULTS_PATH/$MODEL_NAME/$MODEL_NAME.json \
-    --wandb_args project=snlp,name=$EXPERIMENT_NAME-$MODEL_NAME,group=$EXPERIMENT_NAME,mode=offline,dir=$WANDB_PATH &> $LOGS_PATH/$MODEL_NAME.log 
+    --output_path $RESULTS_PATH/$MODEL_NAME/$MODEL_NAME.json
 
 cp -r $EXPERIMENT_SCRATCH_PATH $BASE_PATH/experiment_data/
 

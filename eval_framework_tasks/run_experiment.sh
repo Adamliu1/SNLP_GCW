@@ -23,18 +23,14 @@ RESULTS_PATH=$EXPERIMENT_SCRATCH_PATH/results
 LOGS_PATH=$EXPERIMENT_SCRATCH_PATH/logs
 WANDB_PATH=$EXPERIMENT_SCRATCH_PATH/wandb
 
-mkdir $EXPERIMENT_SCRATCH_PATH
+mkdir -p $EXPERIMENT_SCRATCH_PATH
 
 mkdir $WANDB_PATH
 mkdir $RESULTS_PATH
 mkdir $LOGS_PATH
 
 # Tasks selection
-HF_LLM_LEADERBOARD_TASKS="arc_challenge,hellaswag,truthfulqa,mmlu,winogrande,french_bench,mnli,piqa,squadv2"
-# HF_LLM_LEADERBOARD_TASKS="arc_challenge,hellaswag,truthfulqa"
-# TASKS_ADDITIONAL="toxigen"
-# TASKS=$HF_LLM_LEADERBOARD_TASKS,$TASKS_ADDITIONAL
-TASKS=$HF_LLM_LEADERBOARD_TASKS
+TASKS="arc_challenge,hellaswag,truthfulqa,mmlu,winogrande,french_bench,mnli,piqa,squadv2,toxigen,gsm8k"
 
 # Run evaluation
 
@@ -47,11 +43,11 @@ do
     echo $(date)
     echo "Evaluating $model..."
 
-    HF_HOME=/scratch0/aszablew/.huggingface CUDA_VISIBLE_DEVICES=2 nohup $LAUNCHER --num_processes=1 -m lm_eval --model hf \
+    HF_HOME=/scratch0/aszablew/.huggingface CUDA_VISIBLE_DEVICES=$3 nohup $LAUNCHER --num_processes=1 -m lm_eval --model hf \
     --model_args pretrained=$MODELS_PATH/$model \
     --tasks $TASKS \
     --device "cuda" \
-    --batch_size 16 \
+    --batch_size "auto" \
     --trust_remote_code \
     --output_path $RESULTS_PATH/$model/$model.json &> $LOGS_PATH/$model.log 
 

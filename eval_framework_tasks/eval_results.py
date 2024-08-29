@@ -66,10 +66,12 @@ def filter_json_logs(log_data: dict[int, dict]) -> dict[int, dict]:
             ],
             "arc_challenge_acc": log["results"]["arc_challenge"]["acc,none"],
             "mmlu_acc": log["results"]["mmlu"]["acc,none"],
-            "logiqa_acc": log["results"]["logiqa"]["acc,none"],
+            # "logiqa_acc": log["results"]["logiqa"]["acc,none"],
             "french_bench_acc": log["results"]["french_bench"]["acc,none"],
             "piqa_acc": log["results"]["piqa"]["acc,none"],
-            "squadv2": log["results"]["squadv2"]["f1,none"],
+            "squadv2_f1": log["results"]["squadv2"]["f1,none"],
+            "mnli_acc": log["results"]["mnli"]["acc,none"],
+            "toxigen_acc": log["results"]["toxigen"]["acc,none"],
         }
 
     return results
