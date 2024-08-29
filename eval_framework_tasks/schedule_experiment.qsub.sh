@@ -18,7 +18,7 @@ PROCARR=()
 
 # /scratch0/sduchnie/gemma-2b-unlearn-harm-half_LR1e4
 # /scratch0/sduchnie/gemma-2b-unlearn-harm-full_LR1e4
-# /scratch0/sduchnie/gemma-2b-unlearn-harm-half_LR5e5                         
+# /scratch0/sduchnie/gemma-2b-unlearn-harm-half_LR5e5
 source ./run_experiment.sh "gemma-2b-unlearn-harm-half_LR5e5" "/scratch0/sduchnie" 0 # model name, model path, gpu id
 PROCARR+=($!)
 
