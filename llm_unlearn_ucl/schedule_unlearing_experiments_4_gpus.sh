@@ -90,112 +90,123 @@ for sample_count in "${sample_counts[@]}"; do
             echo "Done syncing. Check wandb ;) "
             date
         fi
+    done
+    GPU_NUM=0
+    DEEPSPEED_PORT=60000
+    echo "Waiting in case runs not finished..."
+    wait ${PROCARR[@]}
+    echo "Done waiting"
+    PROCARR=()
 
-        echo "Now evaluate the runs that just finished spinning..."
-        HF_LLM_LEADERBOARD_TASKS="arc_challenge,hellaswag,truthfulqa,mmlu,winogrande,french_bench,mnli,piqa,squadv2,toxigen,gsm8k"
-        EXPERIMENT_SCRATCH_PATH=/scratch0/sduchnie/$EXPERIMENT_NAME
-        RESULTS_PATH=$EXPERIMENT_SCRATCH_PATH/results
-        LOGS_PATH=$EXPERIMENT_SCRATCH_PATH/logs
-        mkdir -p $RESULTS_PATH
-        mkdir -p $LOGS_PATH
-        mkdir -p $UNLEARNED_MODELS_PATH/experiment_data
-        # TODO: IMPORTANT: GREPPING BELOW - evaluating the 3 runs that just finished! :)
-        MODELS=$(ls $UNLEARNED_MODELS_PATH/models | grep "seq-lr-$LR-$split")
-        GPU_NUM=0
-        PROCARR=()
-        for model in ${MODELS[@]}
-        do
-            echo "Scheduling lm_eval for $model on GPU $GPU_NUM.."
-            echo "Ensuring results dir exist.."
-            mkdir -p $UNLEARNED_MODELS_PATH/experiment_data/model_generations/$model
-            mkdir -p $UNLEARNED_MODELS_PATH/experiment_data/model_generations_truthfulqa/$model
-            mkdir -p $UNLEARNED_MODELS_PATH/experiment_data/eval_results/$model
-            mkdir -p $UNLEARNED_MODELS_PATH/experiment_data/eval_results/truthfulqa/$model
-            mkdir -p $UNLEARNED_MODELS_PATH/experiment_data/eval_results/$model/lm_eval_harness
-            (CUDA_VISIBLE_DEVICES=$GPU_NUM HF_HOME=/scratch0/sduchnie/.huggingface nohup $LMEVAL_PYTHON_PATH -m lm_eval --model hf \
-                --model_args pretrained=$UNLEARNED_MODELS_PATH/models/$model/idx_$NUM_EPOCHS \
-                --tasks $HF_LLM_LEADERBOARD_TASKS \
-                --device "cuda" \
-                --batch_size 16 \
-                --trust_remote_code \
-                --output_path $RESULTS_PATH/$model &> $LOGS_PATH/$model.log; \
-            echo "eval done for $model, copying results and logs from scratch.."; \
-            cp `find $RESULTS_PATH/$model -name "results*.json"` $UNLEARNED_MODELS_PATH/experiment_data/eval_results/$model/lm_eval_harness/$model.json; \
-            cp $LOGS_PATH/eval_harness_$model.log $UNLEARNED_MODELS_PATH/experiment_data/eval_results/$model; \
-            $LMEVAL_PYTHON_PATH ../eval_framework_tasks/eval_results.py --log_dir $UNLEARNED_MODELS_PATH/experiment_data/eval_results/$model/lm_eval_harness) &
-            PROCARR+=($!)
-            GPU_NUM=$((GPU_NUM+1))
-            if [ $GPU_NUM -eq 3 ]; then
-                echo "3/4 GPUs scheduled (memory usage should be ~75%, cant use all 4!), waiting for ${PROCARR[@]}.."
-                GPU_NUM=0
-                DEEPSPEED_PORT=60000
-                wait ${PROCARR[@]}
-                echo "Done waiting"
-                PROCARR=()
-                date
-            fi
-        done
-        echo "Waiting in case more evals still running..."
-        wait ${PROCARR[@]}
-        echo "Done waiting"
-        PROCARR=()
-        GPU_NUM=0
+    echo "Now evaluate the runs that just finished spinning..."
+    HF_LLM_LEADERBOARD_TASKS="arc_challenge,hellaswag,truthfulqa,mmlu,winogrande,french_bench,mnli,piqa,squadv2,toxigen,gsm8k"
+    EXPERIMENT_SCRATCH_PATH=/scratch0/sduchnie/$EXPERIMENT_NAME
+    RESULTS_PATH=$EXPERIMENT_SCRATCH_PATH/results
+    LOGS_PATH=$EXPERIMENT_SCRATCH_PATH/logs
+    mkdir -p $RESULTS_PATH
+    mkdir -p $LOGS_PATH
+    mkdir -p $UNLEARNED_MODELS_PATH/experiment_data
+    # TODO: IMPORTANT: GREPPING BELOW - evaluating the 3 runs that just finished! :)
+    MODELS=$(ls $UNLEARNED_MODELS_PATH/models | grep "seq-lr-$LR-$split")
+    GPU_NUM=0
+    PROCARR=()
+    for model in ${MODELS[@]}
+    do
+        echo "Scheduling lm_eval for $model on GPU $GPU_NUM.."
+        echo "Ensuring results dir exist.."
+        mkdir -p $UNLEARNED_MODELS_PATH/experiment_data/model_generations/$model
+        mkdir -p $UNLEARNED_MODELS_PATH/experiment_data/model_generations_truthfulqa/$model
+        mkdir -p $UNLEARNED_MODELS_PATH/experiment_data/eval_results/$model
+        mkdir -p $UNLEARNED_MODELS_PATH/experiment_data/eval_results/truthfulqa/$model
+        mkdir -p $UNLEARNED_MODELS_PATH/experiment_data/eval_results/$model/lm_eval_harness
+        (CUDA_VISIBLE_DEVICES=$GPU_NUM HF_HOME=/scratch0/sduchnie/.huggingface nohup $LMEVAL_PYTHON_PATH -m lm_eval --model hf \
+            --model_args pretrained=$UNLEARNED_MODELS_PATH/models/$model/idx_$NUM_EPOCHS \
+            --tasks $HF_LLM_LEADERBOARD_TASKS \
+            --device "cuda" \
+            --batch_size 16 \
+            --trust_remote_code \
+            --output_path $RESULTS_PATH/$model &> $LOGS_PATH/$model.log; \
+        echo "eval done for $model, copying results and logs from scratch.."; \
+        cp `find $RESULTS_PATH/$model -name "results*.json"` $UNLEARNED_MODELS_PATH/experiment_data/eval_results/$model/lm_eval_harness/$model.json; \
+        cp $LOGS_PATH/eval_harness_$model.log $UNLEARNED_MODELS_PATH/experiment_data/eval_results/$model; \
+        $LMEVAL_PYTHON_PATH ../eval_framework_tasks/eval_results.py --log_dir $UNLEARNED_MODELS_PATH/experiment_data/eval_results/$model/lm_eval_harness) &
+        PROCARR+=($!)
+        GPU_NUM=$((GPU_NUM+1))
+        if [ $GPU_NUM -eq 3 ]; then
+            echo "3/4 GPUs scheduled (memory usage should be ~75%, cant use all 4!), waiting for ${PROCARR[@]}.."
+            GPU_NUM=0
+            DEEPSPEED_PORT=60000
+            wait ${PROCARR[@]}
+            echo "Done waiting"
+            PROCARR=()
+            date
+        fi
+    done
+    echo "Waiting in case more evals still running..."
+    wait ${PROCARR[@]}
+    echo "Done waiting"
+    PROCARR=()
+    GPU_NUM=0
 
-        echo "Eval harmfulness for the models that just got unlearned..."
-        for model in ${MODELS[@]}
-        do
-            echo "Generate model answers for $model on GPU: $GPU_NUM ... (path relative to llm_unlearn_ucl dir)"
-            (CUDA_VISIBLE_DEVICES=$GPU_NUM nohup python3 ../eval_harmfulness/beavertails_get_model_answers.py \
-                --model_path $UNLEARNED_MODELS_PATH/models/$model/idx_$NUM_EPOCHS \
-                --device cuda \
-                --batch_size 128 \
-                --output_dir $UNLEARNED_MODELS_PATH/experiment_data/model_generations/$model \
-                &> $UNLEARNED_MODELS_PATH/experiment_data/model_generations/$model/model_gen.log; \
-                echo "Model generations done for: $model. Now evaluating generations with beaverdam.."; \
-            CUDA_VISIBLE_DEVICES=$GPU_NUM nohup python3 ../eval_harmfulness/evaluate_outputs.py \
-                --eval_dataset $UNLEARNED_MODELS_PATH/experiment_data/model_generations/$model \
-                --model_path $BEAVERDAM_WEIGHTS_PATH \
-                --device cuda \
-                --max_length 512 \
-                --output_dir $UNLEARNED_MODELS_PATH/experiment_data/eval_results/$model \
-                &> $UNLEARNED_MODELS_PATH/experiment_data/eval_results/$model_name/model_harmful_eval.log) &
-            PROCARR+=($!)
-            GPU_NUM=$((GPU_NUM+1))
-            if [ $GPU_NUM -eq 3 ]; then
-                echo "3/4 GPUs scheduled, waiting for ${PROCARR[@]}.."
-                GPU_NUM=0
-                wait ${PROCARR[@]}
-                echo "Done waiting"
-                PROCARR=()
-                date
-            fi
-        done
-        echo "Eval TruthfulQA answers (Just stats) for the models that just got unlearned..."
-        for model in ${MODELS[@]}
-        do
-            echo "Generate model answers for $model on GPU: $GPU_NUM ... (path relative to llm_unlearn_ucl dir)"
-            (CUDA_VISIBLE_DEVICES=$GPU_NUM nohup python3 ../eval_truthfulQA/generate_outputs.py \
-                --model_path $UNLEARNED_MODELS_PATH/models/$model/idx_$NUM_EPOCHS \
-                --device cuda \
-                --batch_size 128 \
-                --output_dir $UNLEARNED_MODELS_PATH/experiment_data/model_generations_truthfulqa/$model \
-                &> $UNLEARNED_MODELS_PATH/experiment_data/model_generations_truthfulqa/$model/model_gen.log; \
-                echo "Model generations done for: $model. Now evaluating generations with beaverdam.."; \
-            CUDA_VISIBLE_DEVICES=$GPU_NUM nohup python3 ../eval_truthfulQA/evaluate_outputs.py \
-                --eval_dataset $UNLEARNED_MODELS_PATH/experiment_data/model_generations_truthfulqa/$model \
-                --output_dir $UNLEARNED_MODELS_PATH/experiment_data/eval_results/truthfulqa/$model \
-                &> $UNLEARNED_MODELS_PATH/experiment_data/eval_results/$model_name/model_truthfulqa_eval.log) &
-            PROCARR+=($!)
-            GPU_NUM=$((GPU_NUM+1))
-            if [ $GPU_NUM -eq 3 ]; then
-                echo "3/4 GPUs scheduled, waiting for ${PROCARR[@]}.."
-                GPU_NUM=0
-                wait ${PROCARR[@]}
-                echo "Done waiting"
-                PROCARR=()
-                date
-            fi
-        done
+    echo "Eval harmfulness for the models that just got unlearned..."
+    for model in ${MODELS[@]}
+    do
+        echo "Generate model answers for $model on GPU: $GPU_NUM ... (path relative to llm_unlearn_ucl dir)"
+        (CUDA_VISIBLE_DEVICES=$GPU_NUM nohup python3 ../eval_harmfulness/beavertails_get_model_answers.py \
+            --model_path $UNLEARNED_MODELS_PATH/models/$model/idx_$NUM_EPOCHS \
+            --device cuda \
+            --batch_size 128 \
+            --output_dir $UNLEARNED_MODELS_PATH/experiment_data/model_generations/$model \
+            &> $UNLEARNED_MODELS_PATH/experiment_data/model_generations/$model/model_gen.log; \
+            echo "Model generations done for: $model. Now evaluating generations with beaverdam.."; \
+        CUDA_VISIBLE_DEVICES=$GPU_NUM nohup python3 ../eval_harmfulness/evaluate_outputs.py \
+            --eval_dataset $UNLEARNED_MODELS_PATH/experiment_data/model_generations/$model \
+            --model_path $BEAVERDAM_WEIGHTS_PATH \
+            --device cuda \
+            --max_length 512 \
+            --output_dir $UNLEARNED_MODELS_PATH/experiment_data/eval_results/$model \
+            &> $UNLEARNED_MODELS_PATH/experiment_data/eval_results/$model_name/model_harmful_eval.log) &
+        PROCARR+=($!)
+        GPU_NUM=$((GPU_NUM+1))
+        if [ $GPU_NUM -eq 3 ]; then
+            echo "3/4 GPUs scheduled, waiting for ${PROCARR[@]}.."
+            GPU_NUM=0
+            wait ${PROCARR[@]}
+            echo "Done waiting"
+            PROCARR=()
+            date
+        fi
+    done
+    echo "Waiting in case more evals still running..."
+    wait ${PROCARR[@]}
+    echo "Done waiting"
+    PROCARR=()
+    GPU_NUM=0
+    echo "Eval TruthfulQA answers (Just stats) for the models that just got unlearned..."
+    for model in ${MODELS[@]}
+    do
+        echo "Generate model answers for $model on GPU: $GPU_NUM ... (path relative to llm_unlearn_ucl dir)"
+        (CUDA_VISIBLE_DEVICES=$GPU_NUM nohup python3 ../eval_truthfulQA/generate_outputs.py \
+            --model_path $UNLEARNED_MODELS_PATH/models/$model/idx_$NUM_EPOCHS \
+            --device cuda \
+            --batch_size 128 \
+            --output_dir $UNLEARNED_MODELS_PATH/experiment_data/model_generations_truthfulqa/$model \
+            &> $UNLEARNED_MODELS_PATH/experiment_data/model_generations_truthfulqa/$model/model_gen.log; \
+            echo "Model generations done for: $model. Now evaluating generations with beaverdam.."; \
+        CUDA_VISIBLE_DEVICES=$GPU_NUM nohup python3 ../eval_truthfulQA/evaluate_outputs.py \
+            --eval_dataset $UNLEARNED_MODELS_PATH/experiment_data/model_generations_truthfulqa/$model \
+            --output_dir $UNLEARNED_MODELS_PATH/experiment_data/eval_results/truthfulqa/$model \
+            &> $UNLEARNED_MODELS_PATH/experiment_data/eval_results/$model_name/model_truthfulqa_eval.log) &
+        PROCARR+=($!)
+        GPU_NUM=$((GPU_NUM+1))
+        if [ $GPU_NUM -eq 3 ]; then
+            echo "3/4 GPUs scheduled, waiting for ${PROCARR[@]}.."
+            GPU_NUM=0
+            wait ${PROCARR[@]}
+            echo "Done waiting"
+            PROCARR=()
+            date
+        fi
     done
     
     echo "Waiting for processes: ${PROCARR[@]}..."
