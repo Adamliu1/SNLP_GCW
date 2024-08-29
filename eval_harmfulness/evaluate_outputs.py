@@ -28,50 +28,104 @@ import numpy as np
 import pandas as pd
 from evaluation_scripts.moderation import QAModeration
 from evaluation_scripts.parse_args import parse_arguments
+from evaluation_scripts.metrics import (
+    calculate_question_repeated_ratio,
+    calculate_output_quality_heuristics,
+    calculate_response_length,
+    calculate_flagged_proportion_and_agreement,
+)
 
 
-def calculate_flagged_proportion_and_agreement(data: dict) -> dict:
-    flagged_moderation = np.array(
-        [line["flagged"]["QAModeration"] for line in data], dtype=bool
-    )
-
-    return {
-        "flagged/all": flagged_moderation.mean(),
-    }
-
-
-def plot_metrics(metrics: list[dict], output_dir: str) -> None:
+def plot_metrics(metrics: list[dict], output_dir: str, plot_title: str) -> None:
     """Plot metrics."""
     model_names = np.asarray([row["model_name"] for row in metrics])
     moderation = np.asarray([row["flagged/all"] for row in metrics])
+    special_chars = np.asarray(
+        [row["special_char_count/characters_in_response"] for row in metrics]
+    )
+    empty = np.asarray([row["empty_response_ratio"] for row in metrics])
     bar_width = 0.25
     index = np.arange(len(moderation))
-    _, ax = plt.subplots(figsize=(8, 6), dpi=150)  # pylint: disable=invalid-name
+    _, ax = plt.subplots(figsize=(8, 6), dpi=150)
     ax.bar(
         index,
         1.0 - moderation,
         bar_width,
-        label="beaver-dam-7b moderated",
+        label="Model safety evaluation",
+        color="#FF6D60",
+        alpha=0.85,
+        zorder=2,
+    )
+    plt.legend(bbox_to_anchor=(0.55, -0.2), loc="lower right")
+
+    ax_twin = ax.twinx()
+
+    ax_twin.scatter(
+        index,
+        special_chars,
+        s=100,
+        label="special chars/all chars ratio",
+        color="#00FF00",
+        alpha=0.85,
+        zorder=2,
+        marker="s",
+    )
+
+    ax_twin.scatter(
+        index,
+        empty,
+        s=100,
+        label="empty responses ratio",
+        color="#0000FF",
+        alpha=0.85,
+        zorder=2,
+    )
+
+    plt.legend(bbox_to_anchor=(0.55, -0.4), loc="lower right")
+
+    ax.grid(axis="y", color="k", alpha=0.2, zorder=1)
+    # ax.set_xticks(index + bar_width)
+    ax.set_xticks(index)
+    ax.set_xticklabels(model_names)
+    ax.set_xlabel("Model")
+    ax.set_ylabel("Proportion of safe QA Pairs")
+    ax.set_title(f"Safety Evaluation of: {plot_title}")
+    ax.set_yticks(np.arange(0.4, 1.1, 0.1))
+    ax.axhline(y=1.0, color="k", linestyle="-.", alpha=0.5)
+    ax.set_yticklabels([f"{i}%" for i in range(40, 110, 10)])
+    ax.set_ylim(0.35, 1.03)
+
+    ax_twin.set_yticks(np.arange(0, 1, 0.1))
+    ax_twin.set_yticklabels([f"{i*10}%" for i in range(0, 10, 1)])
+    ax_twin.set_ylim(0, 1)
+
+    plt.tight_layout()
+    plt.savefig(os.path.join(output_dir, "flagged-proportion.png"))
+
+    plt.clf()
+    _, ax = plt.subplots(figsize=(8, 6), dpi=150)
+    avg_response_length = np.asarray([row["avg_response_length"] for row in metrics])
+    ax.bar(
+        index,
+        avg_response_length,
+        bar_width,
+        # label="Avg response length",
         color="#FF6D60",
         alpha=0.85,
         zorder=2,
     )
 
-    plt.grid(axis="y", color="k", alpha=0.2, zorder=1)
+    ax.set_xlabel("Model")
     ax.set_xticks(index)
     ax.set_xticklabels(model_names)
-    ax.set_xlabel("Model")
-    ax.set_ylabel("Proportion of safe QA Pairs")
-    ax.set_title("Safety Evaluation of Different Models")
-    ax.set_yticks(np.arange(0.4, 1.1, 0.1))
-    ax.axhline(y=1.0, color="k", linestyle="-.", alpha=0.5)
-    ax.set_yticklabels([f"{i}%" for i in range(40, 110, 10)])
-    ax.set_ylim(0.35, 1.03)
-    plt.legend(bbox_to_anchor=(0.05, -0.3), loc="lower left")
+    ax.set_ylabel("Characters")
+    ax.set_title(f"Average safety response length: {plot_title}")
 
-    plt.legend(bbox_to_anchor=(0.95, -0.3), loc="lower right")
+    ax.grid(axis="y", color="k", alpha=0.2, zorder=1)
     plt.tight_layout()
-    plt.savefig(os.path.join(output_dir, "flagged-proportion.png"))
+    # plt.legend()
+
+    plt.savefig(os.path.join(output_dir, "avg_response_rate.png"))
 
 
 def main() -> None:
@@ -120,22 +174,6 @@ def main() -> None:
         for line, pred in zip(data, predictions):
             line["flagged"] = {"QAModeration": pred["flagged"]}
     else:
-        # XXX: Uncomment below if evaluation.json failed to generate
-        # log_file_names = os.listdir(args.eval_dataset)
-        # assert (
-        #    log_file_names
-        # ), f"Beep boop... no files in a directory provided ({args.eval_dataset}). Something went wrong :("
-
-        # data = []
-        # for file_name in log_file_names:
-        #    with open(os.path.join(args.eval_dataset, file_name), "r") as f:
-        #        data.extend(json.load(f))
-        # with open(
-        #    os.path.join(args.output_dir, "predictions.json"), encoding="utf-8"
-        # ) as f:
-        #    predictions = json.load(f)
-        # for line, pred in zip(data, predictions):
-        #    line["flagged"] = {"QAModeration": pred["flagged"]}
         with open(
             os.path.join(args.output_dir, "evaluation.json"), encoding="utf-8"
         ) as f:
@@ -159,6 +197,9 @@ def main() -> None:
             {
                 "model_name": model_name,
                 **calculate_flagged_proportion_and_agreement(model_data),
+                **calculate_output_quality_heuristics(model_data),
+                **calculate_response_length(model_data),
+                **calculate_question_repeated_ratio(model_data),
             },
         )
 
@@ -167,7 +208,7 @@ def main() -> None:
     print(df)
     df.to_csv(os.path.join(args.output_dir, "flagged_ratio.csv"), index=False)
 
-    plot_metrics(metrics, args.output_dir)
+    plot_metrics(metrics, args.output_dir, "")
 
 
 if __name__ == "__main__":

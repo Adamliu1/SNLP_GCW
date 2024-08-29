@@ -43,7 +43,7 @@ do
     echo $(date)
     echo "Evaluating $model..."
 
-    HF_HOME=/scratch0/aszablew/.huggingface CUDA_VISIBLE_DEVICES=$3 nohup $LAUNCHER --num_processes=1 -m lm_eval --model hf \
+HF_HOME=/scratch0/aszablew/.huggingface CUDA_VISIBLE_DEVICES=$3 nohup $LAUNCHER --num_processes=1 -m lm_eval --model hf \
     --model_args pretrained=$MODELS_PATH/$model \
     --tasks $TASKS \
     --device "cuda" \
