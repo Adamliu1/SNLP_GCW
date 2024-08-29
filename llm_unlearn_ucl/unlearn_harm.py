@@ -45,7 +45,6 @@ from data_utils import (
     make_dataset,
 )
 from parse_args import parse_args
-from peft import AdaLoraConfig, TaskType, get_peft_model
 from torch.optim import AdamW
 from transformers import AutoModelForCausalLM, AutoTokenizer, get_scheduler
 from utils import (
@@ -159,11 +158,10 @@ def main(args) -> None:
         level=logging.INFO,
     )
     logger = get_logger(__name__)
-    if accelerator.is_main_process:
+    if accelerator.is_local_main_process:
         for arg in vars(args):
             logger.info(f"{arg}: {getattr(args, arg)}")
     accelerator.wait_for_everyone()
-
     print(f"Loading model {args.model_name} for training...")
     model = AutoModelForCausalLM.from_pretrained(
         args.model_name,
@@ -238,7 +236,6 @@ def main(args) -> None:
 
     # Prepare.
     if args.no_scheduler:
-        # TODO: TEST THIS BIT
         (
             model,
             optimizer,
