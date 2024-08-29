@@ -32,3 +32,5 @@ llm_unlearn_ucl/wandb
 
 # do not upload harmfulness eval model weights
 eval_harmfulness/beaver-dam-7_weights
+
+*.log

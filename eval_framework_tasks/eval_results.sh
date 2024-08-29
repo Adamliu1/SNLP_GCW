@@ -1,7 +1,7 @@
 #! /bin/bash
 
 # TODO: Add instructions how to use.
-EXPERIMENT_NAME=opt1.3b_unlearned_harmful-eval1
+EXPERIMENT_NAME=llama3-8b-eval1
 
 LOGS_BASE_PATH=/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks/experiment_data/
 BASE_PATH="/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_framework_tasks"
@@ -18,6 +18,5 @@ do
     cp $file $ANALYSIS_LOGS_PATH
 done
 
-# ugh this is a dodgy way of doing it xd
-$BASE_PATH/../venv/bin/python3 eval_results.py --log_dir $ANALYSIS_LOGS_PATH
+python3 eval_results.py --log_dir $ANALYSIS_LOGS_PATH
 
