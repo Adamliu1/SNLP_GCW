@@ -9,6 +9,7 @@
 
 LAUNCHER="accelerate launch"
 LMEVAL_PYTHON_PATH="/home/sduchnie/venv_eval_harness/bin/python3"
+BEAVERDAM_WEIGHTS_PATH="/SAN/intelsys/llm/sduchnie/models/beaver-dam-7b"
 LR=5e-7
 NUM_EPOCHS=20
 SAVE_EVERY_STEPS=256
@@ -51,52 +52,57 @@ DEEPSPEED_PORT=60000
 for sample_count in "${sample_counts[@]}"; do
     date
     PROCARR=()
-    for split in "${splits[@]}"; do
-        # Sequential Splits $split; If $split == 1 => batch
-        RUN_NAME="seq-lr-$LR-$split-$sample_count-$MODEL_NAME-$UNLEARN_DATASET_NAME-$RETAIN_DATASET_NAME"
-        if [ $split -eq 1 ]; then
-            RUN_NAME="batch-$sample_count-$MODEL_NAME-$UNLEARN_DATASET_NAME-$RETAIN_DATASET_NAME"
-        fi
-        echo "Starting $RUN_NAME on GPU $GPU_NUM.."
-        CUDA_VISIBLE_DEVICES=$GPU_NUM nohup $LAUNCHER --main_process_port $DEEPSPEED_PORT unlearn_harm.py \
-                            --model_name $MODEL_PATH \
-                            --model_save_dir "$UNLEARNED_MODELS_PATH/models/$RUN_NAME" \
-                            --log_file "$UNLEARNED_MODELS_PATH/logs/$RUN_NAME.log" \
-                            --cache_dir ".cache" \
-                            --seed $SEED \
-                            --retaining_dataset $RETAIN_DATASET_PATH \
-                            --unlearning_dataset $UNLEARN_DATASET_PATH \
-                            --max_bad_loss 10000 \
-                            --samples_count $sample_count \
-                            --sequential $split \
-                            --num_epochs $NUM_EPOCHS \
-                            --batch_size $BATCH_SIZE \
-                            --save_every $SAVE_EVERY_STEPS \
-                            --lr $LR \
-                            --wandb_project_name $WANDB_PROJ_NAME \
-                            --wandb_run_name $RUN_NAME &> $UNLEARNED_MODELS_PATH/logs/stdout_$RUN_NAME.log &
-        PROCARR+=($!)
-        GPU_NUM=$((GPU_NUM+1))
-        DEEPSPEED_PORT=$((DEEPSPEED_PORT+100))
-        if [ $GPU_NUM -eq 3 ]; then
-            echo "3/4 GPUs scheduled (memory usage should be ~75%, cant use all 4!), waiting for ${PROCARR[@]}.."
-            GPU_NUM=0
-            DEEPSPEED_PORT=60000
-            wait ${PROCARR[@]}
-            echo "Done waiting"
-            PROCARR=()
-            echo "Syncing wandb runs.."
-            for file in $UNLEARNED_MODELS_PATH/logs/stdout_*; do eval $(cat $file | grep "wandb sync .*" | sed 's/^.\{7\}//'); done;
-            echo "Done syncing. Check wandb ;) "
-            date
-        fi
-    done
-    GPU_NUM=0
-    DEEPSPEED_PORT=60000
-    echo "Waiting in case runs not finished..."
-    wait ${PROCARR[@]}
-    echo "Done waiting"
-    PROCARR=()
+    # TODO: Quick fix below, since accidentaly messed up grepping on first run and only did evals of 1/3 models
+    if [[ $sample_count -eq 128 ]]; then
+        echo "Skipping unlearning sample count 128 as already unlearned.."
+    else
+        for split in "${splits[@]}"; do
+            # Sequential Splits $split; If $split == 1 => batch
+            RUN_NAME="seq-lr-$LR-$split-$sample_count-$MODEL_NAME-$UNLEARN_DATASET_NAME-$RETAIN_DATASET_NAME"
+            if [ $split -eq 1 ]; then
+                RUN_NAME="batch-$sample_count-$MODEL_NAME-$UNLEARN_DATASET_NAME-$RETAIN_DATASET_NAME"
+            fi
+            echo "Starting $RUN_NAME on GPU $GPU_NUM.."
+            CUDA_VISIBLE_DEVICES=$GPU_NUM nohup $LAUNCHER --main_process_port $DEEPSPEED_PORT unlearn_harm.py \
+                                --model_name $MODEL_PATH \
+                                --model_save_dir "$UNLEARNED_MODELS_PATH/models/$RUN_NAME" \
+                                --log_file "$UNLEARNED_MODELS_PATH/logs/$RUN_NAME.log" \
+                                --cache_dir ".cache" \
+                                --seed $SEED \
+                                --retaining_dataset $RETAIN_DATASET_PATH \
+                                --unlearning_dataset $UNLEARN_DATASET_PATH \
+                                --max_bad_loss 10000 \
+                                --samples_count $sample_count \
+                                --sequential $split \
+                                --num_epochs $NUM_EPOCHS \
+                                --batch_size $BATCH_SIZE \
+                                --save_every $SAVE_EVERY_STEPS \
+                                --lr $LR \
+                                --wandb_project_name $WANDB_PROJ_NAME \
+                                --wandb_run_name $RUN_NAME &> $UNLEARNED_MODELS_PATH/logs/stdout_$RUN_NAME.log &
+            PROCARR+=($!)
+            GPU_NUM=$((GPU_NUM+1))
+            DEEPSPEED_PORT=$((DEEPSPEED_PORT+100))
+            if [ $GPU_NUM -eq 3 ]; then
+                echo "3/4 GPUs scheduled (memory usage should be ~75%, cant use all 4!), waiting for ${PROCARR[@]}.."
+                GPU_NUM=0
+                DEEPSPEED_PORT=60000
+                wait ${PROCARR[@]}
+                echo "Done waiting"
+                PROCARR=()
+                echo "Syncing wandb runs.."
+                for file in $UNLEARNED_MODELS_PATH/logs/stdout_*; do eval $(cat $file | grep "wandb sync .*" | sed 's/^.\{7\}//'); done;
+                echo "Done syncing. Check wandb ;) "
+                date
+            fi
+        done
+        GPU_NUM=0
+        DEEPSPEED_PORT=60000
+        echo "Waiting in case runs not finished..."
+        wait ${PROCARR[@]}
+        echo "Done waiting"
+        PROCARR=()
+    fi
 
     echo "Now evaluate the runs that just finished spinning..."
     HF_LLM_LEADERBOARD_TASKS="arc_challenge,hellaswag,truthfulqa,mmlu,winogrande,french_bench,mnli,piqa,squadv2,toxigen,gsm8k"
@@ -107,8 +113,10 @@ for sample_count in "${sample_counts[@]}"; do
     mkdir -p $LOGS_PATH
     mkdir -p $UNLEARNED_MODELS_PATH/experiment_data
     # TODO: IMPORTANT: GREPPING BELOW - evaluating the 3 runs that just finished! :)
-    MODELS=$(ls $UNLEARNED_MODELS_PATH/models | grep "seq-lr-$LR-$split")
+    MODELS=$(ls $UNLEARNED_MODELS_PATH/models | grep "seq-lr-$LR-" | grep $sample_count)
+    echo "Models that just finished unlearning:" ${MODELS[@]}
     GPU_NUM=0
+    DEEPSPEED_PORT=60000
     PROCARR=()
     for model in ${MODELS[@]}
     do
@@ -128,7 +136,7 @@ for sample_count in "${sample_counts[@]}"; do
             --output_path $RESULTS_PATH/$model &> $LOGS_PATH/$model.log; \
         echo "eval done for $model, copying results and logs from scratch.."; \
         cp `find $RESULTS_PATH/$model -name "results*.json"` $UNLEARNED_MODELS_PATH/experiment_data/eval_results/$model/lm_eval_harness/$model.json; \
-        cp $LOGS_PATH/eval_harness_$model.log $UNLEARNED_MODELS_PATH/experiment_data/eval_results/$model; \
+        cp $LOGS_PATH/$model.log $UNLEARNED_MODELS_PATH/experiment_data/eval_results/$model; \
         $LMEVAL_PYTHON_PATH ../eval_framework_tasks/eval_results.py --log_dir $UNLEARNED_MODELS_PATH/experiment_data/eval_results/$model/lm_eval_harness) &
         PROCARR+=($!)
         GPU_NUM=$((GPU_NUM+1))
@@ -147,6 +155,7 @@ for sample_count in "${sample_counts[@]}"; do
     echo "Done waiting"
     PROCARR=()
     GPU_NUM=0
+    DEEPSPEED_PORT=60000
 
     echo "Eval harmfulness for the models that just got unlearned..."
     for model in ${MODELS[@]}
@@ -157,7 +166,7 @@ for sample_count in "${sample_counts[@]}"; do
             --device cuda \
             --batch_size 128 \
             --output_dir $UNLEARNED_MODELS_PATH/experiment_data/model_generations/$model \
-            &> $UNLEARNED_MODELS_PATH/experiment_data/model_generations/$model/model_gen.log; \
+            &> $UNLEARNED_MODELS_PATH/experiment_data/eval_results/$model/model_gen.log; \
             echo "Model generations done for: $model. Now evaluating generations with beaverdam.."; \
         CUDA_VISIBLE_DEVICES=$GPU_NUM nohup python3 ../eval_harmfulness/evaluate_outputs.py \
             --eval_dataset $UNLEARNED_MODELS_PATH/experiment_data/model_generations/$model \
@@ -165,12 +174,13 @@ for sample_count in "${sample_counts[@]}"; do
             --device cuda \
             --max_length 512 \
             --output_dir $UNLEARNED_MODELS_PATH/experiment_data/eval_results/$model \
-            &> $UNLEARNED_MODELS_PATH/experiment_data/eval_results/$model_name/model_harmful_eval.log) &
+            &> $UNLEARNED_MODELS_PATH/experiment_data/eval_results/$model/model_harmful_eval.log) &
         PROCARR+=($!)
         GPU_NUM=$((GPU_NUM+1))
         if [ $GPU_NUM -eq 3 ]; then
             echo "3/4 GPUs scheduled, waiting for ${PROCARR[@]}.."
             GPU_NUM=0
+            DEEPSPEED_PORT=60000
             wait ${PROCARR[@]}
             echo "Done waiting"
             PROCARR=()
@@ -182,6 +192,7 @@ for sample_count in "${sample_counts[@]}"; do
     echo "Done waiting"
     PROCARR=()
     GPU_NUM=0
+    DEEPSPEED_PORT=60000
     echo "Eval TruthfulQA answers (Just stats) for the models that just got unlearned..."
     for model in ${MODELS[@]}
     do
@@ -191,17 +202,18 @@ for sample_count in "${sample_counts[@]}"; do
             --device cuda \
             --batch_size 128 \
             --output_dir $UNLEARNED_MODELS_PATH/experiment_data/model_generations_truthfulqa/$model \
-            &> $UNLEARNED_MODELS_PATH/experiment_data/model_generations_truthfulqa/$model/model_gen.log; \
+            &> $UNLEARNED_MODELS_PATH/experiment_data/eval_results/truthfulqa/$model/model_gen.log; \
             echo "Model generations done for: $model. Now evaluating generations with beaverdam.."; \
         CUDA_VISIBLE_DEVICES=$GPU_NUM nohup python3 ../eval_truthfulQA/evaluate_outputs.py \
             --eval_dataset $UNLEARNED_MODELS_PATH/experiment_data/model_generations_truthfulqa/$model \
             --output_dir $UNLEARNED_MODELS_PATH/experiment_data/eval_results/truthfulqa/$model \
-            &> $UNLEARNED_MODELS_PATH/experiment_data/eval_results/$model_name/model_truthfulqa_eval.log) &
+            &> $UNLEARNED_MODELS_PATH/experiment_data/eval_results/$model/model_truthfulqa_eval.log) &
         PROCARR+=($!)
         GPU_NUM=$((GPU_NUM+1))
         if [ $GPU_NUM -eq 3 ]; then
             echo "3/4 GPUs scheduled, waiting for ${PROCARR[@]}.."
             GPU_NUM=0
+            DEEPSPEED_PORT=60000
             wait ${PROCARR[@]}
             echo "Done waiting"
             PROCARR=()
@@ -211,7 +223,11 @@ for sample_count in "${sample_counts[@]}"; do
     
     echo "Waiting for processes: ${PROCARR[@]}..."
     wait ${PROCARR[@]}
-    echo "Done waiting."
+    GPU_NUM=0
+    DEEPSPEED_PORT=60000
+    echo "Done waiting"
+    PROCARR=()
+    date
     echo "Syncing wandb runs.."
     for file in $UNLEARNED_MODELS_PATH/logs/stdout_*; do eval $(cat $file | grep "wandb sync .*" | sed 's/^.\{7\}//'); done;
     echo "Done syncing. Check wandb ;) "
