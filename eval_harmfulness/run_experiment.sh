@@ -2,7 +2,7 @@
 
 # Experiment config
 MODEL_NAME=llama-3-8b
-EXPERIMENT_NAME=$MODEL_NAME-eval1
+EXPERIMENT_NAME=$MODEL_NAME-eval2
 
 
 
@@ -27,7 +27,7 @@ do
     nohup python3 beavertails_get_model_answers.py \
         --model_path $MODELS_PATH/$model \
         --device $DEVICE \
-        --batch_size 128 \ 
+        --batch_size 128 \
         --output_dir "$BASE_PATH/model_generations/$EXPERIMENT_NAME"
 
 done

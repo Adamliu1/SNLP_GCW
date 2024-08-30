@@ -2,13 +2,13 @@
 
 # Experiment config
 MODEL_NAME=llama-3-8b
-EXPERIMENT_NAME=$MODEL_NAME-eval1
+EXPERIMENT_NAME=$MODEL_NAME-eval2
 
 
 
 # Paths and directories
 MODELS_PATH=/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/snlp-unlearned-models/models/$MODEL_NAME
-BASE_PATH=/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_harmfulness
+BASE_PATH=/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/eval_truthfulQA
 source $BASE_PATH/../venv/bin/activate
 
 # Environment config
