@@ -13,7 +13,7 @@ LR=5e-7
 NUM_EPOCHS=20
 SAVE_EVERY_STEPS=256
 SAVE_EVERY_STEPS_BATCH=1 # Save every epoch for batch (would be a multiple of 128 samples seen: e.g. 128 epoch 3 = 384 samples, 512 epoch 20 = 10240 samples)
-BATCH_SIZE=1 # TODO: Continuos batch size set again later
+BATCH_SIZE=2
 SEED=2137
 MAX_UNLEARN_STEPS=10240
 # TODO: ENSURE UNLEARNED_MODELS_PATH IS CORRECT WHEN SCHEDULING
