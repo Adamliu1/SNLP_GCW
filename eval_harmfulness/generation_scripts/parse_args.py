@@ -57,6 +57,13 @@ def parse_args() -> argparse.Namespace:
         help="Directory to which the output JSON is saved.",
     )
 
+    parser.add_argument(
+        "--num_generations_per_prompt",
+        type=int,
+        default=5,
+        help="Number of generations per question used in majority voting.",
+    )
+
     args = parser.parse_args()
 
     return args
