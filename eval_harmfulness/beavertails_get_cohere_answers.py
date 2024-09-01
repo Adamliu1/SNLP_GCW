@@ -17,6 +17,7 @@ from tqdm import tqdm
 from cohere_api_key import COHERE_API_PRODUCTION_KEY
 
 
+# TODO add support for num_generations_per_prompt arg.
 def main() -> None:
     co = cohere.Client(COHERE_API_PRODUCTION_KEY)
     output_dir = "./model_generations"

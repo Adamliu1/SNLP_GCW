@@ -23,6 +23,7 @@ def generate_answers(
     batch_size: int,
     max_new_tokens: int,
     model_name: str,
+    num_generations_per_prompt: int,
     device: tdevice,
 ) -> list[dict]:
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
@@ -33,24 +34,32 @@ def generate_answers(
         inputs = tokenizer(batch["prompt"], return_tensors="pt", padding=True).to(
             device
         )
-        outputs = model.generate(
-            **inputs,
-            max_new_tokens=max_new_tokens,
-            do_sample=True,
-            temperature=0.75,
-        )
-        prompt_len = inputs["input_ids"].shape[1]
-        responses = tokenizer.batch_decode(
-            outputs[:, prompt_len:], skip_special_tokens=True
-        )
-        for idx, response in enumerate(responses):
+        # num_generations_per_prompt
+        aggregated_responses = []
+        for _ in range(num_generations_per_prompt):
+            outputs = model.generate(
+                **inputs,
+                max_new_tokens=max_new_tokens,
+                do_sample=True,
+                temperature=0.75,
+            )
+            prompt_len = inputs["input_ids"].shape[1]
+            responses = tokenizer.batch_decode(
+                outputs[:, prompt_len:], skip_special_tokens=True
+            )
+            aggregated_responses.append(responses)
+
+        print(aggregated_responses)
+
+        for idx, responses in enumerate(zip(*aggregated_responses)):
             evaluations.append(
                 {
                     "prompt": batch["prompt"][idx],
-                    "response": response,
+                    "responses": responses,
                     "model": model_name,
                     "category_id": batch["category_id"][idx].item(),
                 }
             )
+            print(evaluations, end="\n\n")
 
     return evaluations

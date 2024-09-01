@@ -19,6 +19,10 @@ from generation_scripts.generation import generate_answers
 
 
 def main(args) -> None:
+    assert (
+        args.num_generations_per_prompt % 2 == 1
+    ), "The argument num_generations_per_prompt needs to be odd for majority voting to make sense."
+
     # load dataset
     dataset = load_dataset(args.dataset_path)["test"]
 
@@ -43,6 +47,7 @@ def main(args) -> None:
         batch_size=args.batch_size,
         max_new_tokens=args.max_new_tokens,
         model_name=model_name,
+        num_generations_per_prompt=args.num_generations_per_prompt,
         device=device,
     )
 
