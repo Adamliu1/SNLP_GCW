@@ -488,12 +488,12 @@ def get_truthfulQA_answers_plaintext(tqa_file_path="data/TruthfulQA.csv"):
     return all_ans
 
 
-def compute_kl(pretrained_model, current_model, batch, device):
+def compute_kl(pretrained_model_probs, current_model, batch, device):
     """
     Compute *forward* KL as the normal utility loss.
 
     Args:
-        pretrained_model: reference model which is the pretrained (original) model.
+        pretrained_model_probs: precomputed probabilities for the reference model which is the pretrained (original) model.
         current_model: The current unlearning model.
         batch: A batch of normal data.
         device: GPU device.
@@ -507,15 +507,8 @@ def compute_kl(pretrained_model, current_model, batch, device):
         labels=batch["labels"].to(device),
     )
 
-    with torch.no_grad():
-        pretrained_outputs = pretrained_model(
-            batch["input_ids"].to(device),
-            attention_mask=batch["attention_mask"].to(device),
-            labels=batch["labels"].to(device),
-        )
-
     # P: pretrained model; Q: current model.
-    prob_p = torch.nn.functional.softmax(pretrained_outputs.logits, -1)
+    prob_p = pretrained_model_probs
     prob_q = torch.nn.functional.softmax(normal_outputs.logits, -1)
 
     loss = -(prob_p * torch.log(prob_q + 1e-12)).sum(-1).mean()

@@ -54,7 +54,7 @@ def set_seed(seed_num: int) -> None:
 
 def run_training_batch(
     model,
-    pretrained_model,
+    pretrained_model_probs,
     tokenizer,
     device,
     normal_ans,
@@ -85,7 +85,7 @@ def run_training_batch(
         answer_prefix_str=answer_prefix_str,
     )
     ############ KL on normal samples. ############
-    normal_loss = compute_kl(pretrained_model, model, normal_batch, device)
+    normal_loss = compute_kl(pretrained_model_probs, model, normal_batch, device)
 
     # TODO: check this, currently `args` not passed as an argument, but code works
     # Final loss = bad loss + random smoothing + normal loss.
@@ -268,23 +268,25 @@ def main(args) -> None:
             train_bad_loaders[i], train_normal_loaders[i]
         )
 
+    # Pre-compute normal results for normal-loss component
+    pretrained_model_precomputed_normal_outputs_aggregated = []
+    if accelerator.is_local_main_process:
+        print("Precomputing the normal outputs using the pretrained model...")
+    for loader in train_normal_loaders:
+        pretrained_model_precomputed_normal_outputs_aggregated.append([])
+        for batch in loader:
+            with torch.no_grad():
+                pretrained_outputs = model(
+                    batch["input_ids"].to(device),
+                    attention_mask=batch["attention_mask"].to(device),
+                    labels=batch["labels"].to(device),
+                )
+                prob_p = torch.nn.functional.softmax(pretrained_outputs.logits, -1)
+                pretrained_model_precomputed_normal_outputs_aggregated[-1].append(prob_p)
+    if accelerator.is_local_main_process:
+        print("Done precomputing.")
+
     model.train()
-
-    # Reference model for computing KL.
-    if accelerator.is_local_main_process:
-        print(f"Loading model {args.model_name} for reference ('fully learned')...")
-
-    # NOTE: accelerate.prepare only handles one model, it works now, but maybe cause some inefficiency.
-    pretrained_model = AutoModelForCausalLM.from_pretrained(
-        args.model_name,
-        cache_dir=args.cache_dir,
-        torch_dtype=torch.bfloat16,
-        trust_remote_code=True,
-    )
-    pretrained_model.to(device)
-
-    if accelerator.is_local_main_process:
-        print("Model loaded.")
 
     if accelerator.is_local_main_process:
         print("#################### START UNLEARNING ####################")
@@ -301,16 +303,16 @@ def main(args) -> None:
         # NOTE: sequential/batch unlearning
         num_batches_per_epoch = args.samples_count // args.sequential // args.batch_size
 
-        for seq, (train_normal_loader, train_bad_loader) in enumerate(
-            zip(train_normal_loaders, train_bad_loaders)
+        for seq, (train_normal_loader, train_bad_loader, pretrained_model_precomputed_normal_outputs) in enumerate(
+            zip(train_normal_loaders, train_bad_loaders, pretrained_model_precomputed_normal_outputs_aggregated)
         ):
             epoch_num = 0
             accu_bad_loss = 0
             bad_loss = 0
             while epoch_num < args.num_epochs:
                 accu_bad_loss = 0
-                for normal_batch, bad_batch in zip(
-                    train_normal_loader, train_bad_loader
+                for normal_batch, bad_batch, pretrained_model_probs in zip(
+                    train_normal_loader, train_bad_loader, pretrained_model_precomputed_normal_outputs
                 ):
                     samples_count += len(bad_batch["input_ids"])
                     # TODO: fix gradient accumulation, currently because of 'run_training_batch', it's hard to use accelerator's accumulation.
@@ -318,7 +320,7 @@ def main(args) -> None:
                     # with accelerator.accumulate(model):
                     loss, bad_loss = run_training_batch(
                         model=model,
-                        pretrained_model=pretrained_model,
+                        pretrained_model_probs=pretrained_model_probs,
                         tokenizer=tokenizer,
                         device=device,
                         normal_ans=normal_ans,
@@ -375,13 +377,13 @@ def main(args) -> None:
         normal_loader_len = len(train_normal_loaders[0])
         epoch_num = 0
         while idx < args.max_unlearn_steps:
-            for bad_batch, normal_batch in zip(
-                train_bad_loaders[0], train_normal_loaders[0]
+            for bad_batch, normal_batch, pretrained_model_probs in zip(
+                train_bad_loaders[0], train_normal_loaders[0], pretrained_model_precomputed_normal_outputs_aggregated[0]
             ):
                 samples_count += len(bad_batch["input_ids"])
                 loss, bad_loss = run_training_batch(
                     model=model,
-                    pretrained_model=pretrained_model,
+                    pretrained_model_probs=pretrained_model_probs,
                     tokenizer=tokenizer,
                     device=device,
                     normal_ans=normal_ans,
