@@ -49,8 +49,6 @@ def generate_answers(
             )
             aggregated_responses.append(responses)
 
-        print(aggregated_responses)
-
         for idx, responses in enumerate(zip(*aggregated_responses)):
             evaluations.append(
                 {
@@ -60,6 +58,5 @@ def generate_answers(
                     "category_id": batch["category_id"][idx].item(),
                 }
             )
-            print(evaluations, end="\n\n")
 
     return evaluations
