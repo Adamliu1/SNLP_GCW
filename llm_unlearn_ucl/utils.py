@@ -508,7 +508,7 @@ def compute_kl(pretrained_model_probs, current_model, batch, device):
     )
 
     # P: pretrained model; Q: current model.
-    prob_p = pretrained_model_probs
+    prob_p = pretrained_model_probs.to(device)
     prob_q = torch.nn.functional.softmax(normal_outputs.logits, -1)
 
     loss = -(prob_p * torch.log(prob_q + 1e-12)).sum(-1).mean()
