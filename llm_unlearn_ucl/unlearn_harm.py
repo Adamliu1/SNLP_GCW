@@ -282,7 +282,9 @@ def main(args) -> None:
                     labels=batch["labels"].to(device),
                 )
                 prob_p = torch.nn.functional.softmax(pretrained_outputs.logits, -1)
-                pretrained_model_precomputed_normal_outputs_aggregated[-1].append(prob_p)
+                pretrained_model_precomputed_normal_outputs_aggregated[-1].append(
+                    prob_p
+                )
     if accelerator.is_local_main_process:
         print("Done precomputing.")
 
@@ -303,8 +305,16 @@ def main(args) -> None:
         # NOTE: sequential/batch unlearning
         num_batches_per_epoch = args.samples_count // args.sequential // args.batch_size
 
-        for seq, (train_normal_loader, train_bad_loader, pretrained_model_precomputed_normal_outputs) in enumerate(
-            zip(train_normal_loaders, train_bad_loaders, pretrained_model_precomputed_normal_outputs_aggregated)
+        for seq, (
+            train_normal_loader,
+            train_bad_loader,
+            pretrained_model_precomputed_normal_outputs,
+        ) in enumerate(
+            zip(
+                train_normal_loaders,
+                train_bad_loaders,
+                pretrained_model_precomputed_normal_outputs_aggregated,
+            )
         ):
             epoch_num = 0
             accu_bad_loss = 0
@@ -312,7 +322,9 @@ def main(args) -> None:
             while epoch_num < args.num_epochs:
                 accu_bad_loss = 0
                 for normal_batch, bad_batch, pretrained_model_probs in zip(
-                    train_normal_loader, train_bad_loader, pretrained_model_precomputed_normal_outputs
+                    train_normal_loader,
+                    train_bad_loader,
+                    pretrained_model_precomputed_normal_outputs,
                 ):
                     samples_count += len(bad_batch["input_ids"])
                     # TODO: fix gradient accumulation, currently because of 'run_training_batch', it's hard to use accelerator's accumulation.
@@ -378,7 +390,9 @@ def main(args) -> None:
         epoch_num = 0
         while idx < args.max_unlearn_steps:
             for bad_batch, normal_batch, pretrained_model_probs in zip(
-                train_bad_loaders[0], train_normal_loaders[0], pretrained_model_precomputed_normal_outputs_aggregated[0]
+                train_bad_loaders[0],
+                train_normal_loaders[0],
+                pretrained_model_precomputed_normal_outputs_aggregated[0],
             ):
                 samples_count += len(bad_batch["input_ids"])
                 loss, bad_loss = run_training_batch(
