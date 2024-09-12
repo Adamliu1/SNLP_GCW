@@ -281,7 +281,9 @@ def main(args) -> None:
                     attention_mask=batch["attention_mask"].to(device),
                     labels=batch["labels"].to(device),
                 )
-                prob_p = torch.nn.functional.softmax(pretrained_outputs.logits, -1).cpu()
+                prob_p = torch.nn.functional.softmax(
+                    pretrained_outputs.logits, -1
+                ).cpu()
                 pretrained_model_precomputed_normal_outputs_aggregated[-1].append(
                     prob_p
                 )
