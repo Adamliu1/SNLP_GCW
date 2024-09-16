@@ -42,3 +42,4 @@ bitsandbytes
 matplotlib
 scikit-learn
 wandb
+dash
