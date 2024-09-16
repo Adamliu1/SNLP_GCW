@@ -34,7 +34,6 @@ def main():
     for model_name in filter(
         lambda x: x != "truthfulqa", os.listdir(experiment_dir_nested)
     ):  # skip the last dir because it contains truthfulqa evals
-
         df_eval_harness = pd.read_csv(
             os.path.join(experiment_dir_nested, model_name, "results.csv"),
             index_col=False,
