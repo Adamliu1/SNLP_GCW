@@ -367,7 +367,11 @@ def main(args) -> None:
                 # NOTE: This only handles deepspeed zero and zero2, zero3 will require change
                 if args.sequential == 1 and epoch_num % args.save_every == 0:
                     # NOTE: special case for zero 3
-                    if accelerator.deepspeed_config is not None and accelerator.deepspeed_config['zero_optimization']['stage'] == 3:
+                    if (
+                        accelerator.deepspeed_config is not None
+                        and accelerator.deepspeed_config["zero_optimization"]["stage"]
+                        == 3
+                    ):
                         print("Zero 3 optim: Saving model shards from all GPUs!")
                         model_tokenizer_save_dir = Path(
                             os.path.join(args.model_save_dir, f"idx_{epoch_num}")
@@ -442,7 +446,11 @@ def main(args) -> None:
                 final_model_tag = idx
                 if idx % args.save_every == 0:
                     # NOTE: special case for zero 3
-                    if accelerator.deepspeed_config is not None and accelerator.deepspeed_config['zero_optimization']['stage'] == 3:
+                    if (
+                        accelerator.deepspeed_config is not None
+                        and accelerator.deepspeed_config["zero_optimization"]["stage"]
+                        == 3
+                    ):
                         print("Zero 3 optim: Saving model shards from all GPUs!")
                         model_tokenizer_save_dir = Path(
                             os.path.join(args.model_save_dir, f"idx_{epoch_num}")
@@ -502,7 +510,10 @@ def main(args) -> None:
 
     # Save final model.
     # NOTE: special case for zero 3
-    if accelerator.deepspeed_config is not None and accelerator.deepspeed_config['zero_optimization']['stage'] == 3:
+    if (
+        accelerator.deepspeed_config is not None
+        and accelerator.deepspeed_config["zero_optimization"]["stage"] == 3
+    ):
         print("Zero 3 optim: Saving model shards from all GPUs!")
         model_tokenizer_save_dir = Path(
             os.path.join(args.model_save_dir, f"idx_{epoch_num}")
