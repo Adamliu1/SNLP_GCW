@@ -11,19 +11,19 @@ LAUNCHER="accelerate launch"
 LMEVAL_PYTHON_PATH="/home/sduchnie/venv_eval_harness/bin/python3"
 BEAVERDAM_WEIGHTS_PATH="/SAN/intelsys/llm/sduchnie/models/beaver-dam-7b"
 LR=1e-6
-NUM_EPOCHS=20
+NUM_EPOCHS=40
 SAVE_EVERY_STEPS=256
 SAVE_EVERY_STEPS_BATCH=1 # Save every epoch for batch (would be a multiple of 128 samples seen: e.g. 128 epoch 3 = 384 samples, 512 epoch 20 = 10240 samples)
-BATCH_SIZE=2
+BATCH_SIZE=1
 SEED=2137
 MAX_UNLEARN_STEPS=10240
 # TODO: ENSURE UNLEARNED_MODELS_PATH IS CORRECT WHEN SCHEDULING
 #UNLEARNED_MODELS_PATH="/SAN/intelsys/llm/aszablew/snlp/SNLP_GCW/snlp-unlearned-models"
-EXPERIMENT_NAME="llama3_sequential_$LR""_BS$BATCH_SIZE"
+EXPERIMENT_NAME="llama3_sequential_$LR""_BS$BATCH_SIZE""_EPOCH$NUM_EPOCHS"
 UNLEARNED_MODELS_PATH="/SAN/intelsys/llm/sduchnie/snlp/SNLP_GCW/snlp-unlearned-models/$EXPERIMENT_NAME"
 mkdir -p $UNLEARNED_MODELS_PATH/models
 mkdir -p $UNLEARNED_MODELS_PATH/logs
-WANDB_PROJ_NAME="llama-3-8B-sequential-lr$LR""_BS_$BATCH_SIZE"
+WANDB_PROJ_NAME=$EXPERIMENT_NAME
 
 # Model params
 #MODEL_NAME=gemma-2b
