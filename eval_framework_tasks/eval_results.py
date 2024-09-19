@@ -40,15 +40,13 @@ def fetch_log_data(log_dir: str) -> dict[int, dict]:
     log_files_contents = {}
     if len(log_file_names) == 1:
         with open(os.path.join(log_dir, log_file_names[0]), "r") as f:
-            log_files_contents[1] = json.load(
-                f
-            )
+            log_files_contents[1] = json.load(f)
     else:
         for file_name in log_file_names:
             with open(os.path.join(log_dir, file_name), "r") as f:
-                log_files_contents[int(file_name.split("_")[-1].split(".")[0])] = json.load(
-                    f
-                )
+                log_files_contents[
+                    int(file_name.split("_")[-1].split(".")[0])
+                ] = json.load(f)
 
     # return sorted dictionary
     return {
