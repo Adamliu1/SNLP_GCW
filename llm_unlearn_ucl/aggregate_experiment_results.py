@@ -1,6 +1,6 @@
 """Results aggregation script.
 
-Script for aggragating all evaluation results from a single experiment into a single csv file.
+Script for aggregating all evaluation results from a single experiment into a single csv file.
 Importantly, it is not designed to work across experiment boundaries.
 """
 
@@ -31,25 +31,25 @@ def main():
     )
 
     dfs = []
-    for model_name in filter(
-        lambda x: x != "truthfulqa", os.listdir(experiment_dir_nested)
-    ):  # skip the last dir because it contains truthfulqa evals
+    for model_name in os.listdir(experiment_dir_nested):
+
         df_eval_harness = pd.read_csv(
-            os.path.join(experiment_dir_nested, model_name, "results.csv"),
+            os.path.join(
+                experiment_dir_nested, model_name, "lm_eval_harness", "results.csv"
+            ),
             index_col=False,
         )
         df_flagged_ratio = pd.read_csv(
-            os.path.join(experiment_dir_nested, model_name, "flagged_ratio.csv"),
+            os.path.join(
+                experiment_dir_nested, model_name, "harmfulness", "flagged_ratio.csv"
+            ),
             index_col=False,
         ).add_suffix("_beavertails")
         df_flagged_ratio.drop(columns=df_flagged_ratio.columns[0], axis=1, inplace=True)
 
         df_truthfulqa = pd.read_csv(
             os.path.join(
-                experiment_dir_nested,
-                "truthfulqa",
-                model_name,
-                "results.csv",
+                experiment_dir_nested, model_name, "truthfulqa", "results.csv"
             ),
             index_col=False,
         ).add_suffix("_truthfulqa")
@@ -63,6 +63,7 @@ def main():
         df["lr"] = float("-".join(model_name.split("-")[2:4]))
         df["splits"] = int(model_name.split("-")[4])
         df["sample_size"] = int(model_name.split("-")[5])
+        df["epoch_count"] = int(model_name.split("-")[6])
         dfs.append(df)
 
     aggregated_df = pd.concat(dfs)
