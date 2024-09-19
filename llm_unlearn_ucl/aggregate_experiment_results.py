@@ -32,7 +32,6 @@ def main():
 
     dfs = []
     for model_name in os.listdir(experiment_dir_nested):
-
         df_eval_harness = pd.read_csv(
             os.path.join(
                 experiment_dir_nested, model_name, "lm_eval_harness", "results.csv"
