@@ -215,7 +215,6 @@ def main(args) -> None:
             args.retaining_dataset = "truthfulqa/truthful_qa"
         train_normal_dataset, normal_sample_path = make_dataset(
             args.retaining_dataset,
-            args.samples_count if args.sequential != -1 else None,
             args.shuffle_seed,
             save_dir=args.samples_save_dir,
         )
@@ -223,6 +222,8 @@ def main(args) -> None:
         train_normal_loaders = DataloaderConstructor(
             train_normal_dataset,
             args.retaining_dataset,
+            num_samples=None if args.sequential == -1 else args.samples_count,
+            max_sample_length=args.max_sample_length,
             batch_size=args.batch_size,
             tokenizer=tokenizer,
             num_splits=max(args.sequential, 1),
