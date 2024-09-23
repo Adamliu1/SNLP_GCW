@@ -175,17 +175,46 @@ def main(args) -> None:
     if args.unlearning_dataset in SUPPORTED_UNLEARNING_SET:
         train_bad_dataset, bad_sample_path = make_dataset(
             args.unlearning_dataset,
-            num_samples=None if args.sequential == -1 else args.samples_count,
             seed=args.shuffle_seed,
             save_dir=args.samples_save_dir,
         )
         train_bad_loaders = DataloaderConstructor(
             train_bad_dataset,
             dataset_uri=args.unlearning_dataset,
+            num_samples=None if args.sequential == -1 else args.samples_count,
+            max_sample_length=args.max_sample_length,
             batch_size=args.batch_size,
             tokenizer=tokenizer,
             num_splits=max(args.sequential, 1),
         ).get_loaders()
+
+        samples = []
+        for _, batch in enumerate(train_bad_loaders[0]):
+            for elements in batch["input_ids"]:
+                samples.append(elements.numpy())
+
+        lengths = [len(x) for x in samples]
+
+        print("Dataset tokenisation length analysis:")
+        print("Max:", max(lengths))
+        print("Mean:", sum(lengths) / len(lengths))
+        import numpy
+
+        print("75th percentile:", numpy.quantile(lengths, 0.75))
+        print("90th percentile:", numpy.quantile(lengths, 0.90))
+        print("99th percentile:", numpy.quantile(lengths, 0.99))
+
+        if args.max_sample_length is not None:
+            print(
+                f"Number of samples shorter than {args.max_sample_length} tokens: "
+                + f"{numpy.sum(numpy.less(lengths, args.max_sample_length))}/{len(lengths)} "
+                + f"({numpy.sum(numpy.less(lengths, args.max_sample_length))/len(lengths)})",
+            )
+
+        from matplotlib import pyplot as plt
+
+        plt.hist(lengths)
+        plt.show()
 
         if args.unlearning_dataset == "AgentPublic/piaf":
             question_prefix_str = "### Question:"
