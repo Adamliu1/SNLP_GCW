@@ -36,7 +36,6 @@ SUPPORTED_UNLEARNING_SET = [
 
 def make_dataset(
     dataset_uri: str,
-    num_samples: Optional[int] = None,
     seed: Optional[int] = None,
     save_dir: Optional[str] = None,
     split: str = "train",
@@ -44,9 +43,7 @@ def make_dataset(
     """
     dataset_uri: anything that is compatible with datasets.load_dataset
     """
-    print(
-        f"Loading {num_samples if num_samples is not None else 'all'} samples from {dataset_uri}..."
-    )
+    print(f"Loading all samples from {dataset_uri}...")
     if dataset_uri == "truthfulqa/truthful_qa":
         # NOTE: truthfulQA is an eval-only dataset and has a different format.
         full_dataset = cast(
@@ -66,13 +63,7 @@ def make_dataset(
         )
     if seed is not None:
         full_dataset = full_dataset.shuffle(seed)
-    if num_samples is not None:
-        assert num_samples <= len(
-            full_dataset
-        ), f"The dataset {dataset_uri} contains {len(full_dataset)} samples while you requested {num_samples} samples."
-        full_dataset = full_dataset.select(
-            randint(0, len(full_dataset), size=num_samples, dtype=int)
-        )
+
     save_path = ""
     if save_dir is not None:
         os.makedirs(save_dir, exist_ok=True)
@@ -92,6 +83,8 @@ class DataloaderConstructor:
         dataset_uri: str,
         batch_size: int,
         tokenizer: PreTrainedTokenizerBase,
+        num_samples: Optional[int] = None,
+        max_sample_length: Optional[int] = None,
         num_splits: int = 1,
         data_mapper: Optional[Callable] = None,
         verbose: bool = False,
@@ -99,6 +92,8 @@ class DataloaderConstructor:
         self.dataset = dataset
         self.num_splits = num_splits
         self.batch_size = batch_size
+        self.num_samples = num_samples
+        self.max_sample_length = max_sample_length
         if data_mapper is None:
             self.data_mapper = get_mappers(dataset_uri, tokenizer, fraction=1) or (
                 lambda x: x
@@ -127,6 +122,20 @@ class DataloaderConstructor:
                 batched=True,
                 remove_columns=self.dataset.column_names,
             )
+
+            if self.max_sample_length is not None:
+                dataset = dataset.filter(
+                    lambda sample: len(sample["input_ids"]) < self.max_sample_length,
+                )
+
+            if self.num_samples is not None:
+                assert self.num_samples <= len(
+                    dataset
+                ), f"The dataset {self.dataset_uri} contains {len(dataset)} samples while you requested {self.num_samples} samples."
+                dataset = dataset.select(
+                    randint(0, len(dataset), size=self.num_samples, dtype=int)
+                )
+
             dataset.set_format(
                 type="torch", columns=["input_ids", "attention_mask", "start_locs"]
             )
