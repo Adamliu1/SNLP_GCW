@@ -1,7 +1,6 @@
 # Copyright (C) 2024 UCL CS SNLP Naturalnego 语言 Töötlus group
 #    - Szymon Duchniewicz
 #    - Yadong Liu
-#    - Carmen Meinson
 #    - Andrzej Szablewski
 #    - Zhe Yu
 #
@@ -11,9 +10,19 @@
 # https://opensource.org/licenses/MIT
 
 """
-A script to show an example of how to unlearn harmfulness.
+A script to show an example of how to unlearn a specifc task.
 
-The dataset used in is `PKU-SafeRLHF` and TruthfulQA. Model supports OPT-1.3B.
+Supported tasks and corresponding unlearning datasets:
+- Harmfullness: PKU-SafeRLHF
+- French language: AgentPublic/piaf
+- Logical reasoning: sail/symbolic-instruction-tuning
+- (WIP) Mathematical question answering: MathQA
+
+Datasets supported to act as retaining (normalising) datasets:
+- squad
+- truthfulQA
+
+Tested on models: OPT1.3, Llama3 8B, Gemma 2B
 """
 
 import logging
@@ -36,7 +45,6 @@ from data_utils import (
     make_dataset,
 )
 from parse_args import parse_args
-from peft import AdaLoraConfig, TaskType, get_peft_model
 from torch.optim import AdamW
 from transformers import AutoModelForCausalLM, AutoTokenizer, get_scheduler
 from utils import (
@@ -130,16 +138,15 @@ def main(args) -> None:
     assert (
         args.samples_count // args.sequential
     ) % args.batch_size == 0, "samples in each 'sequence' (--samples_count / --sequential) should be a multiple of batch_size."
-
     if args.wandb_log:
-        accelerator = Accelerator(log_with="wandb")
+        accelerator: Accelerator = Accelerator(log_with="wandb")
         accelerator.init_trackers(
             project_name=args.wandb_project_name,
             config=vars(args),
             init_kwargs={"wandb": {"name": args.wandb_run_name}},
         )
     else:
-        accelerator = Accelerator()
+        accelerator: Accelerator = Accelerator()
     device = accelerator.device
 
     # setup logging
@@ -151,11 +158,10 @@ def main(args) -> None:
         level=logging.INFO,
     )
     logger = get_logger(__name__)
-    if accelerator.is_main_process:
+    if accelerator.is_local_main_process:
         for arg in vars(args):
             logger.info(f"{arg}: {getattr(args, arg)}")
     accelerator.wait_for_everyone()
-
     print(f"Loading model {args.model_name} for training...")
     model = AutoModelForCausalLM.from_pretrained(
         args.model_name,
@@ -175,13 +181,14 @@ def main(args) -> None:
     if args.unlearning_dataset in SUPPORTED_UNLEARNING_SET:
         train_bad_dataset, bad_sample_path = make_dataset(
             args.unlearning_dataset,
-            num_samples=None if args.sequential == -1 else args.samples_count,
             seed=args.shuffle_seed,
             save_dir=args.samples_save_dir,
         )
         train_bad_loaders = DataloaderConstructor(
             train_bad_dataset,
             dataset_uri=args.unlearning_dataset,
+            num_samples=None if args.sequential == -1 else args.samples_count,
+            max_sample_length=args.max_sample_length,
             batch_size=args.batch_size,
             tokenizer=tokenizer,
             num_splits=max(args.sequential, 1),
@@ -208,7 +215,6 @@ def main(args) -> None:
             args.retaining_dataset = "truthfulqa/truthful_qa"
         train_normal_dataset, normal_sample_path = make_dataset(
             args.retaining_dataset,
-            args.samples_count if args.sequential != -1 else None,
             args.shuffle_seed,
             save_dir=args.samples_save_dir,
         )
@@ -216,6 +222,8 @@ def main(args) -> None:
         train_normal_loaders = DataloaderConstructor(
             train_normal_dataset,
             args.retaining_dataset,
+            num_samples=None if args.sequential == -1 else args.samples_count,
+            max_sample_length=args.max_sample_length,
             batch_size=args.batch_size,
             tokenizer=tokenizer,
             num_splits=max(args.sequential, 1),
@@ -332,7 +340,7 @@ def main(args) -> None:
                 ):
                     samples_count += len(bad_batch["input_ids"])
                     # TODO: fix gradient accumulation, currently because of 'run_training_batch', it's hard to use accelerator's accumulation.
-                    # Currenlty we need to set accelerator config to use accumulation step 1.
+                    # Currently we need to set accelerator config to use accumulation step 1.
                     # with accelerator.accumulate(model):
                     loss, bad_loss = run_training_batch(
                         model=model,
@@ -356,7 +364,7 @@ def main(args) -> None:
                     accelerator.backward(loss / num_batches_per_epoch)
                     bad_loss /= num_batches_per_epoch
                     accu_bad_loss += bad_loss.item()
-                # If args.batch_size < args.samples_count//args.sequential, always perform gradient accumulation.
+                    # If args.batch_size < args.samples_count//args.sequential, always perform gradient accumulation.
                 epoch_num += 1
                 final_model_tag = epoch_num
                 optimizer.step()
@@ -365,8 +373,28 @@ def main(args) -> None:
                 optimizer.zero_grad()
 
                 # NOTE: This only handles deepspeed zero and zero2, zero3 will require change
-                if accelerator.is_local_main_process:
-                    if args.sequential == 1 and epoch_num % args.save_every == 0:
+                if args.sequential == 1 and epoch_num % args.save_every == 0:
+                    # NOTE: special case for zero 3
+                    if (
+                        accelerator.deepspeed_config is not None
+                        and accelerator.deepspeed_config["zero_optimization"]["stage"]
+                        == 3
+                    ):
+                        print("Zero 3 optim: Saving model shards from all GPUs!")
+                        model_tokenizer_save_dir = Path(
+                            os.path.join(args.model_save_dir, f"idx_{epoch_num}")
+                        )
+                        model_tokenizer_save_dir.mkdir(parents=True, exist_ok=True)
+                        unwrapped_model = accelerator.unwrap_model(model)
+                        unwrapped_model.save_pretrained(
+                            model_tokenizer_save_dir,
+                            is_main_process=accelerator.is_main_process,
+                            save_function=accelerator.save,
+                            state_dict=accelerator.get_state_dict(model),
+                        )
+                        tokenizer.save_pretrained(model_tokenizer_save_dir)
+                        print(f"Saved zero-3 model at step {epoch_num}.")
+                    elif accelerator.is_local_main_process:
                         accelerator.wait_for_everyone()  # for model saving
                         # NOTE: Batch unlearning, save for every epoch
                         model_tokenizer_save_dir = Path(
@@ -424,8 +452,29 @@ def main(args) -> None:
                 optimizer.zero_grad()
                 idx += 1
                 final_model_tag = idx
-                if accelerator.is_local_main_process:
-                    if idx % args.save_every == 0:
+                if idx % args.save_every == 0:
+                    # NOTE: special case for zero 3
+                    if (
+                        accelerator.deepspeed_config is not None
+                        and accelerator.deepspeed_config["zero_optimization"]["stage"]
+                        == 3
+                    ):
+                        print("Zero 3 optim: Saving model shards from all GPUs!")
+                        model_tokenizer_save_dir = Path(
+                            os.path.join(args.model_save_dir, f"idx_{epoch_num}")
+                        )
+                        model_tokenizer_save_dir.mkdir(parents=True, exist_ok=True)
+                        unwrapped_model = accelerator.unwrap_model(model)
+                        unwrapped_model.save_pretrained(
+                            model_tokenizer_save_dir,
+                            is_main_process=accelerator.is_main_process,
+                            save_function=accelerator.save,
+                            state_dict=accelerator.get_state_dict(model),
+                        )
+                        tokenizer.save_pretrained(model_tokenizer_save_dir)
+                        print(f"Saved zero-3 model at step {epoch_num}.")
+                    elif accelerator.is_local_main_process:
+                        # If not using zero 2, just save the entire model on the main process (its not sharded)
                         accelerator.wait_for_everyone()  # for model saving
                         # Save model and tokenizer.
                         model_tokenizer_save_dir = Path(
@@ -449,6 +498,7 @@ def main(args) -> None:
 
             epoch_num += 1
 
+            # NOTE: here need to verify logic
             if idx >= args.max_unlearn_steps:
                 # NOTE: here I think we need to specify which process id, but it's not important for now.
                 print("max_unlearn_steps reached. Unlearning stopped.")
@@ -468,7 +518,30 @@ def main(args) -> None:
         model = model.merge_and_unload()
 
     # Save final model.
-    if accelerator.is_local_main_process:
+    # NOTE: special case for zero 3
+    if (
+        accelerator.deepspeed_config is not None
+        and accelerator.deepspeed_config["zero_optimization"]["stage"] == 3
+    ):
+        print("Zero 3 optim: Saving model shards from all GPUs!")
+        model_tokenizer_save_dir = Path(
+            os.path.join(args.model_save_dir, f"idx_{epoch_num}")
+        )
+        model_tokenizer_save_dir.mkdir(parents=True, exist_ok=True)
+        unwrapped_model = accelerator.unwrap_model(model)
+        unwrapped_model.save_pretrained(
+            model_tokenizer_save_dir,
+            is_main_process=accelerator.is_main_process,
+            save_function=accelerator.save,
+            state_dict=accelerator.get_state_dict(model),
+        )
+        tokenizer.save_pretrained(model_tokenizer_save_dir)
+        print(f"Saved final zero-3 model at step {epoch_num}.")
+        print("Unlearning finished")
+        logger.info("Unlearning finished")
+        if bool(args.wandb_log):
+            accelerator.end_training()
+    elif accelerator.is_local_main_process:
         model_tokenizer_save_dir = Path(
             os.path.join(args.model_save_dir, f"idx_{final_model_tag}")
         )

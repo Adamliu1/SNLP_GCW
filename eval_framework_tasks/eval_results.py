@@ -38,11 +38,15 @@ def fetch_log_data(log_dir: str) -> dict[int, dict]:
     ), f"Beep boop, no files in a directory provided ({log_dir}). Maybe you forgot to copy them?"
 
     log_files_contents = {}
-    for file_name in log_file_names:
-        with open(os.path.join(log_dir, file_name), "r") as f:
-            log_files_contents[int(file_name.split("_")[-1].split(".")[0])] = json.load(
-                f
-            )
+    if len(log_file_names) == 1:
+        with open(os.path.join(log_dir, log_file_names[0]), "r") as f:
+            log_files_contents[1] = json.load(f)
+    else:
+        for file_name in log_file_names:
+            with open(os.path.join(log_dir, file_name), "r") as f:
+                log_files_contents[
+                    int(file_name.split("_")[-1].split(".")[0])
+                ] = json.load(f)
 
     # return sorted dictionary
     return {
@@ -80,7 +84,7 @@ def filter_json_logs(log_data: dict[int, dict]) -> dict[int, dict]:
 def create_plot(df: pd.DataFrame, log_dir: str) -> None:
     ax = df.plot(style=["o-"] * 7)
     fig = ax.get_figure()
-    fig.savefig(os.path.join(log_dir, "..", "figure.png"))
+    fig.savefig(os.path.join(log_dir, "figure.png"))
 
 
 def main(log_dir: str):
@@ -90,7 +94,7 @@ def main(log_dir: str):
     df = pd.DataFrame.from_dict(filtered_logs).transpose()
 
     create_plot(df, log_dir)
-    df.to_csv(os.path.join(log_dir, "..", "results.csv"))
+    df.to_csv(os.path.join(log_dir, "results.csv"))
 
 
 if __name__ == "__main__":
