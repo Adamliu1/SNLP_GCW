@@ -179,6 +179,12 @@ def parse_args() -> argparse.Namespace:
         "--num_epochs", type=int, default=100, help="Number of epochs to unlearn."
     )
     parser.add_argument(
+        "--max_sample_length",
+        type=int,
+        default=None,
+        help="Max total length (in tokens) of a sample to unlearn.",
+    )
+    parser.add_argument(
         "--no_scheduler",
         action="store_true",
         help="Set this flag to disable lr_scheduler",
